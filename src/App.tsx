@@ -11,9 +11,9 @@ import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, Sl
 
 type ModalName = "how" | "settings" | "archive" | "victory" | "note" | null;
 
-function Seal({ tone, achieved = false, compact = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; compact?: boolean }) {
+function Seal({ tone, achieved = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean }) {
   return (
-    <span className={`seal ${tone} ${achieved ? "achieved" : ""} ${compact ? "compact" : ""}`} aria-hidden="true">
+    <span className={`seal ${tone} ${achieved ? "achieved" : ""}`} aria-hidden="true">
       <svg viewBox="0 0 100 100" role="img">
         <path className="seal-fill" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
         {achieved && <>
@@ -243,7 +243,6 @@ export default function App() {
   if (!content || !words || !activeLevel || !game || !derived || !scheduleEntry) return <LoadingScreen />;
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
-  const progress = persisted.levels[activeLevel.id];
   const isToday = scheduleEntry.date === localDateKey(now);
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
@@ -265,11 +264,6 @@ export default function App() {
           <section>
             <h2>Daily progress</h2>
             <div className="rail-feature"><CalendarDays /><div><strong>{shortDate(selectedDate)}</strong><small>{isToday ? `Resets in ${resetCountdown(now)}` : "Archive puzzle"}</small></div></div>
-          </section>
-          <section>
-            <h2>Your progress</h2>
-            <div className="rail-row"><span>Split</span><Seal tone="bronze" achieved={derived.allWordsValid} compact /></div>
-            <div className="rail-row"><span>Perfect Split</span><Seal tone="gold" achieved={Boolean(progress?.perfectSplit)} compact /></div>
           </section>
           <section>
             <h2>Streak</h2>

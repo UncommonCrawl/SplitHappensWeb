@@ -95,7 +95,6 @@ button { color: inherit; }
 .criterion em { color: rgb(0 176 80 / 50%); font-style: normal; }
 .criterion em.correct { color: var(--green); }
 .seal { width: clamp(28px, 3vw, 34px); height: clamp(28px, 3vw, 34px); display: grid; place-items: center; }
-.seal.compact { width: 38px; height: 38px; }
 .seal svg { width: 100%; height: 100%; overflow: visible; }
 .seal-fill { fill: currentColor; }
 .seal-outline { fill: none; stroke: #000; stroke-width: 3; }
