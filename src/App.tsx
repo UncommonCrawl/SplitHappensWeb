@@ -1,15 +1,29 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  Archive, CalendarDays, Check, Flame, HelpCircle, Lightbulb, RotateCcw, Settings,
+  Archive, CalendarDays, Flame, HelpCircle, Lightbulb, RotateCcw, Settings,
   Share2, Shuffle, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
 import { loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
 import { calculateStats, formatDuration } from "./stats";
-import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, TileID } from "./types";
+import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 
 type ModalName = "how" | "settings" | "archive" | "victory" | "note" | null;
+
+function Seal({ tone, achieved = false, compact = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; compact?: boolean }) {
+  return (
+    <span className={`seal ${tone} ${achieved ? "achieved" : ""} ${compact ? "compact" : ""}`} aria-hidden="true">
+      <svg viewBox="0 0 100 100" role="img">
+        <path className="seal-fill" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
+        {achieved && <>
+          <path className="seal-outline" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
+          <path className="seal-check" d="M29 51L43 65L72 35" />
+        </>}
+      </svg>
+    </span>
+  );
+}
 
 function ordinal(day: number): string {
   const mod100 = day % 100;
@@ -66,6 +80,7 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ tileID: TileID; x: number; y: number; moved: boolean } | null>(null);
+  const [dragHover, setDragHover] = useState<SlotID | "source" | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const previousGold = useRef(false);
@@ -183,6 +198,11 @@ export default function App() {
     if (!drag || !dragStart.current) return;
     const moved = drag.moved || Math.hypot(event.clientX - dragStart.current.x, event.clientY - dragStart.current.y) > 6;
     setDrag({ ...drag, x: event.clientX, y: event.clientY, moved });
+    if (moved) {
+      const hit = document.elementFromPoint(event.clientX, event.clientY);
+      const target = hit?.closest<HTMLElement>("[data-slot-id]");
+      setDragHover((target?.dataset.slotId as SlotID | undefined) ?? (hit?.closest("[data-source-board]") ? "source" : null));
+    }
   };
 
   const handlePointerUp = (event: ReactPointerEvent) => {
@@ -197,6 +217,7 @@ export default function App() {
       suppressClick.current = true;
     }
     setDrag(null);
+    setDragHover(null);
     dragStart.current = null;
   };
 
@@ -225,6 +246,7 @@ export default function App() {
   const progress = persisted.levels[activeLevel.id];
   const isToday = scheduleEntry.date === localDateKey(now);
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
+  const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
 
   return (
     <div className="app-shell">
@@ -246,8 +268,8 @@ export default function App() {
           </section>
           <section>
             <h2>Your progress</h2>
-            <div className="rail-row"><span>Split</span><span className={`mini-seal bronze ${derived.allWordsValid ? "earned" : ""}`}><Check /></span></div>
-            <div className="rail-row"><span>Perfect Split</span><span className={`mini-seal gold ${progress?.perfectSplit ? "earned" : ""}`}><Sparkles /></span></div>
+            <div className="rail-row"><span>Split</span><Seal tone="bronze" achieved={derived.allWordsValid} compact /></div>
+            <div className="rail-row"><span>Perfect Split</span><Seal tone="gold" achieved={Boolean(progress?.perfectSplit)} compact /></div>
           </section>
           <section>
             <h2>Streak</h2>
@@ -264,29 +286,34 @@ export default function App() {
 
         <main className="game-area">
           <section className="criteria" aria-label="Puzzle goals">
-            <div className={`criterion ${derived.allWordsValid ? "complete" : ""}`}><span className="seal bronze"><Trophy /></span><strong>{derived.validRows.size}/{game.targetSlots.length} VALID<br />WORDS</strong></div>
-            <div className={`criterion ${derived.silverSatisfied ? "complete" : ""}`}><span className="seal silver"><Trophy /></span><strong>{derived.bonus.label}</strong></div>
-            <div className={`criterion ${derived.victorySatisfied ? "complete" : ""}`}><span className="seal gold"><Trophy /></span><strong>GOLD TILES<br />SPELL <em>{activeLevel.goldWord}</em> IN ORDER</strong></div>
+            <div className={`criterion ${derived.allWordsValid ? "complete" : ""}`}><Seal tone="bronze" achieved={derived.allWordsValid} /><strong>{derived.validRows.size}/{game.targetSlots.length} VALID<br />WORDS</strong></div>
+            <div className={`criterion ${derived.silverSatisfied ? "complete" : ""}`}><Seal tone="silver" achieved={derived.silverSatisfied} /><strong>{derived.bonus.label}</strong></div>
+            <div className={`criterion ${derived.victorySatisfied ? "complete" : ""}`}><Seal tone="gold" achieved={derived.victorySatisfied} /><strong>GOLD TILES<br />SPELL <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> IN ORDER</strong></div>
           </section>
 
           <section className="target-board" aria-label="Target words">
             {game.targetSlots.map((row, rowIndex) => (
-              <div className={`target-row ${derived.validRows.has(rowIndex) ? "valid" : ""}`} key={rowIndex}>
+              <div className="target-row" key={rowIndex}>
                 {row.map((id, columnIndex) => {
                   const target = slotID(rowIndex, columnIndex);
                   const locked = game.hintedRows.includes(rowIndex);
+                  const rowComplete = row.every(Boolean);
+                  const rowValid = derived.validRows.has(rowIndex);
+                  const isGoldSlot = goldSlots.has(target);
+                  const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
                   return (
                     <button
-                      className={`target-slot ${goldSlots.has(target) ? "gold-slot" : ""} ${id && selectedTile === id ? "selected" : ""}`}
+                      className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${id && selectedTile === id ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
                       key={target}
                       data-slot-id={target}
+                      disabled={locked}
                       aria-label={`Row ${rowIndex + 1}, position ${columnIndex + 1}${id ? `, letter ${game.tiles[id].character}` : ", empty"}`}
                       onClick={() => id && !selectedTile ? handleTileClick(id) : placeSelected(target)}
                       onDoubleClick={() => id && send({ type: "RETURN", tileID: id })}
                       onPointerDown={(event) => id && !locked && handlePointerDown(event, id)}
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
-                    >{id ? game.tiles[id].character : ""}</button>
+                    >{id ? <span className="tile-letter">{game.tiles[id].character}</span> : ""}</button>
                   );
                 })}
               </div>
@@ -298,15 +325,15 @@ export default function App() {
               <div className="source-row" key={rowIndex}>
                 {row.map((id, columnIndex) => id ? (
                   <button
-                    className={`letter-tile ${selectedTile === id ? "selected" : ""}`}
+                    className={`letter-tile tile ${selectedTile === id ? "selected" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""}`}
                     key={id}
                     aria-label={`Letter ${game.tiles[id].character}`}
                     onClick={() => handleTileClick(id)}
                     onPointerDown={(event) => handlePointerDown(event, id)}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
-                  >{game.tiles[id].character}</button>
-                ) : <span className="source-hole" key={`hole-${rowIndex}-${columnIndex}`} />)}
+                  ><span className="tile-letter">{game.tiles[id].character}</span></button>
+                ) : <span className="source-hole tile" key={`hole-${rowIndex}-${columnIndex}`} />)}
               </div>
             ))}
           </section>
@@ -320,7 +347,10 @@ export default function App() {
         </main>
       </div>
 
-      {drag?.moved && <div className="drag-ghost" style={{ left: drag.x, top: drag.y }}>{game.tiles[drag.tileID].character}</div>}
+      {drag?.moved && <>
+        <div className={`drag-underlay ${dragHover && dragHover !== "source" ? "over-target" : ""}`} style={{ left: drag.x, top: drag.y }}>{game.tiles[drag.tileID].character}</div>
+        <div className={`drag-ghost ${dragHover && dragHover !== "source" ? "over-target" : ""}`} style={{ left: drag.x, top: drag.y }}>{game.tiles[drag.tileID].character}</div>
+      </>}
       {toast && <div className="toast" role="status">{toast}</div>}
 
       {modal === "how" && <Modal title="How to Play" onClose={() => setModal(null)}>
