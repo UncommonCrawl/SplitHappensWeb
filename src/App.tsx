@@ -262,15 +262,34 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
-        <h1>{longDate(selectedDate)}</h1>
-        <nav aria-label="Game actions">
-          <button className="header-button" aria-label="How to Play" onClick={() => setModal("how")}><HelpCircle /><span>How to Play</span></button>
-          <button className="header-button" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><Lightbulb /><span>Hint</span></button>
-          <button className="header-button icon-only" onClick={() => setModal("settings")} aria-label="Settings"><Settings /></button>
+      <aside className="app-sidebar progress-rail">
+        <header className="sidebar-brand">
+          <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
+          <h1>{longDate(selectedDate)}</h1>
+        </header>
+
+        <nav className="sidebar-actions" aria-label="Game actions">
+          <button aria-label="How to Play" onClick={() => setModal("how")}><HelpCircle /><span>How to Play</span></button>
+          <button aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><Lightbulb /><span>Hint</span></button>
+          <button onClick={() => setModal("settings")} aria-label="Settings"><Settings /><span>Settings</span></button>
         </nav>
-      </header>
+
+        <section>
+          <h2>Daily progress</h2>
+          <div className="rail-feature"><CalendarDays /><div><strong>{shortDate(selectedDate)}</strong><small>{isToday ? `Resets in ${resetCountdown(now)}` : "Archive puzzle"}</small></div></div>
+        </section>
+        <section>
+          <h2>Streak</h2>
+          <div className="rail-feature"><Flame /><div><strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong><small>Best: {stats.bestStreak} days</small></div></div>
+        </section>
+        <section className="sidebar-stats">
+          <h2>Daily stats</h2>
+          <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
+          <div className="stat-row"><span>Perfect Splits</span><strong>{stats.perfectSplits}</strong></div>
+          <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
+          <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
+        </section>
+      </aside>
 
       <div className="workspace">
         <main className="game-area" style={gameLayoutStyle}>
@@ -334,24 +353,6 @@ export default function App() {
             {activeLevel.note && <button aria-label="Level note" onClick={() => setModal("note")}><Sparkles /><span>Level note</span></button>}
           </div>
         </main>
-
-        <aside className="progress-rail">
-          <section>
-            <h2>Daily progress</h2>
-            <div className="rail-feature"><CalendarDays /><div><strong>{shortDate(selectedDate)}</strong><small>{isToday ? `Resets in ${resetCountdown(now)}` : "Archive puzzle"}</small></div></div>
-          </section>
-          <section>
-            <h2>Streak</h2>
-            <div className="rail-feature"><Flame /><div><strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong><small>Best: {stats.bestStreak} days</small></div></div>
-          </section>
-          <section>
-            <h2>Daily stats</h2>
-            <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
-            <div className="stat-row"><span>Perfect Splits</span><strong>{stats.perfectSplits}</strong></div>
-            <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
-            <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
-          </section>
-        </aside>
       </div>
 
       {drag?.moved && <>
