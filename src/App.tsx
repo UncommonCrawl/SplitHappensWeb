@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   Archive, CalendarDays, Flame, HelpCircle, Lightbulb, RotateCcw, Settings,
   Share2, Shuffle, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
@@ -246,6 +246,19 @@ export default function App() {
   const isToday = scheduleEntry.date === localDateKey(now);
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
+  const targetColumns = Math.max(...game.targetSlots.map((row) => row.length));
+  const sourceColumns = Math.max(...game.sourceSlots.map((row) => row.length));
+  const verticalTileUnits = game.targetSlots.length + game.sourceSlots.length * 0.85;
+  const gameLayoutStyle = {
+    "--target-rows": game.targetSlots.length,
+    "--target-columns": targetColumns,
+    "--source-rows": game.sourceSlots.length,
+    "--source-columns": sourceColumns,
+    "--target-width-fit": `calc(${100 / targetColumns}cqw - ${(targetColumns - 1) * 6 / targetColumns}px)`,
+    "--source-width-fit": `calc(${100 / sourceColumns}cqw - ${(sourceColumns - 1) * 5 / sourceColumns}px)`,
+    "--target-height-fit": `${57 / verticalTileUnits}dvh`,
+    "--source-height-fit": `${48.45 / verticalTileUnits}dvh`,
+  } as CSSProperties;
 
   return (
     <div className="app-shell">
@@ -260,25 +273,7 @@ export default function App() {
       </header>
 
       <div className="workspace">
-        <aside className="progress-rail">
-          <section>
-            <h2>Daily progress</h2>
-            <div className="rail-feature"><CalendarDays /><div><strong>{shortDate(selectedDate)}</strong><small>{isToday ? `Resets in ${resetCountdown(now)}` : "Archive puzzle"}</small></div></div>
-          </section>
-          <section>
-            <h2>Streak</h2>
-            <div className="rail-feature"><Flame /><div><strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong><small>Best: {stats.bestStreak} days</small></div></div>
-          </section>
-          <section>
-            <h2>Daily stats</h2>
-            <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
-            <div className="stat-row"><span>Perfect Splits</span><strong>{stats.perfectSplits}</strong></div>
-            <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
-            <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
-          </section>
-        </aside>
-
-        <main className="game-area">
+        <main className="game-area" style={gameLayoutStyle}>
           <section className="criteria" aria-label="Puzzle goals">
             <div className={`criterion ${derived.allWordsValid ? "complete" : ""}`}><Seal tone="bronze" achieved={derived.allWordsValid} /><strong>{derived.validRows.size}/{game.targetSlots.length} VALID<br />WORDS</strong></div>
             <div className={`criterion ${derived.silverSatisfied ? "complete" : ""}`}><Seal tone="silver" achieved={derived.silverSatisfied} /><strong>{derived.bonus.label}</strong></div>
@@ -333,12 +328,30 @@ export default function App() {
           </section>
 
           <div className="game-toolbar">
-            <button onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 />Undo</button>
-            <button onClick={() => send({ type: "RECALL" })}><RotateCcw />Recall</button>
-            <button onClick={() => send({ type: "SHUFFLE", allLetters: persisted.settings.shuffleAllLetters, includeGold: persisted.settings.shuffleGoldTiles })}><Shuffle />Shuffle</button>
-            {activeLevel.note && <button onClick={() => setModal("note")}><Sparkles />Level note</button>}
+            <button aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
+            <button aria-label="Recall" onClick={() => send({ type: "RECALL" })}><RotateCcw /><span>Recall</span></button>
+            <button aria-label="Shuffle" onClick={() => send({ type: "SHUFFLE", allLetters: persisted.settings.shuffleAllLetters, includeGold: persisted.settings.shuffleGoldTiles })}><Shuffle /><span>Shuffle</span></button>
+            {activeLevel.note && <button aria-label="Level note" onClick={() => setModal("note")}><Sparkles /><span>Level note</span></button>}
           </div>
         </main>
+
+        <aside className="progress-rail">
+          <section>
+            <h2>Daily progress</h2>
+            <div className="rail-feature"><CalendarDays /><div><strong>{shortDate(selectedDate)}</strong><small>{isToday ? `Resets in ${resetCountdown(now)}` : "Archive puzzle"}</small></div></div>
+          </section>
+          <section>
+            <h2>Streak</h2>
+            <div className="rail-feature"><Flame /><div><strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong><small>Best: {stats.bestStreak} days</small></div></div>
+          </section>
+          <section>
+            <h2>Daily stats</h2>
+            <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
+            <div className="stat-row"><span>Perfect Splits</span><strong>{stats.perfectSplits}</strong></div>
+            <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
+            <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
+          </section>
+        </aside>
       </div>
 
       {drag?.moved && <>
