@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   Archive, CalendarDays, Flame, HelpCircle, Lightbulb, RotateCcw, Settings,
-  Share2, Shuffle, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
+  Share2, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
@@ -248,6 +248,13 @@ export default function App() {
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
   const targetColumns = Math.max(...game.targetSlots.map((row) => row.length));
   const sourceColumns = Math.max(...game.sourceSlots.map((row) => row.length));
+  const canRecall = game.hintedRows.length > 0
+    || game.targetSlots.some((row) => row.some(Boolean))
+    || game.sourceSlots.some((row, rowIndex) => row.some((id, columnIndex) => {
+      if (!id) return true;
+      const tile = game.tiles[id];
+      return tile.sourceWordIndex !== rowIndex || tile.positionInWord !== columnIndex;
+    }));
   const verticalTileUnits = game.targetSlots.length + game.sourceSlots.length * 0.85;
   const gameLayoutStyle = {
     "--target-rows": game.targetSlots.length,
@@ -270,7 +277,6 @@ export default function App() {
 
         <nav className="sidebar-actions" aria-label="Game actions">
           <button aria-label="How to Play" onClick={() => setModal("how")}><HelpCircle /><span>How to Play</span></button>
-          <button aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><Lightbulb /><span>Hint</span></button>
           <button onClick={() => setModal("settings")} aria-label="Settings"><Settings /><span>Settings</span></button>
         </nav>
 
@@ -347,9 +353,9 @@ export default function App() {
           </section>
 
           <div className="game-toolbar">
-            <button aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
-            <button aria-label="Recall" onClick={() => send({ type: "RECALL" })}><RotateCcw /><span>Recall</span></button>
-            <button aria-label="Shuffle" onClick={() => send({ type: "SHUFFLE", allLetters: persisted.settings.shuffleAllLetters, includeGold: persisted.settings.shuffleGoldTiles })}><Shuffle /><span>Shuffle</span></button>
+            <button className="undo-action" aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
+            <button className="hint-action" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><Lightbulb /><span>Hint</span></button>
+            <button className="recall-action" aria-label="Recall" onClick={() => send({ type: "RECALL" })} disabled={!canRecall}><RotateCcw /><span>Recall</span></button>
             {activeLevel.note && <button aria-label="Level note" onClick={() => setModal("note")}><Sparkles /><span>Level note</span></button>}
           </div>
         </main>
@@ -374,8 +380,6 @@ export default function App() {
         <div className="settings-list">
           <label><span>{persisted.settings.soundEnabled ? <Volume2 /> : <VolumeX />} Sound</span><input type="checkbox" checked={persisted.settings.soundEnabled} onChange={(event) => updateSettings({ soundEnabled: event.target.checked })} /></label>
           <label><span>Touch vibration</span><input type="checkbox" checked={persisted.settings.vibrationEnabled} onChange={(event) => updateSettings({ vibrationEnabled: event.target.checked })} /></label>
-          <label><span>Shuffle all letters</span><input type="checkbox" checked={persisted.settings.shuffleAllLetters} onChange={(event) => updateSettings({ shuffleAllLetters: event.target.checked })} /></label>
-          <label><span>Include correct gold tiles</span><input type="checkbox" checked={persisted.settings.shuffleGoldTiles} onChange={(event) => updateSettings({ shuffleGoldTiles: event.target.checked })} /></label>
         </div>
       </Modal>}
 

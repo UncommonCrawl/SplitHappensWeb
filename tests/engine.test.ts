@@ -39,6 +39,19 @@ describe("game engine", () => {
     expect(state).toEqual(locked);
   });
 
+  it("recalls every tile to its exact original source position and clears hints", () => {
+    const reduce = gameReducer(level, words);
+    const initial = createGame(level);
+    let state = reduce(initial, { type: "PLACE", tileID: "0:0", slotID: "1:0" });
+    state = reduce(state, { type: "HINT" });
+    state = reduce(state, { type: "RECALL" });
+    expect(state.sourceSlots).toEqual(initial.sourceSlots);
+    expect(state.targetSlots).toEqual(initial.targetSlots);
+    expect(state.hintedRows).toEqual([]);
+    expect(state.history).toEqual([]);
+    expect(reduce(state, { type: "UNDO" })).toEqual(state);
+  });
+
   it("recognizes all words, bonus, and ordered gold tiles", () => {
     const reduce = gameReducer(level, words);
     let state = createGame(level);

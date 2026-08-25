@@ -104,7 +104,7 @@ button { color: inherit; }
 .gold-word { white-space: nowrap; }
 .criterion em { color: rgb(0 176 80 / 50%); font-style: normal; }
 .criterion em.correct { color: var(--green); }
-.seal { width: clamp(28px, 3vw, 34px); height: clamp(28px, 3vw, 34px); flex: 0 0 auto; display: grid; place-items: center; }
+.seal { width: 68px; height: 68px; flex: 0 0 auto; display: grid; place-items: center; }
 .seal svg { width: 100%; height: 100%; overflow: visible; }
 .seal-fill { fill: currentColor; }
 .seal-outline { fill: none; stroke: #000; stroke-width: 3; }
@@ -152,12 +152,29 @@ button { color: inherit; }
 .letter-tile.drag-origin { background: rgb(248 238 210 / 20%); box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .source-hole { background: rgb(248 238 210 / 20%); border-radius: 10%; box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .source-hole { width: var(--source-size); height: var(--source-size); flex: 0 0 var(--source-size); }
-.game-toolbar { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(6px, 1cqw, 10px); margin: 0; }
-.game-toolbar button { border: 1px solid #ddd; background: #fff; border-radius: 8px; min-height: 42px; padding: 0 15px; display: flex; align-items: center; gap: 7px; font-weight: 650; cursor: pointer; }
-.game-toolbar button:hover:not(:disabled) { background: #fff9e8; border-color: #d6c07b; }
-.game-toolbar button { color: var(--control); }
+.game-toolbar { width: min(340px, 100%); display: flex; align-items: center; justify-content: space-between; gap: 28px; margin: 0; }
+.game-toolbar button {
+  width: 52px;
+  height: 52px;
+  min-height: 52px;
+  flex: 0 0 52px;
+  padding: 0;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--control);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.game-toolbar button:hover:not(:disabled) { background: #fff9e8; }
 .game-toolbar button:disabled { color: var(--silver); opacity: 1; cursor: default; }
-.game-toolbar svg { width: 19px; }
+.game-toolbar button span { display: none; }
+.game-toolbar svg { width: 31px; height: 31px; stroke-width: 2.5; }
+.game-toolbar .hint-action { width: 62px; height: 62px; min-height: 62px; flex-basis: 62px; border-color: var(--control); background: var(--control); color: #fff; }
+.game-toolbar .hint-action:hover:not(:disabled) { border-color: #494949; background: #494949; }
+.game-toolbar .hint-action:disabled { border-color: var(--silver); background: var(--silver); color: #fff; }
+.game-toolbar .hint-action svg { width: 34px; height: 34px; stroke-width: 2.4; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgb(0 0 0 / 28%); display: grid; place-items: center; padding: 22px; backdrop-filter: blur(3px); }
 .modal { width: min(520px, 100%); max-height: min(760px, 90vh); overflow: auto; position: relative; background: white; border-radius: 20px; padding: 42px 44px 38px; box-shadow: 0 20px 80px rgb(0 0 0 / 26%); }
@@ -206,7 +223,7 @@ button { color: inherit; }
   .app-sidebar { order: 2; position: static; width: 100%; min-height: auto; height: auto; overflow: visible; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; padding: 20px max(14px, calc((100% - 760px) / 2)); }
   .sidebar-brand { grid-column: 1 / -1; }
   .wordmark { width: min(280px, 70vw); }
-  .sidebar-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sidebar-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .sidebar-actions button { justify-content: center; }
   .progress-rail section { padding: 16px 0; border-bottom: 0; }
   .progress-rail h2 { margin-bottom: 10px; }
@@ -225,15 +242,16 @@ button { color: inherit; }
   .app-sidebar { grid-template-columns: 1fr; }
   .sidebar-actions button { flex-direction: column; gap: 4px; padding-block: 7px; font-size: 12px; }
   .progress-rail .sidebar-stats { grid-column: auto; border-bottom: 0; }
+  .seal { width: 28px; height: 28px; }
   .criterion strong { font-size: 10px; }
-  .game-toolbar button { width: 44px; min-height: 44px; padding: 0; justify-content: center; }
-  .game-toolbar button span { display: none; }
+  .game-toolbar { width: min(290px, 100%); gap: 20px; }
+  .game-toolbar button { width: 46px; height: 46px; min-height: 46px; flex-basis: 46px; }
+  .game-toolbar .hint-action { width: 56px; height: 56px; min-height: 56px; flex-basis: 56px; }
 }
 
 @media (max-height: 700px) {
   .criteria { height: 92px; }
   .target-row { padding-block: 2px; }
-  .game-toolbar button { min-height: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

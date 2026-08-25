@@ -108,20 +108,15 @@ function returnToSource(state: GameState, id: TileID): GameState {
 }
 
 function recall(state: GameState): GameState {
-  const next = pushHistory(structuredClone(state));
-  let changed = false;
-  for (let row = 0; row < next.targetSlots.length; row += 1) {
-    if (next.hintedRows.includes(row)) continue;
-    for (let column = 0; column < next.targetSlots[row].length; column += 1) {
-      const id = next.targetSlots[row][column];
-      if (!id) continue;
-      next.targetSlots[row][column] = null;
-      const destination = firstEmptySource(next, { kind: "source", row: next.tiles[id].sourceWordIndex, column: next.tiles[id].positionInWord });
-      if (destination) setLocation(next, destination, id);
-      changed = true;
-    }
-  }
-  return changed ? next : state;
+  const sourceSlots = state.sourceSlots.map((row) => Array<TileID | null>(row.length).fill(null));
+  Object.values(state.tiles).forEach((tile) => {
+    sourceSlots[tile.sourceWordIndex][tile.positionInWord] = tile.id;
+  });
+  const targetSlots = state.targetSlots.map((row) => Array<TileID | null>(row.length).fill(null));
+  const changed = state.hintedRows.length > 0
+    || JSON.stringify(state.sourceSlots) !== JSON.stringify(sourceSlots)
+    || JSON.stringify(state.targetSlots) !== JSON.stringify(targetSlots);
+  return changed ? { ...state, sourceSlots, targetSlots, hintedRows: [], history: [] } : state;
 }
 
 function hint(state: GameState, level: LevelDefinition): GameState {
