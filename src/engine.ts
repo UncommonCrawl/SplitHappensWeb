@@ -3,6 +3,7 @@ import type { BoardSnapshot, GameState, LevelDefinition, LevelProgress, SlotID, 
 
 export type GameAction =
   | { type: "PLACE"; tileID: TileID; slotID: SlotID }
+  | { type: "MOVE_SOURCE"; tileID: TileID; row: number; column: number }
   | { type: "RETURN"; tileID: TileID }
   | { type: "RECALL" }
   | { type: "UNDO" }
@@ -92,6 +93,18 @@ function place(state: GameState, id: TileID, targetID: SlotID): GameState {
   const occupant = next.targetSlots[row][column];
   setLocation(next, origin, occupant);
   next.targetSlots[row][column] = id;
+  return next;
+}
+
+function moveToSource(state: GameState, id: TileID, row: number, column: number): GameState {
+  if (!state.sourceSlots[row]?.hasOwnProperty(column)) return state;
+  const origin = locate(state, id);
+  if (!origin || isLocked(state, origin)) return state;
+  if (origin.kind === "source" && origin.row === row && origin.column === column) return state;
+  const next = pushHistory(structuredClone(state));
+  const occupant = next.sourceSlots[row][column];
+  setLocation(next, origin, occupant);
+  next.sourceSlots[row][column] = id;
   return next;
 }
 
@@ -199,6 +212,7 @@ export function gameReducer(level: LevelDefinition, words: Set<string>) {
     let next = state;
     switch (action.type) {
       case "PLACE": next = place(state, action.tileID, action.slotID); break;
+      case "MOVE_SOURCE": next = moveToSource(state, action.tileID, action.row, action.column); break;
       case "RETURN": next = returnToSource(state, action.tileID); break;
       case "RECALL": next = recall(state); break;
       case "HINT": next = hint(state, level); break;

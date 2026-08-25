@@ -29,6 +29,19 @@ describe("game engine", () => {
     expect(state.targetSlots[0][0]).toBeNull();
   });
 
+  it("swaps occupied source slots and moves into empty source slots", () => {
+    const reduce = gameReducer(level, words);
+    let state = createGame(level);
+
+    state = reduce(state, { type: "MOVE_SOURCE", tileID: "0:0", row: 0, column: 1 });
+    expect(state.sourceSlots[0]).toEqual(["0:1", "0:0", "0:2"]);
+
+    state = reduce(state, { type: "PLACE", tileID: "0:2", slotID: "0:0" });
+    expect(state.sourceSlots[0][2]).toBeNull();
+    state = reduce(state, { type: "MOVE_SOURCE", tileID: "0:0", row: 0, column: 2 });
+    expect(state.sourceSlots[0]).toEqual(["0:1", null, "0:0"]);
+  });
+
   it("fills and locks official answer rows with sequential hints", () => {
     const reduce = gameReducer(level, words);
     let state = reduce(createGame(level), { type: "HINT" });

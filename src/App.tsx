@@ -208,10 +208,20 @@ export default function App() {
   const handlePointerUp = (event: ReactPointerEvent) => {
     if (!drag) return;
     if (drag.moved) {
-      const target = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-slot-id]");
-      const source = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>("[data-source-board]");
+      const hit = document.elementFromPoint(event.clientX, event.clientY);
+      const target = hit?.closest<HTMLElement>("[data-slot-id]");
+      const sourceSlot = hit?.closest<HTMLElement>("[data-source-row][data-source-column]");
+      const source = hit?.closest<HTMLElement>("[data-source-board]");
       if (target?.dataset.slotId) {
         send({ type: "PLACE", tileID: drag.tileID, slotID: target.dataset.slotId as `${number}:${number}` });
+        playPlacementSound();
+      } else if (sourceSlot?.dataset.sourceRow && sourceSlot.dataset.sourceColumn) {
+        send({
+          type: "MOVE_SOURCE",
+          tileID: drag.tileID,
+          row: Number(sourceSlot.dataset.sourceRow),
+          column: Number(sourceSlot.dataset.sourceColumn),
+        });
         playPlacementSound();
       } else if (source) send({ type: "RETURN", tileID: drag.tileID });
       suppressClick.current = true;
@@ -341,13 +351,20 @@ export default function App() {
                   <button
                     className={`letter-tile tile ${selectedTile === id ? "selected" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""}`}
                     key={id}
+                    data-source-row={rowIndex}
+                    data-source-column={columnIndex}
                     aria-label={`Letter ${game.tiles[id].character}`}
                     onClick={() => handleTileClick(id)}
                     onPointerDown={(event) => handlePointerDown(event, id)}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                   ><span className="tile-letter">{game.tiles[id].character}</span></button>
-                ) : <span className="source-hole tile" key={`hole-${rowIndex}-${columnIndex}`} />)}
+                ) : <span
+                  className="source-hole tile"
+                  key={`hole-${rowIndex}-${columnIndex}`}
+                  data-source-row={rowIndex}
+                  data-source-column={columnIndex}
+                />)}
               </div>
             ))}
           </section>
