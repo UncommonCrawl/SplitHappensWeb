@@ -5,6 +5,7 @@ export type GameAction =
   | { type: "PLACE"; tileID: TileID; slotID: SlotID }
   | { type: "MOVE_SOURCE"; tileID: TileID; row: number; column: number }
   | { type: "RETURN"; tileID: TileID }
+  | { type: "RETURN_FIRST_FREE"; tileID: TileID }
   | { type: "RECALL" }
   | { type: "UNDO" }
   | { type: "HINT" }
@@ -108,13 +109,13 @@ function moveToSource(state: GameState, id: TileID, row: number, column: number)
   return next;
 }
 
-function returnToSource(state: GameState, id: TileID): GameState {
+function returnToSource(state: GameState, id: TileID, preferOriginal = true): GameState {
   const origin = locate(state, id);
   if (!origin || origin.kind === "source" || isLocked(state, origin)) return state;
   const next = pushHistory(structuredClone(state));
   setLocation(next, origin, null);
   const original = { kind: "source" as const, row: next.tiles[id].sourceWordIndex, column: next.tiles[id].positionInWord };
-  const destination = firstEmptySource(next, original);
+  const destination = firstEmptySource(next, preferOriginal ? original : undefined);
   if (!destination) return state;
   setLocation(next, destination, id);
   return next;
@@ -214,6 +215,7 @@ export function gameReducer(level: LevelDefinition, words: Set<string>) {
       case "PLACE": next = place(state, action.tileID, action.slotID); break;
       case "MOVE_SOURCE": next = moveToSource(state, action.tileID, action.row, action.column); break;
       case "RETURN": next = returnToSource(state, action.tileID); break;
+      case "RETURN_FIRST_FREE": next = returnToSource(state, action.tileID, false); break;
       case "RECALL": next = recall(state); break;
       case "HINT": next = hint(state, level); break;
       case "SHUFFLE": next = shuffle(state, level, words, action.allLetters, action.includeGold); break;

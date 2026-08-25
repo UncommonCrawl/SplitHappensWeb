@@ -4,7 +4,6 @@ export const STORAGE_KEY = "split-happens.web.v2";
 
 export const defaultSettings: WebSettings = {
   soundEnabled: true,
-  vibrationEnabled: true,
   shuffleAllLetters: false,
   shuffleGoldTiles: false,
 };

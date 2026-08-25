@@ -77,7 +77,6 @@ export interface DailyResult {
 
 export interface WebSettings {
   soundEnabled: boolean;
-  vibrationEnabled: boolean;
   shuffleAllLetters: boolean;
   shuffleGoldTiles: boolean;
 }

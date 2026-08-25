@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  Archive, CalendarDays, Flame, HelpCircle, Lightbulb, RotateCcw, Settings,
+  Archive, ArrowLeft, CalendarDays, Flame, HelpCircle, Lightbulb, RotateCcw,
   Share2, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
@@ -9,7 +9,21 @@ import { loadPersistedState, progressFromGame, savePersistedState } from "./pers
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 
-type ModalName = "how" | "settings" | "archive" | "victory" | "note" | null;
+type ModalName = "how" | "archive" | "victory" | "note" | null;
+
+type DragState = {
+  tileID: TileID;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  fontSize: string;
+  fromTarget: boolean;
+  grabOffsetX: number;
+  grabOffsetY: number;
+  tileClassName: string;
+  moved: boolean;
+};
 
 function Seal({ tone, achieved = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean }) {
   return (
@@ -79,7 +93,7 @@ export default function App() {
   const [modal, setModal] = useState<ModalName>(null);
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
-  const [drag, setDrag] = useState<{ tileID: TileID; x: number; y: number; moved: boolean } | null>(null);
+  const [drag, setDrag] = useState<DragState | null>(null);
   const [dragHover, setDragHover] = useState<SlotID | "source" | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
@@ -106,6 +120,11 @@ export default function App() {
   const activeLevel = useMemo(() => content?.levels.find((level) => level.id === activeLevelID) ?? null, [content, activeLevelID]);
   const scheduleEntry = useMemo(() => content?.schedule.find((entry) => entry.levelID === activeLevelID) ?? null, [content, activeLevelID]);
   const releasedEntries = useMemo(() => content?.schedule.filter((entry) => entry.date <= localDateKey(now)).slice().reverse() ?? [], [content, now]);
+  const yesterdayEntry = useMemo(() => {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return content?.schedule.find((entry) => entry.date === localDateKey(yesterday)) ?? null;
+  }, [content, now]);
 
   useEffect(() => {
     if (!activeLevel || !words) return;
@@ -172,7 +191,6 @@ export default function App() {
   const stats = useMemo(() => calculateStats(persisted.dailyResults, now), [persisted.dailyResults, now]);
   const playPlacementSound = () => {
     if (persisted.settings.soundEnabled) new Audio(staticAssetPath("/sounds/tile-place.wav")).play().catch(() => undefined);
-    if (persisted.settings.vibrationEnabled && navigator.vibrate) navigator.vibrate(12);
   };
 
   const placeSelected = (target: `${number}:${number}`) => {
@@ -189,15 +207,41 @@ export default function App() {
 
   const handlePointerDown = (event: ReactPointerEvent, id: TileID) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    const tile = event.currentTarget as HTMLElement;
+    const bounds = tile.getBoundingClientRect();
+    const targetTile = document.querySelector<HTMLElement>(".target-slot");
+    const targetBounds = targetTile?.getBoundingClientRect() ?? bounds;
+    const grabRatioX = (event.clientX - bounds.left) / bounds.width;
+    const grabRatioY = (event.clientY - bounds.top) / bounds.height;
+    const tileClassName = tile.classList.contains("letter-tile")
+      ? [...tile.classList].filter((className) => className !== "letter-tile").concat("target-slot", "occupied").join(" ")
+      : tile.className;
     dragStart.current = { x: event.clientX, y: event.clientY };
-    setDrag({ tileID: id, x: event.clientX, y: event.clientY, moved: false });
+    setDrag({
+      tileID: id,
+      left: event.clientX - targetBounds.width * grabRatioX,
+      top: event.clientY - targetBounds.height * grabRatioY,
+      width: targetBounds.width,
+      height: targetBounds.height,
+      fontSize: getComputedStyle(targetTile ?? tile).fontSize,
+      fromTarget: tile.classList.contains("target-slot"),
+      grabOffsetX: targetBounds.width * grabRatioX,
+      grabOffsetY: targetBounds.height * grabRatioY,
+      tileClassName,
+      moved: false,
+    });
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const handlePointerMove = (event: ReactPointerEvent) => {
     if (!drag || !dragStart.current) return;
     const moved = drag.moved || Math.hypot(event.clientX - dragStart.current.x, event.clientY - dragStart.current.y) > 6;
-    setDrag({ ...drag, x: event.clientX, y: event.clientY, moved });
+    setDrag({
+      ...drag,
+      left: event.clientX - drag.grabOffsetX,
+      top: event.clientY - drag.grabOffsetY,
+      moved,
+    });
     if (moved) {
       const hit = document.elementFromPoint(event.clientX, event.clientY);
       const target = hit?.closest<HTMLElement>("[data-slot-id]");
@@ -214,6 +258,9 @@ export default function App() {
       const source = hit?.closest<HTMLElement>("[data-source-board]");
       if (target?.dataset.slotId) {
         send({ type: "PLACE", tileID: drag.tileID, slotID: target.dataset.slotId as `${number}:${number}` });
+        playPlacementSound();
+      } else if (source && drag.fromTarget) {
+        send({ type: "RETURN_FIRST_FREE", tileID: drag.tileID });
         playPlacementSound();
       } else if (sourceSlot?.dataset.sourceRow && sourceSlot.dataset.sourceColumn) {
         send({
@@ -256,8 +303,6 @@ export default function App() {
   const isToday = scheduleEntry.date === localDateKey(now);
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
-  const targetColumns = Math.max(...game.targetSlots.map((row) => row.length));
-  const sourceColumns = Math.max(...game.sourceSlots.map((row) => row.length));
   const canRecall = game.hintedRows.length > 0
     || game.targetSlots.some((row) => row.some(Boolean))
     || game.sourceSlots.some((row, rowIndex) => row.some((id, columnIndex) => {
@@ -265,18 +310,12 @@ export default function App() {
       const tile = game.tiles[id];
       return tile.sourceWordIndex !== rowIndex || tile.positionInWord !== columnIndex;
     }));
-  const verticalTileUnits = game.targetSlots.length + game.sourceSlots.length * 0.85;
   const gameLayoutStyle = {
-    "--target-rows": game.targetSlots.length,
-    "--target-columns": targetColumns,
-    "--source-rows": game.sourceSlots.length,
-    "--source-columns": sourceColumns,
-    "--target-width-fit": `calc(${100 / targetColumns}cqw - ${(targetColumns - 1) * 6 / targetColumns}px)`,
-    "--source-width-fit": `calc(${100 / sourceColumns}cqw - ${(sourceColumns - 1) * 5 / sourceColumns}px)`,
-    "--target-height-fit": `${57 / verticalTileUnits}dvh`,
-    "--source-height-fit": `${48.45 / verticalTileUnits}dvh`,
+    "--target-columns": Math.max(...game.targetSlots.map((row) => row.length)),
+    "--source-columns": Math.max(...game.sourceSlots.map((row) => row.length)),
+    "--target-height-limit": `${36 / game.targetSlots.length}cqh`,
+    "--source-height-limit": `${15 / game.sourceSlots.length}cqh`,
   } as CSSProperties;
-
   return (
     <div className="app-shell">
       <aside className="app-sidebar progress-rail">
@@ -287,7 +326,14 @@ export default function App() {
 
         <nav className="sidebar-actions" aria-label="Game actions">
           <button aria-label="How to Play" onClick={() => setModal("how")}><HelpCircle /><span>How to Play</span></button>
-          <button onClick={() => setModal("settings")} aria-label="Settings"><Settings /><span>Settings</span></button>
+          <button
+            onClick={() => updateSettings({ soundEnabled: !persisted.settings.soundEnabled })}
+            aria-label={persisted.settings.soundEnabled ? "Turn sound off" : "Turn sound on"}
+            aria-pressed={persisted.settings.soundEnabled}
+          >
+            {persisted.settings.soundEnabled ? <Volume2 /> : <VolumeX />}
+            <span>Sound</span>
+          </button>
         </nav>
 
         <section>
@@ -303,6 +349,7 @@ export default function App() {
           <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
           <div className="stat-row"><span>Perfect Splits</span><strong>{stats.perfectSplits}</strong></div>
           <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
+          <button className="archive-button" disabled={!yesterdayEntry} onClick={() => yesterdayEntry && setActiveLevelID(yesterdayEntry.levelID)}><ArrowLeft />Yesterday&apos;s puzzle</button>
           <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
         </section>
       </aside>
@@ -378,10 +425,11 @@ export default function App() {
         </main>
       </div>
 
-      {drag?.moved && <>
-        <div className={`drag-underlay ${dragHover && dragHover !== "source" ? "over-target" : ""}`} style={{ left: drag.x, top: drag.y }}>{game.tiles[drag.tileID].character}</div>
-        <div className={`drag-ghost ${dragHover && dragHover !== "source" ? "over-target" : ""}`} style={{ left: drag.x, top: drag.y }}>{game.tiles[drag.tileID].character}</div>
-      </>}
+      {drag?.moved && <div
+        aria-hidden="true"
+        className={`drag-tile ${drag.tileClassName}`}
+        style={{ left: drag.left, top: drag.top, width: drag.width, height: drag.height, fontSize: drag.fontSize }}
+      ><span className="tile-letter">{game.tiles[drag.tileID].character}</span></div>}
       {toast && <div className="toast" role="status">{toast}</div>}
 
       {modal === "how" && <Modal title="How to Play" onClose={() => setModal(null)}>
@@ -390,13 +438,6 @@ export default function App() {
           <p>Complete the bronze, silver, and gold goals in order. Gold letters must spell the featured word from top to bottom.</p>
           <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
           <p>Hints fill one official answer row at a time. A Perfect Split is Gold earned without a hint.</p>
-        </div>
-      </Modal>}
-
-      {modal === "settings" && <Modal title="Settings" onClose={() => setModal(null)}>
-        <div className="settings-list">
-          <label><span>{persisted.settings.soundEnabled ? <Volume2 /> : <VolumeX />} Sound</span><input type="checkbox" checked={persisted.settings.soundEnabled} onChange={(event) => updateSettings({ soundEnabled: event.target.checked })} /></label>
-          <label><span>Touch vibration</span><input type="checkbox" checked={persisted.settings.vibrationEnabled} onChange={(event) => updateSettings({ vibrationEnabled: event.target.checked })} /></label>
         </div>
       </Modal>}
 
