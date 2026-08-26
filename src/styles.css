@@ -106,22 +106,39 @@ button { color: inherit; }
   --source-height-limit: 6cqh;
   --target-size: min(56px, var(--target-height-limit), calc((100cqw - (var(--target-columns) - 1) * 6px) / var(--target-columns)));
   --source-size: min(48px, var(--source-height-limit), calc((100cqw - (var(--source-columns) - 1) * 5px) / var(--source-columns)));
-  --seal-size: min(34px, 6cqh, 12cqw);
+  --seal-size: min(32px, 5cqh, 10cqw);
   --toolbar-size: min(46px, 7cqh, 16cqw);
   --toolbar-featured-size: min(52px, 8cqh, 18cqw);
   --toolbar-gap: min(24px, 4cqw);
   --criteria-height: min(104px, 14cqh);
 }
-.criteria { width: 100%; height: max-content; min-height: min(var(--criteria-height), 12dvh); display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(2px, 2.4cqw, 24px); align-items: start; }
-.criterion { display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(4px, .65dvh, 9px); min-width: 0; }
-.criterion strong { max-width: 200px; font-size: clamp(10px, 1.7dvh, 16px); line-height: 1.3; text-transform: uppercase; }
+.criteria { width: min(620px, 100%); height: max-content; min-height: min(var(--criteria-height), 12dvh); display: flex; flex-direction: column; align-items: center; gap: clamp(5px, .8dvh, 10px); }
+.achievement-track { width: min(500px, 100%); display: flex; align-items: center; justify-content: center; }
+.tier-step { min-width: 0; flex: 0 1 132px; display: flex; flex-direction: column; align-items: center; gap: clamp(2px, .35dvh, 5px); text-align: center; color: var(--control); }
+.tier-step strong { font-size: clamp(9px, 1.35dvh, 13px); line-height: 1.1; letter-spacing: .055em; text-transform: uppercase; white-space: nowrap; }
+.tier-bronze { --tier-color: var(--bronze); }
+.tier-silver { --tier-color: var(--silver); }
+.tier-gold { --tier-color: var(--gold); }
+.tier-seal { position: relative; display: grid; place-items: center; }
+.tier-step .seal { color: var(--placeholder); opacity: .82; }
+.tier-step.complete .seal { color: var(--tier-color); opacity: 1; }
+.tier-step.active { color: #000; }
+.tier-step.active .seal { color: var(--tier-color); opacity: 1; filter: drop-shadow(0 0 0.5px #000); }
+.tier-step.active.complete .seal { color: var(--tier-color); filter: drop-shadow(0 0 2px rgb(0 0 0 / 20%)); }
+.tier-step.future { color: rgb(0 0 0 / 38%); }
+.tier-step.future .seal { color: var(--placeholder); opacity: .82; filter: none; }
+.tier-lock { position: absolute; width: 42%; height: 42%; color: var(--control); stroke-width: 2.8; }
+.tier-connector { height: 3px; min-width: 18px; max-width: 72px; flex: 1 1 72px; margin: 0 -20px clamp(14px, 2.2dvh, 21px); border-radius: 999px; background: var(--placeholder); }
+.tier-connector.complete { background: var(--green); }
+.tier-objective { min-height: 2.6em; max-width: 560px; margin-top: clamp(8px, 1.2dvh, 14px); display: flex; flex-direction: column; justify-content: flex-start; gap: 1px; color: var(--control); text-align: center; font-size: clamp(11px, 1.65dvh, 15px); font-weight: 750; line-height: 1.25; text-transform: uppercase; }
+.tier-objective > span + span { font-size: .92em; font-weight: 650; color: var(--control); }
 .gold-word { white-space: nowrap; }
-.criterion em { color: rgb(0 176 80 / 50%); font-style: normal; }
-.criterion em.correct { color: var(--green); }
+.tier-objective em { color: rgb(0 176 80 / 50%); font-style: normal; }
+.tier-objective em.correct { color: var(--green); }
 .seal { width: var(--seal-size); height: var(--seal-size); flex: 0 0 auto; display: grid; place-items: center; }
 .seal svg { width: 100%; height: 100%; overflow: visible; }
 .seal-fill { fill: currentColor; }
-.seal-outline { fill: none; stroke: #000; stroke-width: 3; }
+.seal-outline { fill: none; stroke: #000; stroke-width: 5; }
 .seal-check { fill: none; stroke: #000; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
 .seal.bronze { color: var(--bronze); }
 .seal.silver { color: var(--silver); }
@@ -299,7 +316,8 @@ button { color: inherit; }
   .app-sidebar { grid-template-columns: 1fr; }
   .sidebar-actions button { flex-direction: column; gap: 4px; padding-block: 7px; font-size: 12px; }
   .progress-rail .sidebar-stats { grid-column: auto; border-bottom: 0; }
-  .criterion strong { font-size: 10px; }
+  .tier-step strong { font-size: 9px; letter-spacing: .025em; }
+  .tier-connector { margin-inline: -15px; }
   .game-toolbar { width: min(290px, 100%); }
 }
 

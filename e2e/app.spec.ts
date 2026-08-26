@@ -4,11 +4,62 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("img", { name: "Split Happens" })).toBeVisible();
   await expect(page.getByRole("main")).toBeVisible({ timeout: 15_000 });
+  const steps = page.locator(".tier-step");
+  await expect(steps).toHaveCount(3);
+  await expect(steps.nth(0)).toContainText("Normal");
+  await expect(steps.nth(0)).toHaveAttribute("aria-current", "step");
+  await expect(steps.nth(0)).toHaveClass(/tier-bronze/);
+  await expect(steps.nth(1)).toHaveClass(/future/);
+  await expect(steps.nth(1)).toContainText("Hard");
+  await expect(steps.nth(2)).toHaveClass(/future/);
+  await expect(steps.nth(2)).toContainText("Perfect Split");
+  await expect(page.locator(".tier-lock")).toHaveCount(2);
+  await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS.");
   await page.getByRole("button", { name: /How to Play/i }).click();
-  await expect(page.getByRole("dialog")).toContainText("Rearrange every letter");
+  const howToPlay = page.getByRole("dialog");
+  await expect(howToPlay).toContainText("Rearrange every letter");
+  await expect(howToPlay).toContainText("Normal, Hard, and Perfect Split");
+  await expect(howToPlay).toContainText("Holy Split");
+  await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
   await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: /View Archive/i }).click();
   await expect(page.getByRole("dialog")).toContainText("Puzzle Archive");
+});
+
+test("shows completed progression and distinguishes Perfect Split from Holy Split", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const rowCount = await page.locator(".target-row").count();
+  const hint = page.getByRole("button", { name: "Hint" });
+  for (let row = 0; row < rowCount; row += 1) await hint.click();
+
+  await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
+  await expect(page.locator(".tier-step.complete")).toHaveCount(3);
+  await expect(page.locator(".tier-lock")).toHaveCount(0);
+  const perfectStep = page.locator(".tier-step").filter({ hasText: "Perfect Split" });
+  await expect(perfectStep).toHaveClass(/active/);
+  await expect(perfectStep).toHaveAttribute("aria-current", "step");
+  await expect(page.locator(".tier-objective")).toContainText(/Highlighted tiles spell .* in order/i);
+
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.evaluate(() => {
+    const storageKey = "split-happens.web.v2";
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) throw new Error("Expected saved game progress");
+    const saved = JSON.parse(raw);
+    const completed = Object.values(saved.levels).find((level: any) => level.firstGoldAt);
+    if (!completed) throw new Error("Expected completed level progress");
+    completed.hintedRows = [];
+    completed.firstGoldAt = null;
+    completed.perfectSplit = false;
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+  });
+  await page.reload();
+
+  await expect(page.getByRole("dialog")).toContainText("Holy Split!");
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator(".stat-row").filter({ hasText: "Holy Splits" })).toBeVisible();
 });
 
 test("supports keyboard-style select then place", async ({ page }) => {

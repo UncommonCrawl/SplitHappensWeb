@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  Archive, ArrowLeft, CalendarDays, Flame, HelpCircle, Lightbulb, RotateCcw,
+  Archive, ArrowLeft, CalendarDays, Flame, HelpCircle, Lightbulb, Lock, RotateCcw,
   Share2, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
@@ -303,6 +303,17 @@ export default function App() {
   const isToday = scheduleEntry.date === localDateKey(now);
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
+  const achievementTiers = [
+    { name: "Normal", tone: "bronze" as const, complete: derived.allWordsValid },
+    { name: "Hard", tone: "silver" as const, complete: derived.silverSatisfied },
+    { name: "Perfect Split", tone: "gold" as const, complete: derived.victorySatisfied },
+  ];
+  const activeTierIndex = !derived.allWordsValid ? 0 : !derived.silverSatisfied ? 1 : 2;
+  const activeObjective = activeTierIndex === 0
+    ? <span>REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS.</span>
+    : activeTierIndex === 1
+      ? <><span>Complete the secondary challenge</span><span>{derived.bonus.label}</span></>
+      : <><span>Highlighted tiles spell <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> in order.</span></>;
   const canRecall = game.hintedRows.length > 0
     || game.targetSlots.some((row) => row.some(Boolean))
     || game.sourceSlots.some((row, rowIndex) => row.some((id, columnIndex) => {
@@ -347,7 +358,7 @@ export default function App() {
         <section className="sidebar-stats">
           <h2>Daily stats</h2>
           <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
-          <div className="stat-row"><span>Perfect Splits</span><strong>{stats.perfectSplits}</strong></div>
+          <div className="stat-row"><span>Holy Splits</span><strong>{stats.perfectSplits}</strong></div>
           <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
           <button className="archive-button" disabled={!yesterdayEntry} onClick={() => yesterdayEntry && setActiveLevelID(yesterdayEntry.levelID)}><ArrowLeft />Yesterday&apos;s puzzle</button>
           <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
@@ -357,9 +368,24 @@ export default function App() {
       <div className="workspace">
         <main className="game-area" style={gameLayoutStyle}>
           <section className="criteria" aria-label="Puzzle goals">
-            <div className={`criterion ${derived.allWordsValid ? "complete" : ""}`}><Seal tone="bronze" achieved={derived.allWordsValid} /><strong>{derived.validRows.size}/{game.targetSlots.length} VALID<br />WORDS</strong></div>
-            <div className={`criterion ${derived.silverSatisfied ? "complete" : ""}`}><Seal tone="silver" achieved={derived.silverSatisfied} /><strong>{derived.bonus.label}</strong></div>
-            <div className={`criterion ${derived.victorySatisfied ? "complete" : ""}`}><Seal tone="gold" achieved={derived.victorySatisfied} /><strong>GOLD TILES<br />SPELL <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> IN ORDER</strong></div>
+            <div className="achievement-track" role="list" aria-label="Normal, Hard, Perfect Split progression">
+              {achievementTiers.map((tier, index) => <Fragment key={tier.name}>
+                {index > 0 && <span className={`tier-connector ${achievementTiers[index - 1].complete ? "complete" : ""}`} aria-hidden="true" />}
+                <div
+                  className={`tier-step tier-${tier.tone} ${tier.complete ? "complete" : ""} ${index === activeTierIndex ? "active" : ""} ${index > activeTierIndex ? "future" : ""}`}
+                  role="listitem"
+                  aria-current={index === activeTierIndex ? "step" : undefined}
+                  aria-label={`${tier.name}: ${tier.complete ? "completed" : index === activeTierIndex ? "active" : "not yet available"}`}
+                >
+                  <span className="tier-seal">
+                    <Seal tone={tier.tone} achieved={tier.complete} />
+                    {index > activeTierIndex && <Lock className="tier-lock" aria-hidden="true" />}
+                  </span>
+                  <strong>{tier.name}</strong>
+                </div>
+              </Fragment>)}
+            </div>
+            <div className="tier-objective" aria-live="polite" aria-label={`${achievementTiers[activeTierIndex].name} objective`}>{activeObjective}</div>
           </section>
 
           <section className="target-board" aria-label="Target words">
@@ -435,9 +461,9 @@ export default function App() {
       {modal === "how" && <Modal title="How to Play" onClose={() => setModal(null)}>
         <div className="instructions">
           <p>Rearrange every letter to form a valid English word in each row.</p>
-          <p>Complete the bronze, silver, and gold goals in order. Gold letters must spell the featured word from top to bottom.</p>
+          <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
           <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
-          <p>Hints fill one official answer row at a time. A Perfect Split is Gold earned without a hint.</p>
+          <p>Hints fill one official answer row at a time. A Holy Split is a Perfect Split earned without a hint.</p>
         </div>
       </Modal>}
 
@@ -448,7 +474,7 @@ export default function App() {
             const saved = persisted.levels[entry.levelID];
             if (!level) return null;
             return <button key={entry.levelID} className={entry.levelID === activeLevel.id ? "active" : ""} onClick={() => { setActiveLevelID(entry.levelID); setModal(null); }}>
-              <span>{shortDate(parseLocalDate(entry.date))}</span><strong>{level.goldWord}</strong><small>{saved?.perfectSplit ? "Perfect Split" : saved?.firstSplitAt ? "Split" : "Not played"}</small>
+              <span>{shortDate(parseLocalDate(entry.date))}</span><strong>{level.goldWord}</strong><small>{saved?.perfectSplit ? "Holy Split" : saved?.firstGoldAt ? "Perfect Split" : saved?.firstSplitAt ? "Split" : "Not played"}</small>
             </button>;
           })}
         </div>
@@ -456,7 +482,7 @@ export default function App() {
 
       {modal === "note" && <Modal title={activeLevel.goldWord} onClose={() => setModal(null)}><p className="level-note">{activeLevel.note}</p></Modal>}
 
-      {modal === "victory" && <Modal title={game.hintedRows.length === 0 ? "Perfect Split!" : "Gold Split!"} onClose={() => setModal(null)}>
+      {modal === "victory" && <Modal title={game.hintedRows.length === 0 ? "Holy Split!" : "Perfect Split!"} onClose={() => setModal(null)}>
         <div className="victory-content"><span className="victory-seal"><Trophy /></span><p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p><button className="primary-button" onClick={shareResult}><Share2 />Share result</button></div>
       </Modal>}
     </div>
