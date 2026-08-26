@@ -14,7 +14,7 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(steps.nth(2)).toHaveClass(/future/);
   await expect(steps.nth(2)).toContainText("Perfect Split");
   await expect(page.locator(".tier-lock")).toHaveCount(2);
-  await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS.");
+  await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS");
   await page.getByRole("button", { name: /How to Play/i }).click();
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");

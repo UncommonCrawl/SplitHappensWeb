@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   Archive, ArrowLeft, CalendarDays, Flame, HelpCircle, Lightbulb, Lock, RotateCcw,
-  Share2, Sparkles, Trophy, Undo2, Volume2, VolumeX, X,
+  Share2, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
@@ -9,7 +9,7 @@ import { loadPersistedState, progressFromGame, savePersistedState } from "./pers
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 
-type ModalName = "how" | "archive" | "victory" | "note" | null;
+type ModalName = "how" | "archive" | "victory" | null;
 
 type DragState = {
   tileID: TileID;
@@ -310,7 +310,7 @@ export default function App() {
   ];
   const activeTierIndex = !derived.allWordsValid ? 0 : !derived.silverSatisfied ? 1 : 2;
   const activeObjective = activeTierIndex === 0
-    ? <span>REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS.</span>
+    ? <span>REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS</span>
     : activeTierIndex === 1
       ? <><span>Complete the secondary challenge</span><span>{derived.bonus.label}</span></>
       : <><span>Highlighted tiles spell <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> in order.</span></>;
@@ -446,7 +446,6 @@ export default function App() {
             <button className="undo-action" aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
             <button className="hint-action" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><Lightbulb /><span>Hint</span></button>
             <button className="recall-action" aria-label="Recall" onClick={() => send({ type: "RECALL" })} disabled={!canRecall}><RotateCcw /><span>Recall</span></button>
-            {activeLevel.note && <button aria-label="Level note" onClick={() => setModal("note")}><Sparkles /><span>Level note</span></button>}
           </div>
         </main>
       </div>
@@ -479,8 +478,6 @@ export default function App() {
           })}
         </div>
       </Modal>}
-
-      {modal === "note" && <Modal title={activeLevel.goldWord} onClose={() => setModal(null)}><p className="level-note">{activeLevel.note}</p></Modal>}
 
       {modal === "victory" && <Modal title={game.hintedRows.length === 0 ? "Holy Split!" : "Perfect Split!"} onClose={() => setModal(null)}>
         <div className="victory-content"><span className="victory-seal"><Trophy /></span><p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p><button className="primary-button" onClick={shareResult}><Share2 />Share result</button></div>
