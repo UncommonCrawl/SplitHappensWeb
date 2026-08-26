@@ -90,6 +90,7 @@ export default function App() {
   const [activeLevelID, setActiveLevelID] = useState<string | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
   const [selectedTile, setSelectedTile] = useState<TileID | null>(null);
+  const [selectedTargetSlot, setSelectedTargetSlot] = useState<SlotID | null>(null);
   const [modal, setModal] = useState<ModalName>(null);
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
@@ -130,6 +131,7 @@ export default function App() {
     if (!activeLevel || !words) return;
     setGame(createGame(activeLevel, persisted.levels[activeLevel.id]));
     setSelectedTile(null);
+    setSelectedTargetSlot(null);
     previousGold.current = Boolean(persisted.levels[activeLevel.id]?.firstGoldAt);
   // Persisted state is intentionally read only when a level is opened.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -198,11 +200,32 @@ export default function App() {
     send({ type: "PLACE", tileID: selectedTile, slotID: target });
     playPlacementSound();
     setSelectedTile(null);
+    setSelectedTargetSlot(null);
   };
 
   const handleTileClick = (id: TileID) => {
     if (suppressClick.current) { suppressClick.current = false; return; }
+    if (selectedTargetSlot) {
+      send({ type: "PLACE", tileID: id, slotID: selectedTargetSlot });
+      playPlacementSound();
+      setSelectedTargetSlot(null);
+      return;
+    }
     setSelectedTile((current) => current === id ? null : id);
+  };
+
+  const handleEmptyTargetClick = (target: SlotID) => {
+    if (selectedTile) {
+      placeSelected(target);
+      return;
+    }
+    // A second empty target is a cancellation, not a new destination.
+    setSelectedTargetSlot((current) => current ? null : target);
+  };
+
+  const clearSelection = () => {
+    setSelectedTile(null);
+    setSelectedTargetSlot(null);
   };
 
   const handlePointerDown = (event: ReactPointerEvent, id: TileID) => {
@@ -374,7 +397,7 @@ export default function App() {
           style={gameLayoutStyle}
           onClick={(event) => {
             const target = event.target;
-            if (target instanceof Element && !target.closest(".tile, [data-slot-id]")) setSelectedTile(null);
+            if (target instanceof Element && !target.closest("button.tile")) clearSelection();
           }}
         >
           <section className="criteria" aria-label="Puzzle goals">
@@ -410,12 +433,17 @@ export default function App() {
                   const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
                   return (
                     <button
-                      className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${id && selectedTile === id ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
+                      className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${(id && selectedTile === id) || (!id && selectedTargetSlot === target) ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
                       key={target}
                       data-slot-id={target}
                       disabled={locked}
                       aria-label={`Row ${rowIndex + 1}, position ${columnIndex + 1}${id ? `, letter ${game.tiles[id].character}` : ", empty"}`}
-                      onClick={() => id && !selectedTile ? handleTileClick(id) : placeSelected(target)}
+                      onClick={() => {
+                        if (!id) handleEmptyTargetClick(target);
+                        else if (selectedTargetSlot) handleTileClick(id);
+                        else if (!selectedTile) handleTileClick(id);
+                        else placeSelected(target);
+                      }}
                       onDoubleClick={() => id && send({ type: "RETURN", tileID: id })}
                       onPointerDown={(event) => id && !locked && handlePointerDown(event, id)}
                       onPointerMove={handlePointerMove}
