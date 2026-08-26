@@ -15,6 +15,7 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(steps.nth(2)).toContainText("Perfect Split");
   await expect(page.locator(".tier-lock")).toHaveCount(2);
   await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS");
+  await expect(page.locator(".gold-slot")).toHaveCount(0);
   await page.getByRole("button", { name: /How to Play/i }).click();
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");
@@ -41,6 +42,7 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
   await expect(perfectStep).toHaveClass(/active/);
   await expect(perfectStep).toHaveAttribute("aria-current", "step");
   await expect(page.locator(".tier-objective")).toContainText(/Highlighted tiles spell .* in order/i);
+  await expect(page.locator(".gold-slot")).toHaveCount(await page.locator(".gold-word em").count());
 
   await page.getByRole("button", { name: "Close" }).click();
   await page.evaluate(() => {

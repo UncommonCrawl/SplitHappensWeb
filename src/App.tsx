@@ -301,6 +301,7 @@ export default function App() {
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
   const isToday = scheduleEntry.date === localDateKey(now);
+  const goldLevelReached = derived.silverSatisfied;
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
   const achievementTiers = [
@@ -398,7 +399,7 @@ export default function App() {
                   const locked = game.hintedRows.includes(rowIndex);
                   const rowComplete = row.every(Boolean);
                   const rowValid = derived.validRows.has(rowIndex);
-                  const isGoldSlot = goldSlots.has(target);
+                  const isGoldSlot = goldLevelReached && goldSlots.has(target);
                   const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
                   return (
                     <button
