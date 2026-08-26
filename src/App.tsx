@@ -325,7 +325,7 @@ export default function App() {
     "--target-columns": Math.max(...game.targetSlots.map((row) => row.length)),
     "--source-columns": Math.max(...game.sourceSlots.map((row) => row.length)),
     "--target-height-limit": `${36 / game.targetSlots.length}cqh`,
-    "--source-height-limit": `${15 / game.sourceSlots.length}cqh`,
+    "--source-height-limit": `${18.75 / game.sourceSlots.length}cqh`,
   } as CSSProperties;
   return (
     <div className="app-shell">

@@ -230,7 +230,7 @@ for (const viewport of layoutViewports) {
     expect(targetTile.width).toBeGreaterThan(0);
     expect(targetTile.width).toBeLessThanOrEqual(56);
     expect(sourceTile.width).toBeGreaterThan(0);
-    expect(sourceTile.width).toBeLessThanOrEqual(48);
+    expect(sourceTile.width).toBeLessThanOrEqual(60);
     expect(gameOverflow).toBeLessThanOrEqual(1);
 
     const usesDesktopLayout = await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches);

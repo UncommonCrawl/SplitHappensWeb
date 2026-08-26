@@ -97,15 +97,15 @@ button { color: inherit; }
   overflow: hidden;
   justify-self: start;
   display: grid;
-  grid-template-rows: minmax(0, 16%) minmax(0, 44%) minmax(0, 24%) minmax(0, 10%);
-  align-content: space-between;
+  grid-template-rows: max-content minmax(0, 44%) minmax(0, 1fr) minmax(0, 10%);
+  row-gap: 2cqh;
   justify-items: center;
   --target-columns: 10;
   --source-columns: 10;
   --target-height-limit: 7cqh;
   --source-height-limit: 6cqh;
   --target-size: min(56px, var(--target-height-limit), calc((100cqw - (var(--target-columns) - 1) * 6px) / var(--target-columns)));
-  --source-size: min(48px, var(--source-height-limit), calc((100cqw - (var(--source-columns) - 1) * 5px) / var(--source-columns)));
+  --source-size: min(60px, var(--source-height-limit), calc((100cqw - (var(--source-columns) - 1) * 5px) / var(--source-columns)));
   --seal-size: min(32px, 5cqh, 10cqw);
   --toolbar-size: min(46px, 7cqh, 16cqw);
   --toolbar-featured-size: min(52px, 8cqh, 18cqw);
@@ -113,6 +113,10 @@ button { color: inherit; }
   --criteria-height: min(104px, 14cqh);
 }
 .criteria { width: min(620px, 100%); height: max-content; min-height: min(var(--criteria-height), 12dvh); display: flex; flex-direction: column; align-items: center; gap: clamp(5px, .8dvh, 10px); }
+.criteria,
+.target-board,
+.source-board,
+.game-toolbar { outline: 2px solid red; }
 .achievement-track { width: min(500px, 100%); display: flex; align-items: center; justify-content: center; }
 .tier-step { min-width: 0; flex: 0 1 132px; display: flex; flex-direction: column; align-items: center; gap: clamp(2px, .35dvh, 5px); text-align: center; color: var(--control); }
 .tier-step strong { font-size: clamp(9px, 1.35dvh, 13px); line-height: 1.1; letter-spacing: .055em; text-transform: uppercase; white-space: nowrap; }
@@ -178,7 +182,7 @@ button { color: inherit; }
 .tile.selected, .tile.drop-hover { outline: 3px solid var(--selection); outline-offset: 0; }
 .tile:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
 .tile.drag-origin .tile-letter { opacity: 0; }
-.source-board { width: 100%; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(4px, 1dvh, 10px); }
+.source-board { width: 100%; min-width: 0; height: max-content; align-self: end; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(4px, 1dvh, 10px); }
 .source-row { max-width: 100%; display: flex; justify-content: flex-start; gap: 5px; }
 .letter-tile { width: var(--source-size); height: var(--source-size); flex-basis: var(--source-size); font-size: min(28px, calc(var(--source-size) * .48)); background: var(--cream); box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .letter-tile.drag-origin { background: rgb(248 238 210 / 20%); box-shadow: inset 0 1px 1px var(--inner-shadow); }
