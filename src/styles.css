@@ -163,8 +163,21 @@ button { color: inherit; }
   user-select: none;
   touch-action: none;
   cursor: pointer;
-  transition: transform .12s ease, box-shadow .12s ease, background .18s ease;
+  transition: none;
 }
+/*
+ * The visible squares deliberately have breathing room, but their hit areas do
+ * not. Each transparent pseudo-element reaches halfway into every adjacent
+ * gap, creating a continuous selection grid without changing the artwork.
+ */
+.target-slot, .letter-tile, .source-hole { position: relative; }
+.target-slot::after, .letter-tile::after, .source-hole::after {
+  content: "";
+  position: absolute;
+  inset: calc(0px - var(--tile-hit-y)) calc(0px - var(--tile-hit-x));
+}
+.target-slot { --tile-hit-x: 3px; --tile-hit-y: calc(var(--target-row-padding) + .5px); }
+.letter-tile, .source-hole { --tile-hit-x: 2.5px; --tile-hit-y: calc(var(--source-row-gap) / 2); }
 .target-slot { background: var(--placeholder); box-shadow: inset 0 1px 1px var(--inner-shadow); }
 .target-slot.occupied { background: var(--cream); box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .target-slot.row-valid:not(.gold-slot) { background: var(--valid); }
@@ -185,9 +198,9 @@ button { color: inherit; }
   z-index: 1;
   border: 1.5px solid var(--selection);
 }
-.tile:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+.tile:focus-visible { outline: none; }
 .tile.drag-origin .tile-letter { opacity: 0; }
-.source-board { width: 100%; min-width: 0; height: max-content; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(4px, 1dvh, 10px); }
+.source-board { --source-row-gap: clamp(4px, 1dvh, 10px); width: 100%; min-width: 0; height: max-content; display: flex; flex-direction: column; align-items: flex-start; gap: var(--source-row-gap); }
 .source-row { max-width: 100%; display: flex; justify-content: flex-start; gap: 5px; }
 .letter-tile { width: var(--source-size); height: var(--source-size); flex-basis: var(--source-size); font-size: min(28px, calc(var(--source-size) * .48)); background: var(--cream); box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .letter-tile.drag-origin { background: rgb(248 238 210 / 20%); box-shadow: inset 0 1px 1px var(--inner-shadow); }

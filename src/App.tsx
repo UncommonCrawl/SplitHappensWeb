@@ -283,6 +283,18 @@ export default function App() {
     setSelectedTile((current) => current === id ? null : id);
   };
 
+  const handleSourceTileDoubleClick = (id: TileID) => {
+    if (!game) return;
+    const target = game.targetSlots
+      .flatMap((row, rowIndex) => row.map((occupant, columnIndex) => ({ occupant, rowIndex, columnIndex })))
+      .find(({ occupant, rowIndex }) => !occupant && !game.hintedRows.includes(rowIndex));
+    if (!target) return;
+
+    send({ type: "PLACE", tileID: id, slotID: slotID(target.rowIndex, target.columnIndex) });
+    playPlacementSound();
+    clearSelection();
+  };
+
   const handleEmptyTargetClick = (target: SlotID) => {
     if (selectedTile) {
       placeSelected(target);
@@ -549,6 +561,7 @@ export default function App() {
                     data-source-column={columnIndex}
                     aria-label={`Letter ${game.tiles[id].character}`}
                     onClick={() => handleTileClick(id)}
+                    onDoubleClick={() => handleSourceTileDoubleClick(id)}
                     onPointerDown={(event) => handlePointerDown(event, id)}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
