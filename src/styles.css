@@ -14,7 +14,7 @@
   --gold: #ffd86b;
   --green: #00b050;
   --control: #606060;
-  --selection: var(--control);
+  --selection: rgb(0 0 0 / 30%);
   --inner-shadow: rgb(68 51 30 / 10%);
   --line: #e8e8e8;
   --shadow: 0 3px 8px rgb(37 30 12 / 13%);
