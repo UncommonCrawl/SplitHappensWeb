@@ -223,6 +223,19 @@ export default function App() {
     setSelectedTargetSlot((current) => current ? null : target);
   };
 
+  const handleOccupiedTargetClick = (id: TileID, target: SlotID) => {
+    if (selectedTile) {
+      placeSelected(target);
+      return;
+    }
+    if (selectedTargetSlot) {
+      if (selectedTargetSlot === target) setSelectedTargetSlot(null);
+      else handleTileClick(id);
+      return;
+    }
+    setSelectedTargetSlot(target);
+  };
+
   const clearSelection = () => {
     setSelectedTile(null);
     setSelectedTargetSlot(null);
@@ -433,16 +446,14 @@ export default function App() {
                   const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
                   return (
                     <button
-                      className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${(id && selectedTile === id) || (!id && selectedTargetSlot === target) ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
+                      className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${selectedTargetSlot === target ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
                       key={target}
                       data-slot-id={target}
                       disabled={locked}
                       aria-label={`Row ${rowIndex + 1}, position ${columnIndex + 1}${id ? `, letter ${game.tiles[id].character}` : ", empty"}`}
                       onClick={() => {
                         if (!id) handleEmptyTargetClick(target);
-                        else if (selectedTargetSlot) handleTileClick(id);
-                        else if (!selectedTile) handleTileClick(id);
-                        else placeSelected(target);
+                        else handleOccupiedTargetClick(id, target);
                       }}
                       onDoubleClick={() => id && send({ type: "RETURN", tileID: id })}
                       onPointerDown={(event) => id && !locked && handlePointerDown(event, id)}
