@@ -369,7 +369,14 @@ export default function App() {
       </aside>
 
       <div className="workspace">
-        <main className="game-area" style={gameLayoutStyle}>
+        <main
+          className="game-area"
+          style={gameLayoutStyle}
+          onClick={(event) => {
+            const target = event.target;
+            if (target instanceof Element && !target.closest(".tile, [data-slot-id]")) setSelectedTile(null);
+          }}
+        >
           <section className="criteria" aria-label="Puzzle goals">
             <div className="achievement-track" role="list" aria-label="Normal, Hard, Perfect Split progression">
               {achievementTiers.map((tier, index) => <Fragment key={tier.name}>

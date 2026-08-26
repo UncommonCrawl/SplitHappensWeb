@@ -150,6 +150,7 @@ button { color: inherit; }
 .target-row, .target-row-placeholder { width: 100%; display: flex; justify-content: flex-start; align-items: center; gap: 6px; border-bottom: 1px solid rgb(0 0 0 / 20%); padding: var(--target-row-padding) 0; }
 .target-board > :first-child { padding-top: 0; }
 .target-board > :last-child { padding-bottom: 0; border-bottom: 0; }
+.target-row-placeholder, .target-row:has(+ .target-row-placeholder) { border-bottom-color: transparent; }
 .target-row-placeholder::before { content: ""; width: var(--target-size); height: var(--target-size); flex: 0 0 var(--target-size); visibility: hidden; }
 .target-slot, .letter-tile {
   width: var(--target-size);
