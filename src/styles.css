@@ -115,10 +115,6 @@ button { color: inherit; }
   --criteria-height: min(104px, 14cqh);
 }
 .criteria { width: min(620px, 100%); height: max-content; min-height: min(var(--criteria-height), 12dvh); display: flex; flex-direction: column; align-items: center; gap: clamp(5px, .8dvh, 10px); }
-.criteria,
-.target-board,
-.source-board,
-.game-toolbar { outline: 2px solid red; }
 .achievement-track { width: min(500px, 100%); display: flex; align-items: center; justify-content: center; }
 .tier-step { min-width: 0; flex: 0 1 132px; display: flex; flex-direction: column; align-items: center; gap: clamp(2px, .35dvh, 5px); text-align: center; color: var(--control); }
 .tier-step strong { font-size: clamp(9px, 1.35dvh, 13px); line-height: 1.1; letter-spacing: .055em; text-transform: uppercase; white-space: nowrap; }
