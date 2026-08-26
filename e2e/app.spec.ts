@@ -170,6 +170,33 @@ const layoutViewports = [
   { width: 360, height: 640 },
 ];
 
+test("reserves a fifth target row and keeps four- and five-row tile sizes consistent", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  await page.getByRole("button", { name: /View Archive/i }).click();
+  await page.getByRole("button", { name: /COFFEE/i }).click();
+  await expect(page.locator(".target-row")).toHaveCount(4);
+  const fourRowBoard = await page.locator(".target-board").boundingBox();
+  const fourRowTile = await page.locator(".target-slot").first().boundingBox();
+  expect(fourRowBoard).not.toBeNull();
+  expect(fourRowTile).not.toBeNull();
+  if (!fourRowBoard || !fourRowTile) return;
+
+  await page.getByRole("button", { name: /View Archive/i }).click();
+  await page.getByRole("button", { name: /CATS/i }).click();
+  await expect(page.locator(".target-row")).toHaveCount(5);
+  const fiveRowBoard = await page.locator(".target-board").boundingBox();
+  const fiveRowTile = await page.locator(".target-slot").first().boundingBox();
+  expect(fiveRowBoard).not.toBeNull();
+  expect(fiveRowTile).not.toBeNull();
+  if (fiveRowBoard && fiveRowTile) {
+    expect(Math.abs(fourRowBoard.height - fiveRowBoard.height)).toBeLessThanOrEqual(1);
+    expect(Math.abs(fourRowTile.width - fiveRowTile.width)).toBeLessThanOrEqual(1);
+  }
+});
+
 test("lets game controls shrink below their preferred sizes for a tiny window", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 360 });
   await page.goto("/");
@@ -228,7 +255,7 @@ for (const viewport of layoutViewports) {
     expect(source.x).toBeGreaterThanOrEqual(game.x - 1);
     expect(source.x + source.width).toBeLessThanOrEqual(game.x + game.width + 1);
     expect(targetTile.width).toBeGreaterThan(0);
-    expect(targetTile.width).toBeLessThanOrEqual(56);
+    expect(targetTile.width).toBeLessThanOrEqual(70);
     expect(sourceTile.width).toBeGreaterThan(0);
     expect(sourceTile.width).toBeLessThanOrEqual(60);
     expect(gameOverflow).toBeLessThanOrEqual(1);

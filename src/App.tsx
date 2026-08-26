@@ -321,10 +321,12 @@ export default function App() {
       const tile = game.tiles[id];
       return tile.sourceWordIndex !== rowIndex || tile.positionInWord !== columnIndex;
     }));
+  const targetSizingRows = Math.max(5, game.targetSlots.length);
   const gameLayoutStyle = {
     "--target-columns": Math.max(...game.targetSlots.map((row) => row.length)),
     "--source-columns": Math.max(...game.sourceSlots.map((row) => row.length)),
-    "--target-height-limit": `${36 / game.targetSlots.length}cqh`,
+    "--target-height-limit": `calc(${45 / targetSizingRows}cqh - 0.5px)`,
+    "--target-compact-height-limit": `calc(${36 / targetSizingRows}cqh - 0.5px)`,
     "--source-height-limit": `${18.75 / game.sourceSlots.length}cqh`,
   } as CSSProperties;
   return (
@@ -414,6 +416,9 @@ export default function App() {
                   );
                 })}
               </div>
+            ))}
+            {Array.from({ length: targetSizingRows - game.targetSlots.length }, (_, index) => (
+              <div className="target-row-placeholder" aria-hidden="true" key={`placeholder-${index}`} />
             ))}
           </section>
 
