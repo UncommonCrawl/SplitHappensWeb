@@ -14,7 +14,7 @@
   --gold: #ffd86b;
   --green: #00b050;
   --control: #606060;
-  --selection: rgb(0 0 0 / 30%);
+  --selection: var(--control);
   --inner-shadow: rgb(68 51 30 / 10%);
   --line: #e8e8e8;
   --shadow: 0 3px 8px rgb(37 30 12 / 13%);
@@ -94,7 +94,8 @@ button { color: inherit; }
   min-width: 0;
   height: calc(100dvh - 56px);
   min-height: 0;
-  overflow: hidden;
+  /* Selection rings may extend beyond a tile (and the board's last column). */
+  overflow: visible;
   justify-self: start;
   display: grid;
   grid-template-rows: repeat(4, max-content);
@@ -180,7 +181,12 @@ button { color: inherit; }
 .target-slot.hint-locked { opacity: 1; cursor: default; }
 .target-slot.hint-locked .tile-letter { opacity: .5; }
 .target-slot.correct-gold .tile-letter { text-shadow: 0 1px 3px rgb(255 255 255 / 50%); }
-.tile.selected, .tile.drop-hover { outline: 3px solid var(--selection); outline-offset: 0; }
+.tile.selected, .tile.drop-hover {
+  position: relative;
+  z-index: 1;
+  outline: 1.5px solid var(--selection);
+  outline-offset: 0;
+}
 .tile:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
 .tile.drag-origin .tile-letter { opacity: 0; }
 .source-board { width: 100%; min-width: 0; height: max-content; display: flex; flex-direction: column; align-items: flex-start; gap: clamp(4px, 1dvh, 10px); }
