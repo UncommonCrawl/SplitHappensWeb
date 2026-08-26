@@ -75,6 +75,105 @@ test("supports keyboard-style select then place", async ({ page }) => {
   await expect(slot).not.toHaveAccessibleName(/empty$/);
 });
 
+test("places a typed source letter into a selected target slot", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const sourceLabel = await source.getAttribute("aria-label");
+  const sourceRow = await source.getAttribute("data-source-row");
+  const sourceColumn = await source.getAttribute("data-source-column");
+  const targetID = await page.locator(".target-slot.empty").first().getAttribute("data-slot-id");
+  expect(sourceRow).toBeTruthy();
+  expect(sourceColumn).toBeTruthy();
+  expect(targetID).toBeTruthy();
+  const letter = sourceLabel?.replace("Letter ", "");
+  expect(letter).toMatch(/^[A-Z]$/);
+  if (!letter || !sourceRow || !sourceColumn || !targetID) return;
+  const target = page.locator(`[data-slot-id="${targetID}"]`);
+
+  await target.click();
+  await page.keyboard.press(letter.toLowerCase());
+
+  await expect(target).toHaveAccessibleName(new RegExp(`letter ${letter}`, "i"));
+  await expect(page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`)).toHaveClass(/source-hole/);
+});
+
+test("places a typed source letter into the first empty target slot when idle", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const sourceLabel = await source.getAttribute("aria-label");
+  const sourceRow = await source.getAttribute("data-source-row");
+  const sourceColumn = await source.getAttribute("data-source-column");
+  const targetID = await page.locator(".target-slot.empty").first().getAttribute("data-slot-id");
+  const letter = sourceLabel?.replace("Letter ", "");
+  expect(letter).toMatch(/^[A-Z]$/);
+  expect(sourceRow).toBeTruthy();
+  expect(sourceColumn).toBeTruthy();
+  expect(targetID).toBeTruthy();
+  if (!letter || !sourceRow || !sourceColumn || !targetID) return;
+
+  await page.keyboard.press(letter.toLowerCase());
+
+  await expect(page.locator(`[data-slot-id="${targetID}"]`)).toHaveAccessibleName(new RegExp(`letter ${letter}`, "i"));
+  await expect(page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`)).toHaveClass(/source-hole/);
+});
+
+test("uses Backspace to clear source selection and return target tiles", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const sourceRow = await source.getAttribute("data-source-row");
+  const sourceColumn = await source.getAttribute("data-source-column");
+  const targetID = await page.locator(".target-slot.empty").first().getAttribute("data-slot-id");
+  expect(sourceRow).toBeTruthy();
+  expect(sourceColumn).toBeTruthy();
+  expect(targetID).toBeTruthy();
+  if (!sourceRow || !sourceColumn || !targetID) return;
+  const sourceSlot = page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`);
+  const target = page.locator(`[data-slot-id="${targetID}"]`);
+
+  await source.click();
+  await expect(source).toHaveClass(/selected/);
+  await page.keyboard.press("Backspace");
+  await expect(source).not.toHaveClass(/selected/);
+
+  await sourceSlot.click();
+  await target.click();
+  await target.click();
+  await expect(target).toHaveClass(/selected/);
+  await page.keyboard.press("Backspace");
+  await expect(target).toHaveAccessibleName(/empty$/);
+
+  await sourceSlot.click();
+  await target.click();
+  await page.keyboard.press("Backspace");
+  await expect(target).toHaveAccessibleName(/empty$/);
+});
+
+test("uses a target letter after the source board is empty", async ({ page }) => {
+  await page.goto("/");
+  const sourceTiles = page.locator(".letter-tile");
+  const emptyTargets = page.locator(".target-slot.empty");
+  await expect(sourceTiles.first()).toBeVisible();
+  while (await sourceTiles.count()) {
+    await sourceTiles.first().click();
+    await emptyTargets.first().click();
+  }
+
+  const targets = page.locator(".target-slot");
+  const donor = targets.nth(0);
+  const destination = targets.nth(1);
+  const donorLetter = (await donor.getAttribute("aria-label"))?.match(/letter ([A-Z])/i)?.[1];
+  const displacedLetter = (await destination.getAttribute("aria-label"))?.match(/letter ([A-Z])/i)?.[1];
+  expect(donorLetter).toBeTruthy();
+  expect(displacedLetter).toBeTruthy();
+  if (!donorLetter || !displacedLetter) return;
+
+  await destination.click();
+  await page.keyboard.press(donorLetter.toLowerCase());
+
+  await expect(destination).toHaveAccessibleName(new RegExp(`letter ${donorLetter}`, "i"));
+  await expect(page.locator('[data-source-row="0"][data-source-column="0"]')).toHaveAttribute("aria-label", `Letter ${displacedLetter}`);
+});
+
 test("uses target-tile sizing and preserves the proportional grab offset while dragging", async ({ page }) => {
   await page.goto("/");
   const source = page.locator(".letter-tile").first();

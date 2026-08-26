@@ -3,6 +3,7 @@ import type { BoardSnapshot, GameState, LevelDefinition, LevelProgress, SlotID, 
 
 export type GameAction =
   | { type: "PLACE"; tileID: TileID; slotID: SlotID }
+  | { type: "PLACE_RETURNING_DISPLACED"; tileID: TileID; slotID: SlotID }
   | { type: "MOVE_SOURCE"; tileID: TileID; row: number; column: number }
   | { type: "RETURN"; tileID: TileID }
   | { type: "RETURN_FIRST_FREE"; tileID: TileID }
@@ -94,6 +95,32 @@ function place(state: GameState, id: TileID, targetID: SlotID): GameState {
   const occupant = next.targetSlots[row][column];
   setLocation(next, origin, occupant);
   next.targetSlots[row][column] = id;
+  return next;
+}
+
+function placeReturningDisplaced(state: GameState, id: TileID, targetID: SlotID): GameState {
+  const [row, column] = targetID.split(":").map(Number);
+  if (!state.targetSlots[row]?.hasOwnProperty(column) || state.hintedRows.includes(row)) return state;
+  const origin = locate(state, id);
+  if (!origin || isLocked(state, origin)) return state;
+
+  const next = pushHistory(structuredClone(state));
+  const occupant = next.targetSlots[row][column];
+  setLocation(next, origin, null);
+
+  // Typing the letter already in the selected slot returns it to the source board.
+  if (origin.kind === "target" && origin.row === row && origin.column === column) {
+    const destination = firstEmptySource(next);
+    if (!destination) return state;
+    setLocation(next, destination, id);
+    return next;
+  }
+
+  next.targetSlots[row][column] = id;
+  if (!occupant) return next;
+  const destination = firstEmptySource(next);
+  if (!destination) return state;
+  setLocation(next, destination, occupant);
   return next;
 }
 
@@ -213,6 +240,7 @@ export function gameReducer(level: LevelDefinition, words: Set<string>) {
     let next = state;
     switch (action.type) {
       case "PLACE": next = place(state, action.tileID, action.slotID); break;
+      case "PLACE_RETURNING_DISPLACED": next = placeReturningDisplaced(state, action.tileID, action.slotID); break;
       case "MOVE_SOURCE": next = moveToSource(state, action.tileID, action.row, action.column); break;
       case "RETURN": next = returnToSource(state, action.tileID); break;
       case "RETURN_FIRST_FREE": next = returnToSource(state, action.tileID, false); break;

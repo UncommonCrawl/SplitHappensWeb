@@ -54,6 +54,28 @@ describe("game engine", () => {
     expect(state.targetSlots[0]).toEqual([null, "0:0", null]);
   });
 
+  it("returns a displaced keyboard-placement tile to the first free source slot", () => {
+    const reduce = gameReducer(level, words);
+    let state = createGame(level);
+    state = reduce(state, { type: "PLACE", tileID: "0:0", slotID: "0:0" });
+    state = reduce(state, { type: "PLACE", tileID: "0:1", slotID: "0:1" });
+
+    state = reduce(state, { type: "PLACE_RETURNING_DISPLACED", tileID: "0:2", slotID: "0:1" });
+
+    expect(state.targetSlots[0]).toEqual(["0:0", "0:2", null]);
+    expect(state.sourceSlots[0]).toEqual(["0:1", null, null]);
+  });
+
+  it("returns a typed target tile to source when it is already in the selected slot", () => {
+    const reduce = gameReducer(level, words);
+    let state = reduce(createGame(level), { type: "PLACE", tileID: "0:0", slotID: "0:0" });
+
+    state = reduce(state, { type: "PLACE_RETURNING_DISPLACED", tileID: "0:0", slotID: "0:0" });
+
+    expect(state.targetSlots[0][0]).toBeNull();
+    expect(state.sourceSlots[0][0]).toBe("0:0");
+  });
+
   it("fills and locks official answer rows with sequential hints", () => {
     const reduce = gameReducer(level, words);
     let state = reduce(createGame(level), { type: "HINT" });

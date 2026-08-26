@@ -203,6 +203,75 @@ export default function App() {
     setSelectedTargetSlot(null);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!game || event.altKey || event.ctrlKey || event.metaKey) return;
+
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        if (selectedTile) {
+          clearSelection();
+          return;
+        }
+
+        const selectedTargetTile = selectedTargetSlot && (() => {
+          const [row, column] = selectedTargetSlot.split(":").map(Number);
+          return game.hintedRows.includes(row) ? null : game.targetSlots[row]?.[column] ?? null;
+        })();
+        const lastTargetTile = game.targetSlots.flatMap((row, rowIndex) => row.map((id, columnIndex) => ({ id, rowIndex, columnIndex })))
+          .reverse()
+          .find(({ id, rowIndex }) => id && !game.hintedRows.includes(rowIndex))?.id;
+        const tileID = selectedTargetTile || lastTargetTile;
+        if (tileID) {
+          send({ type: "RETURN", tileID });
+          playPlacementSound();
+        }
+        clearSelection();
+        return;
+      }
+
+      if (event.key.length !== 1) return;
+      const letter = event.key.toUpperCase();
+      if (!/^[A-Z]$/.test(letter)) return;
+
+      if (!selectedTargetSlot && !selectedTile) {
+        const sourceTile = game.sourceSlots.flat().find((id) => id && game.tiles[id].character === letter);
+        const target = game.targetSlots.flatMap((row, rowIndex) => row.map((id, columnIndex) => ({ id, slotID: slotID(rowIndex, columnIndex), rowIndex }))).find(({ id, rowIndex }) =>
+          !id && !game.hintedRows.includes(rowIndex),
+        );
+        if (sourceTile && target) {
+          send({ type: "PLACE", tileID: sourceTile, slotID: target.slotID });
+          playPlacementSound();
+        }
+        return;
+      }
+
+      if (!selectedTargetSlot) return;
+      const [selectedRow] = selectedTargetSlot.split(":").map(Number);
+      if (game.hintedRows.includes(selectedRow)) {
+        clearSelection();
+        return;
+      }
+
+      const sourceTile = game.sourceSlots.flat().find((id) => id && game.tiles[id].character === letter);
+      const hasSourceTiles = game.sourceSlots.some((row) => row.some(Boolean));
+      const targetTile = !hasSourceTiles
+        ? game.targetSlots.flatMap((row, rowIndex) => row.map((id) => ({ id, rowIndex }))).find(({ id, rowIndex }) =>
+          id && game.tiles[id].character === letter && !game.hintedRows.includes(rowIndex),
+        )?.id
+        : undefined;
+      const tileID = sourceTile ?? targetTile;
+      if (tileID) {
+        send({ type: "PLACE_RETURNING_DISPLACED", tileID, slotID: selectedTargetSlot });
+        playPlacementSound();
+      }
+      clearSelection();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [game, selectedTile, selectedTargetSlot, send]);
+
   const handleTileClick = (id: TileID) => {
     if (suppressClick.current) { suppressClick.current = false; return; }
     if (selectedTargetSlot) {

@@ -94,7 +94,6 @@ button { color: inherit; }
   min-width: 0;
   height: calc(100dvh - 56px);
   min-height: 0;
-  /* Selection rings may extend beyond a tile (and the board's last column). */
   overflow: visible;
   justify-self: start;
   display: grid;
@@ -184,8 +183,7 @@ button { color: inherit; }
 .tile.selected, .tile.drop-hover {
   position: relative;
   z-index: 1;
-  outline: 1.5px solid var(--selection);
-  outline-offset: 0;
+  border: 1.5px solid var(--selection);
 }
 .tile:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
 .tile.drag-origin .tile-letter { opacity: 0; }
