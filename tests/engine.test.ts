@@ -109,4 +109,14 @@ describe("game engine", () => {
     expect(result.goldSatisfied).toBe(true);
     expect(result.victorySatisfied).toBe(true);
   });
+
+  it("still requires lower criteria for victory when the gold tiles match", () => {
+    const reduce = gameReducer(level, words);
+    const state = reduce(createGame(level), { type: "PLACE", tileID: "0:1", slotID: "0:0" });
+    const result = deriveGame(state, level, words);
+
+    expect(result.goldSatisfied).toBe(true);
+    expect(result.allWordsValid).toBe(false);
+    expect(result.victorySatisfied).toBe(false);
+  });
 });

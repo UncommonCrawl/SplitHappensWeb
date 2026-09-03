@@ -11,9 +11,15 @@ interface RowQualifier {
   negated: boolean;
 }
 
+const NUMBER_WORDS = ["ZERO", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN"];
+
+function numberWord(value: number): string {
+  return NUMBER_WORDS[value] ?? String(value);
+}
+
 function rowLabel(qualifier: RowQualifier): string {
-  if (qualifier.requiredRows > 1) return `${qualifier.requiredRows} ROWS`;
-  return qualifier.rowNumber === null ? "ANY ROW" : `ROW ${qualifier.rowNumber}`;
+  if (qualifier.requiredRows > 1) return `${numberWord(qualifier.requiredRows)} ROWS`;
+  return qualifier.rowNumber === null ? "ANY ROW" : `ROW ${numberWord(qualifier.rowNumber)}`;
 }
 
 function parseQualifier(parts: string[]): RowQualifier | null {
@@ -60,7 +66,7 @@ export function evaluateCriterion(raw: string | null, rowWords: Array<string | n
   const normalized = raw.replace(/[\u200B-\u200D\uFEFF\u2060]/g, "").trim().toUpperCase();
   if (normalized.startsWith("INCLUDES_") || normalized.startsWith("INCLUDE_")) {
     const value = normalized.replace(/^INCLUDES?_/, "");
-    return { label: `ONE WORD IS '${value}'`, satisfied: rowWords.includes(value) };
+    return { label: `ONE WORD MUST BE '${value}'`, satisfied: rowWords.includes(value) };
   }
   const parts = normalized.split("_");
   let operationIndex = 1;
@@ -86,12 +92,11 @@ export function evaluateCriterion(raw: string | null, rowWords: Array<string | n
   const matches = candidates.filter((word): word is string => Boolean(word)).filter(predicate).length;
   const satisfied = qualifier.negated ? matches === 0 : matches >= qualifier.requiredRows;
   const valueLabel = qualifier.value ?? "LETTER";
-  const row = rowLabel(qualifier);
-  const verb = operation === "DOUBLE" ? `HAS DOUBLE '${valueLabel}'`
-    : operation === "STARTS" || operation === "START" ? `STARTS WITH '${valueLabel}'`
-      : operation === "ENDS" || operation === "END" ? `ENDS IN '${valueLabel}'`
-        : `CONTAINS '${valueLabel}'`;
-  let label = `${row} ${verb}`.replace(" ROWS HAS ", " ROWS HAVE ").replace(" ROWS STARTS ", " ROWS START ").replace(" ROWS ENDS ", " ROWS END ").replace(" ROWS CONTAINS ", " ROWS CONTAIN ");
-  if (qualifier.negated) label = label.replace("ANY ROW", "NO ROW").replace(" HAS ", " MUST NOT HAVE ").replace(" STARTS ", " MUST NOT START ").replace(" ENDS ", " MUST NOT END ").replace(" CONTAINS ", " MUST NOT CONTAIN ");
+  const row = qualifier.negated && qualifier.rowNumber === null ? "ALL ROWS" : rowLabel(qualifier);
+  const verb = operation === "DOUBLE" ? `HAVE DOUBLE '${valueLabel}'`
+    : operation === "STARTS" || operation === "START" ? `START WITH '${valueLabel}'`
+      : operation === "ENDS" || operation === "END" ? `END IN '${valueLabel}'`
+        : `CONTAIN '${valueLabel}'`;
+  const label = `${row} MUST${qualifier.negated ? " NOT" : ""} ${verb}`;
   return { label, satisfied };
 }

@@ -178,6 +178,32 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
   await expect(page.locator(".stat-row").filter({ hasText: "Holy Splits" })).toBeVisible();
 });
 
+test("keeps criteria unlocked while their live completion borders update", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  await page.evaluate(() => {
+    const storageKey = "split-happens.web.v2";
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+    if (!saved) throw new Error("Expected saved game progress");
+    const current = Object.values(saved.levels)[0] as any;
+    current.firstSplitAt = "2026-09-03T12:00:00.000Z";
+    current.firstSilverAt = "2026-09-03T12:01:00.000Z";
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+  });
+  await page.reload();
+
+  const steps = page.locator(".tier-step");
+  await expect(steps.filter({ has: page.locator(".seal-outline") })).toHaveCount(0);
+  await expect(steps.nth(0)).toHaveClass(/unlocked/);
+  await expect(steps.nth(1)).toHaveClass(/unlocked/);
+  await expect(steps.nth(2)).toHaveClass(/unlocked/);
+  await expect(page.locator(".tier-lock")).toHaveCount(0);
+  await expect(steps.nth(2)).toHaveClass(/active/);
+  await expect(page.locator(".tier-objective")).toContainText(/Highlighted tiles spell .* in order/i);
+  await expect(page.locator(".gold-slot")).not.toHaveCount(0);
+});
+
 test("supports keyboard-style select then place", async ({ page }) => {
   await page.goto("/");
   const tile = page.getByRole("button", { name: /^Letter / }).first();

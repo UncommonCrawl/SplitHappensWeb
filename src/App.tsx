@@ -498,19 +498,24 @@ export default function App() {
   if (!content || !words || !activeLevel || !game || !derived || !scheduleEntry) return <LoadingScreen />;
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
-  const goldLevelReached = derived.silverSatisfied;
+  const savedProgress = persisted.levels[activeLevel.id];
+  const hardUnlocked = derived.allWordsValid || Boolean(
+    savedProgress?.firstSplitAt || savedProgress?.firstSilverAt || savedProgress?.firstGoldAt,
+  );
+  const goldUnlocked = derived.silverSatisfied || Boolean(savedProgress?.firstSilverAt || savedProgress?.firstGoldAt);
+  const goldLevelReached = goldUnlocked;
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
   const achievementTiers = [
-    { name: "Normal", tone: "bronze" as const, complete: derived.allWordsValid },
-    { name: "Hard", tone: "silver" as const, complete: derived.silverSatisfied },
-    { name: "Perfect Split", tone: "gold" as const, complete: derived.victorySatisfied },
+    { name: "Normal", tone: "bronze" as const, unlocked: true, complete: derived.allWordsValid },
+    { name: "Hard", tone: "silver" as const, unlocked: hardUnlocked, complete: hardUnlocked && derived.bonus.satisfied },
+    { name: "Perfect Split", tone: "gold" as const, unlocked: goldUnlocked, complete: goldUnlocked && derived.goldSatisfied },
   ];
-  const activeTierIndex = !derived.allWordsValid ? 0 : !derived.silverSatisfied ? 1 : 2;
+  const activeTierIndex = goldUnlocked ? 2 : hardUnlocked ? 1 : 0;
   const activeObjective = activeTierIndex === 0
     ? <span>REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS</span>
     : activeTierIndex === 1
-      ? <><span>Complete the secondary challenge</span><span>{derived.bonus.label}</span></>
+      ? <span>{derived.bonus.label}</span>
       : <><span>Highlighted tiles spell <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> in order.</span></>;
   const canRecall = game.hintedRows.length > 0
     || game.targetSlots.some((row) => row.some(Boolean))
@@ -625,16 +630,16 @@ export default function App() {
           <section className="criteria" aria-label="Puzzle goals">
             <div className="achievement-track" role="list" aria-label="Normal, Hard, Perfect Split progression">
               {achievementTiers.map((tier, index) => <Fragment key={tier.name}>
-                {index > 0 && <span className={`tier-connector ${achievementTiers[index - 1].complete ? "complete" : ""}`} aria-hidden="true" />}
+                {index > 0 && <span className={`tier-connector ${tier.unlocked ? "complete" : ""}`} aria-hidden="true" />}
                 <div
-                  className={`tier-step tier-${tier.tone} ${tier.complete ? "complete" : ""} ${index === activeTierIndex ? "active" : ""} ${index > activeTierIndex ? "future" : ""}`}
+                  className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.complete ? "complete" : ""} ${index === activeTierIndex ? "active" : ""}`}
                   role="listitem"
                   aria-current={index === activeTierIndex ? "step" : undefined}
-                  aria-label={`${tier.name}: ${tier.complete ? "completed" : index === activeTierIndex ? "active" : "not yet available"}`}
+                  aria-label={`${tier.name}: ${tier.complete ? "currently satisfied" : tier.unlocked ? "unlocked, not currently satisfied" : "not yet available"}`}
                 >
                   <span className="tier-seal">
                     <Seal tone={tier.tone} achieved={tier.complete} />
-                    {index > activeTierIndex && <Lock className="tier-lock" aria-hidden="true" />}
+                    {!tier.unlocked && <Lock className="tier-lock" aria-hidden="true" />}
                   </span>
                   <strong>{tier.name}</strong>
                 </div>

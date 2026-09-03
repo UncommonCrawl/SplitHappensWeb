@@ -158,7 +158,7 @@ button { color: inherit; }
 .tier-gold { --tier-color: var(--gold); }
 .tier-seal { position: relative; display: grid; place-items: center; }
 .tier-step .seal { color: var(--placeholder); opacity: .82; }
-.tier-step.complete .seal { color: var(--tier-color); opacity: 1; }
+.tier-step.unlocked .seal { color: var(--tier-color); opacity: 1; }
 .tier-step.active { color: #000; }
 .tier-step.active .seal { color: var(--tier-color); opacity: 1; filter: drop-shadow(0 0 0.5px #000); }
 .tier-step.active.complete .seal { color: var(--tier-color); filter: drop-shadow(0 0 2px rgb(0 0 0 / 20%)); }
