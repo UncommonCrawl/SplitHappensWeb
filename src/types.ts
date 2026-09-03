@@ -62,6 +62,7 @@ export interface LevelProgress {
   splitElapsedMs: number | null;
   goldElapsedMs: number | null;
   firstSplitAt: string | null;
+  firstSilverAt?: string | null;
   firstGoldAt: string | null;
   perfectSplit: boolean;
   licketySplit: boolean;

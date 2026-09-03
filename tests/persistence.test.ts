@@ -16,4 +16,11 @@ describe("persistence", () => {
     expect(loadPersistedState({ getItem: () => "not-json" })).toEqual(emptyPersistedState());
     expect(loadPersistedState({ getItem: () => JSON.stringify({ version: 1 }) })).toEqual(emptyPersistedState());
   });
+
+  it("accepts version 2 progress saved before the optional Silver milestone existed", () => {
+    const legacy = emptyPersistedState();
+    const loaded = loadPersistedState({ getItem: () => JSON.stringify(legacy) });
+    expect(loaded.version).toBe(2);
+    expect(loaded.levels).toEqual({});
+  });
 });

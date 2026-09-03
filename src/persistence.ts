@@ -38,6 +38,7 @@ export function progressFromGame(state: GameState, previous?: LevelProgress): Le
     splitElapsedMs: state.splitElapsedMs,
     goldElapsedMs: state.goldElapsedMs,
     firstSplitAt: previous?.firstSplitAt ?? null,
+    firstSilverAt: previous?.firstSilverAt ?? null,
     firstGoldAt: previous?.firstGoldAt ?? null,
     perfectSplit: previous?.perfectSplit ?? false,
     licketySplit: previous?.licketySplit ?? false,

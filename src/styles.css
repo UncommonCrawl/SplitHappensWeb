@@ -87,6 +87,41 @@ button { color: inherit; }
 .archive-button:hover:not(:disabled) { border-color: rgb(0 0 0 / 40%); background: rgb(255 255 255 / 22%); }
 .archive-button:disabled { opacity: .45; cursor: not-allowed; }
 .archive-button svg { width: 20px; }
+.puzzle-date-grid {
+  width: 100%;
+  margin: 16px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(4px, .7vw, 7px);
+  container-type: inline-size;
+}
+.puzzle-date-button {
+  --puzzle-month-size: clamp(8px, 5cqw, 10px);
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 3px;
+  border: 1px solid rgb(0 0 0 / 22%);
+  border-radius: 10%;
+  background: #fff;
+  color: #000;
+  box-shadow: inset 0 -1px 1px var(--inner-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  cursor: pointer;
+}
+.puzzle-date-button:hover { border-color: rgb(0 0 0 / 55%); filter: brightness(.97); }
+.puzzle-date-button[aria-pressed="true"] { border-color: #000; outline: 0; box-shadow: inset 0 0 0 3px #000, inset 0 -1px 1px var(--inner-shadow); }
+.puzzle-date-button.tier-bronze { background: var(--bronze); }
+.puzzle-date-button.tier-silver { background: var(--silver); }
+.puzzle-date-button.tier-gold { background: var(--gold); }
+.puzzle-date-month { font-size: var(--puzzle-month-size); font-weight: 750; letter-spacing: .04em; }
+.puzzle-date-day { font-size: calc(var(--puzzle-month-size) * 2); line-height: .95; }
 
 .game-area {
   container-type: size;
@@ -234,6 +269,8 @@ button { color: inherit; }
 .modal { width: min(520px, 100%); max-height: min(760px, 90vh); overflow: auto; position: relative; background: white; border-radius: 20px; padding: 42px 44px 38px; box-shadow: 0 20px 80px rgb(0 0 0 / 26%); }
 .modal-wide { width: min(860px, 100%); }
 .modal h2 { margin: 0 40px 26px; text-align: center; font-size: 32px; }
+.modal-stats { font-size: 17px; }
+.modal-stats .stat-row + .stat-row { border-top: 1px solid var(--line); }
 .modal-close { position: absolute; top: 16px; right: 16px; width: 42px; min-height: 42px; padding: 0; background: #f4f4f4; box-shadow: none; }
 .instructions { text-align: center; font-size: 17px; line-height: 1.45; }
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
@@ -271,6 +308,7 @@ button { color: inherit; }
   .progress-rail h2 { margin-bottom: 10px; }
   .rail-row, .stat-row { min-height: 36px; }
   .archive-button { height: 42px; margin-top: 8px; }
+  .puzzle-date-grid { margin-top: 8px; gap: 4px; }
 }
 
 @media (hover: hover) and (pointer: fine) and (max-height: 650px) {
@@ -281,7 +319,7 @@ button { color: inherit; }
   .sidebar-actions { padding-block: 3px; }
   .sidebar-actions button { min-height: 32px; gap: 10px; font-size: 13px; }
   .sidebar-actions svg { width: 20px; height: 20px; }
-  .progress-rail section { padding-block: 6px; }
+  .progress-rail section { padding-block: 5px; }
   .progress-rail h2 { margin-bottom: 4px; font-size: 10px; }
   .rail-feature { gap: 10px; }
   .rail-feature > svg { width: 20px; height: 20px; }
@@ -291,6 +329,8 @@ button { color: inherit; }
   .rail-row, .stat-row { min-height: 24px; font-size: 12px; }
   .archive-button { height: 30px; margin-top: 4px; font-size: 12px; }
   .archive-button svg { width: 16px; }
+  .puzzle-date-grid { margin-top: 4px; gap: 3px; }
+  .puzzle-date-button { --puzzle-month-size: clamp(6px, 5cqw, 8px); }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -318,7 +358,7 @@ button { color: inherit; }
   .app-sidebar { order: 2; position: static; width: 100%; min-height: auto; height: auto; overflow: visible; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; padding: 20px max(14px, calc((100% - 760px) / 2)); }
   .sidebar-brand { grid-column: 1 / -1; }
   .wordmark { width: min(280px, 70vw); }
-  .sidebar-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .sidebar-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .sidebar-actions button { justify-content: center; }
   .progress-rail section { padding: 16px 0; border-bottom: 0; }
   .progress-rail h2 { margin-bottom: 10px; }

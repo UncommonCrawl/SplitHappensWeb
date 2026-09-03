@@ -1,15 +1,16 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  Archive, ArrowLeft, CalendarDays, Flame, HelpCircle, Lightbulb, Lock, RotateCcw,
+  Archive, ChartNoAxesColumn, Flame, HelpCircle, Lightbulb, Lock, RotateCcw,
   Share2, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
 import { loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
+import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 
-type ModalName = "how" | "archive" | "victory" | null;
+type ModalName = "how" | "stats" | "archive" | "victory" | null;
 
 type DragState = {
   tileID: TileID;
@@ -55,11 +56,7 @@ function shortDate(date: Date): string {
   return `${date.toLocaleDateString(undefined, { month: "long" })} ${ordinal(date.getDate())}`;
 }
 
-function resetCountdown(now: Date): string {
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  const minutes = Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 60_000));
-  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
-}
+const MONTH_ABBREVIATIONS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   return (
@@ -121,11 +118,7 @@ export default function App() {
   const activeLevel = useMemo(() => content?.levels.find((level) => level.id === activeLevelID) ?? null, [content, activeLevelID]);
   const scheduleEntry = useMemo(() => content?.schedule.find((entry) => entry.levelID === activeLevelID) ?? null, [content, activeLevelID]);
   const releasedEntries = useMemo(() => content?.schedule.filter((entry) => entry.date <= localDateKey(now)).slice().reverse() ?? [], [content, now]);
-  const yesterdayEntry = useMemo(() => {
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    return content?.schedule.find((entry) => entry.date === localDateKey(yesterday)) ?? null;
-  }, [content, now]);
+  const recentEntries = useMemo(() => recentScheduleEntries(content?.schedule ?? [], now), [content, now]);
 
   useEffect(() => {
     if (!activeLevel || !words) return;
@@ -136,6 +129,26 @@ export default function App() {
   // Persisted state is intentionally read only when a level is opened.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLevel?.id, words]);
+
+  useEffect(() => {
+    if (!content || !words) return;
+    setPersisted((current) => {
+      let changed = false;
+      const levels = { ...current.levels };
+      const timestamp = new Date().toISOString();
+      Object.entries(current.levels).forEach(([levelID, progress]) => {
+        if (progress.firstSilverAt || progress.firstGoldAt) return;
+        const level = content.levels.find((item) => item.id === levelID);
+        if (!level || highestPuzzleTier(level, progress, words) !== "silver") return;
+        levels[levelID] = { ...progress, firstSilverAt: timestamp };
+        changed = true;
+      });
+      if (!changed) return current;
+      const next = { ...current, levels };
+      savePersistedState(next);
+      return next;
+    });
+  }, [content, words]);
 
   const derived = useMemo(() => game && activeLevel && words ? deriveGame(game, activeLevel, words) : null, [game, activeLevel, words]);
 
@@ -151,6 +164,7 @@ export default function App() {
       const progress = progressFromGame(game, previous);
       const timestamp = new Date().toISOString();
       if (derived.allWordsValid && !progress.firstSplitAt) progress.firstSplitAt = timestamp;
+      if (derived.silverSatisfied && !progress.firstSilverAt) progress.firstSilverAt = timestamp;
       if (derived.victorySatisfied && !progress.firstGoldAt) progress.firstGoldAt = timestamp;
       progress.perfectSplit = Boolean(derived.victorySatisfied && game.hintedRows.length === 0);
       progress.licketySplit = Boolean(derived.victorySatisfied && scheduleEntry.date === localDateKey());
@@ -317,6 +331,17 @@ export default function App() {
     setSelectedTargetSlot(target);
   };
 
+  const handleEmptySourceClick = (row: number, column: number) => {
+    if (!game || !selectedTargetSlot) return;
+    const [targetRow, targetColumn] = selectedTargetSlot.split(":").map(Number);
+    const tileID = game.hintedRows.includes(targetRow) ? null : game.targetSlots[targetRow]?.[targetColumn] ?? null;
+    if (!tileID) return;
+
+    send({ type: "MOVE_SOURCE", tileID, row, column });
+    playPlacementSound();
+    clearSelection();
+  };
+
   const clearSelection = () => {
     setSelectedTile(null);
     setSelectedTargetSlot(null);
@@ -330,9 +355,10 @@ export default function App() {
     const targetBounds = targetTile?.getBoundingClientRect() ?? bounds;
     const grabRatioX = (event.clientX - bounds.left) / bounds.width;
     const grabRatioY = (event.clientY - bounds.top) / bounds.height;
-    const tileClassName = tile.classList.contains("letter-tile")
-      ? [...tile.classList].filter((className) => className !== "letter-tile").concat("target-slot", "occupied").join(" ")
-      : tile.className;
+    const tileClassName = [...tile.classList]
+      .filter((className) => !["letter-tile", "selected", "drag-origin", "drop-hover"].includes(className))
+      .concat(tile.classList.contains("letter-tile") ? ["target-slot", "occupied"] : [])
+      .join(" ");
     dragStart.current = { x: event.clientX, y: event.clientY };
     setDrag({
       tileID: id,
@@ -353,6 +379,7 @@ export default function App() {
   const handlePointerMove = (event: ReactPointerEvent) => {
     if (!drag || !dragStart.current) return;
     const moved = drag.moved || Math.hypot(event.clientX - dragStart.current.x, event.clientY - dragStart.current.y) > 6;
+    if (moved && !drag.moved && (selectedTile || selectedTargetSlot)) clearSelection();
     setDrag({
       ...drag,
       left: event.clientX - drag.grabOffsetX,
@@ -417,7 +444,6 @@ export default function App() {
   if (!content || !words || !activeLevel || !game || !derived || !scheduleEntry) return <LoadingScreen />;
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
-  const isToday = scheduleEntry.date === localDateKey(now);
   const goldLevelReached = derived.silverSatisfied;
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
@@ -457,6 +483,7 @@ export default function App() {
 
         <nav className="sidebar-actions" aria-label="Game actions">
           <button aria-label="How to Play" onClick={() => setModal("how")}><HelpCircle /><span>How to Play</span></button>
+          <button aria-label="Stats" onClick={() => setModal("stats")}><ChartNoAxesColumn /><span>Stats</span></button>
           <button
             onClick={() => updateSettings({ soundEnabled: !persisted.settings.soundEnabled })}
             aria-label={persisted.settings.soundEnabled ? "Turn sound off" : "Turn sound on"}
@@ -468,19 +495,31 @@ export default function App() {
         </nav>
 
         <section>
-          <h2>Daily progress</h2>
-          <div className="rail-feature"><CalendarDays /><div><strong>{shortDate(selectedDate)}</strong><small>{isToday ? `Resets in ${resetCountdown(now)}` : "Archive puzzle"}</small></div></div>
-        </section>
-        <section>
           <h2>Streak</h2>
           <div className="rail-feature"><Flame /><div><strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong><small>Best: {stats.bestStreak} days</small></div></div>
         </section>
         <section className="sidebar-stats">
-          <h2>Daily stats</h2>
-          <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
-          <div className="stat-row"><span>Holy Splits</span><strong>{stats.perfectSplits}</strong></div>
-          <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
-          <button className="archive-button" disabled={!yesterdayEntry} onClick={() => yesterdayEntry && setActiveLevelID(yesterdayEntry.levelID)}><ArrowLeft />Yesterday&apos;s puzzle</button>
+          <h2>Recent puzzles</h2>
+          <div className="puzzle-date-grid" aria-label="Recent puzzles">
+            {recentEntries.map((entry) => {
+              const date = parseLocalDate(entry.date);
+              const level = content.levels.find((item) => item.id === entry.levelID);
+              const today = entry.date === localDateKey(now);
+              const tier = level ? highestPuzzleTier(level, persisted.levels[entry.levelID], words) : "none";
+              const tierLabel = tier === "none" ? "not completed" : `${tier} tier`;
+              return <button
+                key={entry.date}
+                className={`puzzle-date-button tier-${tier}`}
+                data-date={entry.date}
+                aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}`}
+                aria-pressed={entry.levelID === activeLevel.id}
+                onClick={() => setActiveLevelID(entry.levelID)}
+              >
+                <span className="puzzle-date-month">{MONTH_ABBREVIATIONS[date.getMonth()]}</span>
+                <strong className="puzzle-date-day">{date.getDate()}</strong>
+              </button>;
+            })}
+          </div>
           <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
         </section>
       </aside>
@@ -533,6 +572,10 @@ export default function App() {
                       disabled={locked}
                       aria-label={`Row ${rowIndex + 1}, position ${columnIndex + 1}${id ? `, letter ${game.tiles[id].character}` : ", empty"}`}
                       onClick={() => {
+                        if (suppressClick.current) {
+                          suppressClick.current = false;
+                          return;
+                        }
                         if (!id) handleEmptyTargetClick(target);
                         else handleOccupiedTargetClick(id, target);
                       }}
@@ -571,6 +614,7 @@ export default function App() {
                   key={`hole-${rowIndex}-${columnIndex}`}
                   data-source-row={rowIndex}
                   data-source-column={columnIndex}
+                  onClick={() => handleEmptySourceClick(rowIndex, columnIndex)}
                 />)}
               </div>
             ))}
@@ -597,6 +641,14 @@ export default function App() {
           <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
           <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
           <p>Hints fill one official answer row at a time. A Holy Split is a Perfect Split earned without a hint.</p>
+        </div>
+      </Modal>}
+
+      {modal === "stats" && <Modal title="Daily Stats" onClose={() => setModal(null)}>
+        <div className="modal-stats">
+          <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
+          <div className="stat-row"><span>Holy Splits</span><strong>{stats.perfectSplits}</strong></div>
+          <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
         </div>
       </Modal>}
 

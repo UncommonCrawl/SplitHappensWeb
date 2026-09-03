@@ -16,6 +16,10 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(page.locator(".tier-lock")).toHaveCount(2);
   await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS");
   await expect(page.locator(".gold-slot")).toHaveCount(0);
+  await page.getByRole("button", { name: "Stats" }).click();
+  await expect(page.getByRole("dialog")).toContainText("Daily Stats");
+  await expect(page.getByRole("dialog")).toContainText("Puzzles Solved");
+  await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: /How to Play/i }).click();
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");
@@ -25,6 +29,66 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: /View Archive/i }).click();
   await expect(page.getByRole("dialog")).toContainText("Puzzle Archive");
+});
+
+test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const dates = page.locator(".puzzle-date-button");
+  await expect(dates).toHaveCount(9);
+  await expect(dates.first().locator(".puzzle-date-month")).toHaveText("AUG");
+  await expect(dates.first().locator(".puzzle-date-day")).toHaveText("26");
+  await expect(dates.last().locator(".puzzle-date-month")).toHaveText("SEP");
+  await expect(dates.last().locator(".puzzle-date-day")).toHaveText("3");
+  await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(dates.last()).toHaveCSS("border-color", "rgb(0, 0, 0)");
+  await expect(dates.last()).toHaveCSS("outline-style", "none");
+  await expect(dates.last()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 3px inset/);
+
+  const firstBox = await dates.first().boundingBox();
+  const lastBox = await dates.last().boundingBox();
+  expect(firstBox).not.toBeNull();
+  expect(lastBox).not.toBeNull();
+  if (!firstBox || !lastBox) return;
+  expect(Math.abs(firstBox.width - firstBox.height)).toBeLessThan(1);
+  expect(Math.abs(firstBox.width - lastBox.width)).toBeLessThan(1);
+  const monthSize = Number.parseFloat(await dates.last().locator(".puzzle-date-month").evaluate((element) => getComputedStyle(element).fontSize));
+  const daySize = Number.parseFloat(await dates.last().locator(".puzzle-date-day").evaluate((element) => getComputedStyle(element).fontSize));
+  expect(daySize / monthSize).toBeCloseTo(2, 1);
+
+  await dates.first().click();
+  await expect(dates.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(dates.first()).toHaveCSS("border-color", "rgb(0, 0, 0)");
+  await expect(dates.first()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 3px inset/);
+  await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
+  await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
+});
+
+test("colors recent puzzles by their highest saved tier", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  const dates = page.locator(".puzzle-date-button");
+
+  for (const index of [0, 1, 2]) {
+    await dates.nth(index).click();
+    await expect(dates.nth(index)).toHaveAttribute("aria-pressed", "true");
+  }
+  await page.evaluate(() => {
+    const storageKey = "split-happens.web.v2";
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+    if (!saved) throw new Error("Expected saved game progress");
+    saved.levels.atlanta.firstSplitAt = "2026-08-26T12:00:00.000Z";
+    saved.levels.summits.firstSilverAt = "2026-08-27T12:00:00.000Z";
+    saved.levels.doors.firstGoldAt = "2026-08-28T12:00:00.000Z";
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+  });
+  await page.reload();
+
+  await expect(page.locator('[data-date="2026-08-26"]')).toHaveCSS("background-color", "rgb(175, 145, 110)");
+  await expect(page.locator('[data-date="2026-08-27"]')).toHaveCSS("background-color", "rgb(209, 209, 209)");
+  await expect(page.locator('[data-date="2026-08-28"]')).toHaveCSS("background-color", "rgb(255, 216, 107)");
+  await expect(page.locator('[data-date="2026-09-03"]')).toHaveCSS("background-color", "rgb(255, 255, 255)");
 });
 
 test("shows completed progression and distinguishes Perfect Split from Holy Split", async ({ page }) => {
@@ -37,6 +101,7 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
 
   await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
   await expect(page.locator(".tier-step.complete")).toHaveCount(3);
+  await expect(page.locator('[data-date="2026-09-03"]')).toHaveCSS("background-color", "rgb(255, 216, 107)");
   await expect(page.locator(".tier-lock")).toHaveCount(0);
   const perfectStep = page.locator(".tier-step").filter({ hasText: "Perfect Split" });
   await expect(perfectStep).toHaveClass(/active/);
@@ -61,6 +126,7 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
 
   await expect(page.getByRole("dialog")).toContainText("Holy Split!");
   await page.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Stats" }).click();
   await expect(page.locator(".stat-row").filter({ hasText: "Holy Splits" })).toBeVisible();
 });
 
@@ -73,6 +139,30 @@ test("supports keyboard-style select then place", async ({ page }) => {
   await slot.focus();
   await page.keyboard.press("Enter");
   await expect(slot).not.toHaveAccessibleName(/empty$/);
+});
+
+test("moves a selected target tile into a clicked empty source slot", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const sourceRow = await source.getAttribute("data-source-row");
+  const sourceColumn = await source.getAttribute("data-source-column");
+  const targetID = await page.locator(".target-slot.empty").first().getAttribute("data-slot-id");
+  expect(sourceRow).toBeTruthy();
+  expect(sourceColumn).toBeTruthy();
+  expect(targetID).toBeTruthy();
+  if (!sourceRow || !sourceColumn || !targetID) return;
+  const target = page.locator(`[data-slot-id="${targetID}"]`);
+
+  await source.click();
+  await target.click();
+  await expect(target).not.toHaveAccessibleName(/empty$/);
+
+  await target.click();
+  await expect(target).toHaveClass(/selected/);
+  await page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`).click();
+
+  await expect(target).toHaveAccessibleName(/empty$/);
+  await expect(page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`)).toHaveClass(/letter-tile/);
 });
 
 test("places a typed source letter into a selected target slot", async ({ page }) => {
@@ -207,6 +297,71 @@ test("uses target-tile sizing and preserves the proportional grab offset while d
   await expect(target).not.toHaveAccessibleName(/empty$/);
 });
 
+test("clears another letter's selection when a tile is dragged", async ({ page }) => {
+  await page.goto("/");
+  const selected = page.locator(".letter-tile").first();
+  const dragged = page.locator(".letter-tile").nth(1);
+  const draggedBox = await dragged.boundingBox();
+  expect(draggedBox).not.toBeNull();
+  if (!draggedBox) return;
+
+  await selected.click();
+  await expect(selected).toHaveClass(/selected/);
+  await page.mouse.move(draggedBox.x + draggedBox.width / 2, draggedBox.y + draggedBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(draggedBox.x + draggedBox.width / 2 + 8, draggedBox.y + draggedBox.height / 2);
+
+  await expect(selected).not.toHaveClass(/selected/);
+  await page.mouse.up();
+});
+
+test("keeps a selected tile visible in its drag preview", async ({ page }) => {
+  await page.goto("/");
+  const tile = page.locator(".letter-tile").first();
+  const tileBox = await tile.boundingBox();
+  expect(tileBox).not.toBeNull();
+  if (!tileBox) return;
+
+  await tile.click();
+  await expect(tile).toHaveClass(/selected/);
+  await page.mouse.move(tileBox.x + tileBox.width / 2, tileBox.y + tileBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(tileBox.x + tileBox.width / 2 + 8, tileBox.y + tileBox.height / 2);
+
+  const preview = page.locator(".drag-tile");
+  await expect(tile).not.toHaveClass(/selected/);
+  await expect(preview).toBeVisible();
+  await expect(preview).not.toHaveClass(/selected/);
+  await expect(preview.locator(".tile-letter")).toHaveCSS("opacity", "1");
+  await page.mouse.up();
+});
+
+test("does not reselect a tile's old slot after dragging it", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const oldSlot = page.locator(".target-slot").first();
+  const newSlot = page.locator(".target-slot").nth(1);
+  await source.click();
+  await oldSlot.click();
+  await oldSlot.click();
+  await expect(oldSlot).toHaveClass(/selected/);
+
+  const oldBox = await oldSlot.boundingBox();
+  const newBox = await newSlot.boundingBox();
+  expect(oldBox).not.toBeNull();
+  expect(newBox).not.toBeNull();
+  if (!oldBox || !newBox) return;
+
+  await page.mouse.move(oldBox.x + oldBox.width / 2, oldBox.y + oldBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(newBox.x + newBox.width / 2, newBox.y + newBox.height / 2);
+  await page.mouse.up();
+
+  await expect(oldSlot).not.toHaveClass(/selected/);
+  await expect(newSlot).not.toHaveClass(/selected/);
+  await expect(page.locator(".target-slot.selected")).toHaveCount(0);
+});
+
 test("returns a target tile to the first free source slot regardless of where it lands", async ({ page }) => {
   await page.goto("/");
   const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);
@@ -240,6 +395,8 @@ test("fits the daily game within the reported short desktop viewport", async ({ 
   await page.goto("/");
   const game = page.locator(".game-area");
   await expect(game).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: /View Archive/i }).click();
+  await page.getByRole("button", { name: /CATS/i }).click();
   await expect(page.locator(".target-row")).toHaveCount(5);
   const criteria = await page.locator(".criteria").boundingBox();
   const target = await page.locator(".target-board").boundingBox();
