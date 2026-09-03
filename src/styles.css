@@ -27,6 +27,7 @@ button, input { font: inherit; }
 button { color: inherit; }
 
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 294px minmax(0, 1fr); }
+.mobile-header, .drawer-backdrop, .drawer-close { display: none; }
 .app-sidebar {
   min-height: 100vh;
   height: 100dvh;
@@ -76,11 +77,6 @@ button { color: inherit; }
 .progress-rail section { padding: 18px 5px; border-bottom: 1px solid rgb(0 0 0 / 11%); }
 .progress-rail section:last-child { border: 0; padding-bottom: 0; }
 .progress-rail h2 { margin: 0 0 17px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: rgb(0 0 0 / 68%); }
-.rail-feature { display: flex; align-items: flex-start; gap: 15px; }
-.rail-feature > svg { width: 28px; height: 28px; stroke-width: 2.2; }
-.rail-feature div { display: grid; gap: 6px; }
-.rail-feature strong { font-size: 15px; }
-.rail-feature small { color: rgb(0 0 0 / 62%); font-size: 13px; }
 .rail-row, .stat-row { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
 .rail-row + .rail-row { border-top: 1px solid #eee; }
 .archive-button { width: 100%; height: 46px; margin-top: 16px; border: 1px solid rgb(0 0 0 / 22%); background: rgb(255 255 255 / 8%); border-radius: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
@@ -274,6 +270,12 @@ button { color: inherit; }
 .modal-wide { width: min(860px, 100%); }
 .modal h2 { margin: 0 40px 26px; text-align: center; font-size: 32px; }
 .modal-stats { font-size: 17px; }
+.modal-streak { margin-bottom: 12px; padding: 18px; border-radius: 12px; background: #fff8df; display: flex; align-items: center; gap: 16px; }
+.modal-streak > svg { width: 36px; height: 36px; flex: 0 0 auto; color: var(--yellow-deep); stroke-width: 2.2; }
+.modal-streak div { display: grid; gap: 3px; }
+.modal-streak span { color: rgb(0 0 0 / 62%); font-size: 13px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+.modal-streak strong { font-size: 22px; }
+.modal-streak small { color: rgb(0 0 0 / 62%); font-size: 14px; }
 .modal-stats .stat-row + .stat-row { border-top: 1px solid var(--line); }
 .modal-close { position: absolute; top: 16px; right: 16px; width: 42px; min-height: 42px; padding: 0; background: #f4f4f4; box-shadow: none; }
 .instructions { text-align: center; font-size: 17px; line-height: 1.45; }
@@ -294,14 +296,7 @@ button { color: inherit; }
 .loader { width: 40px; height: 40px; border: 4px solid rgb(0 0 0 / 13%); border-top-color: #111; border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-@media (max-width: 1050px) {
-  .app-shell { grid-template-columns: clamp(150px, 24vw, 250px) minmax(0, 1fr); }
-  .app-sidebar { padding-inline: 13px; }
-  .sidebar-brand h1 { font-size: 14px; }
-  .workspace { padding-inline: 24px; }
-}
-
-@media (hover: hover) and (pointer: fine) and (max-height: 780px) {
+@media (max-height: 780px) {
   .app-sidebar { padding-block: 12px 16px; }
   .sidebar-brand { padding-bottom: 10px; }
   .wordmark { height: 40px; }
@@ -316,7 +311,7 @@ button { color: inherit; }
   .puzzle-pagination { margin-top: 8px; gap: 6px; }
 }
 
-@media (hover: hover) and (pointer: fine) and (max-height: 650px) {
+@media (max-height: 650px) {
   .app-sidebar { padding-block: 8px; }
   .sidebar-brand { padding-bottom: 4px; }
   .wordmark { height: 28px; }
@@ -326,11 +321,6 @@ button { color: inherit; }
   .sidebar-actions svg { width: 20px; height: 20px; }
   .progress-rail section { padding-block: 5px; }
   .progress-rail h2 { margin-bottom: 4px; font-size: 10px; }
-  .rail-feature { gap: 10px; }
-  .rail-feature > svg { width: 20px; height: 20px; }
-  .rail-feature div { gap: 2px; }
-  .rail-feature strong { font-size: 13px; }
-  .rail-feature small { font-size: 11px; }
   .rail-row, .stat-row { min-height: 24px; font-size: 12px; }
   .archive-button { height: 30px; margin-top: 4px; font-size: 12px; }
   .archive-button svg { width: 16px; }
@@ -339,7 +329,7 @@ button { color: inherit; }
   .puzzle-date-button { --puzzle-month-size: clamp(6px, 5cqw, 8px); }
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) and (pointer: fine) and (min-width: 1051px) {
   html, body, #root {
     width: 100%;
     height: 100%;
@@ -358,34 +348,99 @@ button { color: inherit; }
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .app-shell { display: flex; flex-direction: column; }
-  .workspace { order: 1; height: auto; min-height: 100dvh; overflow: visible; padding: 8px 12px 24px; }
-  .game-area { width: min(760px, 100%); height: calc(100dvh - 32px); min-height: 0; align-self: center; }
-  .app-sidebar { order: 2; position: static; width: 100%; min-height: auto; height: auto; overflow: visible; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 18px; padding: 20px max(14px, calc((100% - 760px) / 2)); }
-  .sidebar-brand { grid-column: 1 / -1; }
-  .wordmark { width: min(280px, 70vw); }
-  .sidebar-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .sidebar-actions button { justify-content: center; }
-  .progress-rail section { padding: 16px 0; border-bottom: 0; }
-  .progress-rail h2 { margin-bottom: 10px; }
   .modal { padding: 38px 22px 28px; border-radius: 16px; }
   .modal h2 { font-size: 26px; }
 }
 
-@media (max-width: 640px) and (hover: none) and (pointer: coarse) {
-  .app-sidebar { grid-template-columns: 1fr 1fr; }
-  .progress-rail section { border-bottom: 1px solid var(--line); }
-  .progress-rail section:nth-child(2) { border-bottom: 1px solid var(--line); }
-  .progress-rail .sidebar-stats { grid-column: 1 / -1; border-bottom: 0; }
+@media (max-width: 1050px) {
+  html, body, #root { width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+  .app-shell {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .mobile-header {
+    min-height: 66px;
+    padding: max(4px, env(safe-area-inset-top)) 12px 6px;
+    background: var(--gold);
+    box-shadow: 0 1px 5px rgb(0 0 0 / 10%);
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    z-index: 20;
+  }
+  .mobile-menu-button, .drawer-close {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--control);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .mobile-menu-button:hover, .drawer-close:hover { background: rgb(255 255 255 / 28%); }
+  .mobile-menu-button svg, .drawer-close svg { width: 28px; height: 28px; stroke-width: 2.5; }
+  .mobile-brand { min-width: 0; display: grid; justify-items: center; gap: 1px; text-align: center; }
+  .mobile-wordmark { width: min(230px, 100%); height: 34px; object-fit: contain; }
+  .mobile-brand h1 { margin: 0; font-size: 13px; line-height: 1.15; white-space: nowrap; }
+  .mobile-header-spacer { width: 44px; height: 44px; }
+  .workspace { width: 100%; height: 100%; min-height: 0; overflow: hidden; padding: 8px 12px max(16px, env(safe-area-inset-bottom)); }
+  .game-area { width: min(760px, 100%); height: 100%; min-height: 0; align-self: center; }
+  .app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(294px, 88vw);
+    min-height: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    padding: max(18px, env(safe-area-inset-top)) 16px max(26px, env(safe-area-inset-bottom));
+    z-index: 70;
+    box-shadow: 4px 0 20px rgb(0 0 0 / 24%);
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform .22s ease, visibility 0s linear .22s;
+  }
+  .app-sidebar.drawer-open { transform: translateX(0); visibility: visible; transition: transform .22s ease; }
+  .app-sidebar .sidebar-brand { display: none; }
+  .drawer-close { margin: -5px -5px 5px auto; }
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgb(0 0 0 / 36%);
+    display: block;
+    cursor: default;
+  }
+  .sidebar-actions { padding-top: 5px; }
 }
 
-@media (max-width: 480px) and (hover: none) and (pointer: coarse) {
-  .app-sidebar { grid-template-columns: 1fr; }
-  .sidebar-actions button { flex-direction: column; gap: 4px; padding-block: 7px; font-size: 12px; }
-  .progress-rail .sidebar-stats { grid-column: auto; border-bottom: 0; }
+@media (max-width: 480px) {
   .tier-step strong { font-size: 9px; letter-spacing: .025em; }
   .tier-connector { margin-inline: -15px; }
   .game-toolbar { width: min(290px, 100%); }
+}
+
+@media (max-width: 360px), (max-height: 430px) {
+  .mobile-header { min-height: 38px; padding-block: max(1px, env(safe-area-inset-top)) 1px; grid-template-columns: 36px minmax(0, 1fr) 36px; }
+  .mobile-menu-button { width: 36px; height: 36px; min-height: 36px; }
+  .mobile-menu-button svg { width: 25px; height: 25px; }
+  .mobile-wordmark { height: 22px; }
+  .mobile-brand h1 { font-size: 10px; }
+  .mobile-header-spacer { width: 36px; height: 36px; }
+  .workspace { padding-block: 0 max(0px, env(safe-area-inset-bottom)); }
+  .game-area { row-gap: 1.8cqh; }
 }
 
 @media (max-height: 700px) {

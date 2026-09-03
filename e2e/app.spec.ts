@@ -1,4 +1,12 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+async function openSidebarIfNeeded(page: Page) {
+  const menu = page.getByRole("button", { name: "Open sidebar menu" });
+  if (await menu.isVisible()) {
+    await menu.click();
+    await expect(page.locator("#sidebar-menu")).toHaveClass(/drawer-open/);
+  }
+}
 
 test("loads the daily game and opens core dialogs", async ({ page }) => {
   await page.goto("/");
@@ -16,10 +24,15 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(page.locator(".tier-lock")).toHaveCount(2);
   await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS");
   await expect(page.locator(".gold-slot")).toHaveCount(0);
+  await expect(page.locator(".app-sidebar")).not.toContainText("Streak");
+  await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: "Stats" }).click();
   await expect(page.getByRole("dialog")).toContainText("Daily Stats");
+  await expect(page.getByRole("dialog")).toContainText("Current Streak");
+  await expect(page.getByRole("dialog")).toContainText("Best:");
   await expect(page.getByRole("dialog")).toContainText("Puzzles Solved");
   await page.getByRole("button", { name: "Close" }).click();
+  await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: /How to Play/i }).click();
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");
@@ -27,6 +40,7 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(howToPlay).toContainText("Holy Split");
   await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
   await page.getByRole("button", { name: "Close" }).click();
+  await openSidebarIfNeeded(page);
   await expect(page.getByRole("button", { name: "Prev." })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Next" })).toHaveCSS("background-color", "rgba(96, 96, 96, 0.5)");
@@ -35,6 +49,7 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
 test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await openSidebarIfNeeded(page);
 
   const dates = page.locator(".puzzle-date-button");
   await expect(dates).toHaveCount(9);
@@ -64,6 +79,7 @@ test("shows nine equal recent-puzzle buttons ending with today and navigates by 
   await expect(dates.first()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 3px inset/);
   await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
   await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await openSidebarIfNeeded(page);
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Prev." }).click();
@@ -101,6 +117,7 @@ test("colors recent puzzles by their highest saved tier", async ({ page }) => {
   const dates = page.locator(".puzzle-date-button");
 
   for (const index of [0, 1, 2]) {
+    await openSidebarIfNeeded(page);
     await dates.nth(index).click();
     await expect(dates.nth(index)).toHaveAttribute("aria-pressed", "true");
   }
@@ -156,6 +173,7 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
 
   await expect(page.getByRole("dialog")).toContainText("Holy Split!");
   await page.getByRole("button", { name: "Close" }).click();
+  await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: "Stats" }).click();
   await expect(page.locator(".stat-row").filter({ hasText: "Holy Splits" })).toBeVisible();
 });
@@ -457,10 +475,51 @@ const layoutViewports = [
   { width: 360, height: 640 },
 ];
 
+test("uses an accessible sidebar drawer at constrained widths", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const header = page.locator(".mobile-header");
+  const menu = page.getByRole("button", { name: "Open sidebar menu" });
+  const drawer = page.locator("#sidebar-menu");
+  await expect(header).toBeVisible();
+  await expect(page.locator(".workspace")).toHaveCSS("padding-bottom", "16px");
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  await expect(drawer).toHaveAttribute("aria-hidden", "true");
+
+  await menu.click();
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer).toHaveAttribute("aria-modal", "true");
+  await expect(drawer).toHaveClass(/drawer-open/);
+  await expect(page.getByRole("button", { name: "Close sidebar menu" }).last()).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(drawer).toHaveAttribute("aria-hidden", "true");
+  await expect(menu).toBeFocused();
+
+  await menu.click();
+  await page.locator(".drawer-backdrop").click({ position: { x: 900, y: 700 } });
+  await expect(menu).toBeFocused();
+
+  await menu.click();
+  await page.locator('[data-date="2026-08-26"]').click();
+  await expect(header.locator("h1")).toContainText("August 26th");
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+
+  await page.setViewportSize({ width: 500, height: 718 });
+  await openSidebarIfNeeded(page);
+  await page.locator('[data-date="2026-09-03"]').click();
+  const toolbarBox = await page.locator(".game-toolbar").boundingBox();
+  expect(toolbarBox).not.toBeNull();
+  if (toolbarBox) expect(718 - (toolbarBox.y + toolbarBox.height)).toBeGreaterThanOrEqual(4);
+});
+
 test("reserves a fifth target row and keeps four- and five-row tile sizes consistent", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".game-toolbar")).toHaveCSS("margin-bottom", "0px");
 
   await page.locator('[data-date="2026-08-26"]').click();
   await expect(page.locator(".target-row")).toHaveCount(4);
@@ -543,8 +602,8 @@ for (const viewport of layoutViewports) {
     expect(sourceTile.width).toBeLessThanOrEqual(60);
     expect(gameOverflow).toBeLessThanOrEqual(1);
 
-    const usesDesktopLayout = await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches);
-    if (usesDesktopLayout) {
+    const usesPermanentSidebar = viewport.width > 1050;
+    if (usesPermanentSidebar) {
       expect(rail.x + rail.width).toBeLessThanOrEqual(game.x);
       const documentOverflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
       const sidebar = page.locator(".app-sidebar");
@@ -555,7 +614,10 @@ for (const viewport of layoutViewports) {
       expect(sidebarOverflow).toBeLessThanOrEqual(0);
       expect(documentOverflow).toBeLessThanOrEqual(0);
     } else {
-      expect(rail.y).toBeGreaterThanOrEqual(game.y + game.height);
+      await expect(page.locator(".mobile-header")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Open sidebar menu" })).toHaveAttribute("aria-expanded", "false");
+      await expect(page.locator("#sidebar-menu")).toHaveAttribute("aria-hidden", "true");
+      expect(rail.x + rail.width).toBeLessThanOrEqual(1);
     }
   });
 }

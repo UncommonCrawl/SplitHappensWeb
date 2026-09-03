@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   ArrowLeft, ArrowRight, ChartNoAxesColumn, Flame, HelpCircle, Lightbulb, Lock,
-  RotateCcw, Share2, Trophy, Undo2, Volume2, VolumeX, X,
+  Menu, RotateCcw, Share2, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
@@ -88,11 +88,15 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
   const [archivePage, setArchivePage] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isConstrained, setIsConstrained] = useState(() => window.matchMedia("(max-width: 1050px)").matches);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [dragHover, setDragHover] = useState<SlotID | "source" | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const previousGold = useRef(false);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   const refreshContent = useCallback(() => {
     setLoadError(null);
@@ -111,6 +115,57 @@ export default function App() {
     const timer = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 1050px)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsConstrained(event.matches);
+      if (!event.matches) setDrawerOpen(false);
+    };
+    setIsConstrained(media.matches);
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
+
+  const closeDrawer = useCallback((restoreFocus = true) => {
+    setDrawerOpen(false);
+    if (restoreFocus) window.requestAnimationFrame(() => hamburgerRef.current?.focus());
+  }, []);
+
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (drawer) drawer.inert = isConstrained && !drawerOpen;
+    if (!drawerOpen || !isConstrained) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusable = () => Array.from(drawer?.querySelectorAll<HTMLElement>("button:not(:disabled), [href], [tabindex]:not([tabindex='-1'])") ?? []);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDrawer();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    window.requestAnimationFrame(() => focusable()[0]?.focus());
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeDrawer, drawerOpen, isConstrained]);
 
   const activeLevel = useMemo(() => content?.levels.find((level) => level.id === activeLevelID) ?? null, [content, activeLevelID]);
   const scheduleEntry = useMemo(() => content?.schedule.find((entry) => entry.levelID === activeLevelID) ?? null, [content, activeLevelID]);
@@ -472,19 +527,54 @@ export default function App() {
     "--target-compact-height-limit": `calc(${36 / targetSizingRows}cqh - 0.5px)`,
     "--source-height-limit": `${18.75 / game.sourceSlots.length}cqh`,
   } as CSSProperties;
+  const handleSidebarAction = (action: () => void) => {
+    action();
+    if (isConstrained) closeDrawer();
+  };
+  const handlePuzzleSelection = (levelID: string) => {
+    setActiveLevelID(levelID);
+    if (isConstrained) closeDrawer();
+  };
   return (
     <div className="app-shell">
-      <aside className="app-sidebar progress-rail">
+      <header className="mobile-header">
+        <button
+          ref={hamburgerRef}
+          className="mobile-menu-button"
+          aria-label="Open sidebar menu"
+          aria-controls="sidebar-menu"
+          aria-expanded={drawerOpen}
+          onClick={() => setDrawerOpen(true)}
+        ><Menu /></button>
+        <div className="mobile-brand">
+          <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="mobile-wordmark" />
+          <h1>{longDate(selectedDate)}</h1>
+        </div>
+        <span className="mobile-header-spacer" aria-hidden="true" />
+      </header>
+
+      {isConstrained && drawerOpen && <button className="drawer-backdrop" aria-label="Close sidebar menu" onClick={() => closeDrawer()} />}
+
+      <aside
+        ref={drawerRef}
+        id="sidebar-menu"
+        className={`app-sidebar progress-rail ${drawerOpen ? "drawer-open" : ""}`}
+        role={isConstrained ? "dialog" : undefined}
+        aria-modal={isConstrained && drawerOpen ? "true" : undefined}
+        aria-label={isConstrained ? "Sidebar menu" : "Game sidebar"}
+        aria-hidden={isConstrained && !drawerOpen ? "true" : undefined}
+      >
+        <button className="drawer-close" aria-label="Close sidebar menu" onClick={() => closeDrawer()}><X /></button>
         <header className="sidebar-brand">
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
           <h1>{longDate(selectedDate)}</h1>
         </header>
 
         <nav className="sidebar-actions" aria-label="Game actions">
-          <button aria-label="How to Play" onClick={() => setModal("how")}><HelpCircle /><span>How to Play</span></button>
-          <button aria-label="Stats" onClick={() => setModal("stats")}><ChartNoAxesColumn /><span>Stats</span></button>
+          <button aria-label="How to Play" onClick={() => handleSidebarAction(() => setModal("how"))}><HelpCircle /><span>How to Play</span></button>
+          <button aria-label="Stats" onClick={() => handleSidebarAction(() => setModal("stats"))}><ChartNoAxesColumn /><span>Stats</span></button>
           <button
-            onClick={() => updateSettings({ soundEnabled: !persisted.settings.soundEnabled })}
+            onClick={() => handleSidebarAction(() => updateSettings({ soundEnabled: !persisted.settings.soundEnabled }))}
             aria-label={persisted.settings.soundEnabled ? "Turn sound off" : "Turn sound on"}
             aria-pressed={persisted.settings.soundEnabled}
           >
@@ -493,10 +583,6 @@ export default function App() {
           </button>
         </nav>
 
-        <section>
-          <h2>Streak</h2>
-          <div className="rail-feature"><Flame /><div><strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong><small>Best: {stats.bestStreak} days</small></div></div>
-        </section>
         <section className="sidebar-stats">
           <h2>Recent puzzles</h2>
           <div className="puzzle-date-grid" aria-label="Recent puzzles">
@@ -513,7 +599,7 @@ export default function App() {
                 data-date={entry.date}
                 aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}`}
                 aria-pressed={entry.levelID === activeLevel.id}
-                onClick={() => setActiveLevelID(entry.levelID)}
+                onClick={() => handlePuzzleSelection(entry.levelID)}
               >
                 <span className="puzzle-date-month">{MONTH_ABBREVIATIONS[date.getMonth()]}</span>
                 <strong className="puzzle-date-day">{date.getDate()}</strong>
@@ -649,6 +735,14 @@ export default function App() {
 
       {modal === "stats" && <Modal title="Daily Stats" onClose={() => setModal(null)}>
         <div className="modal-stats">
+          <div className="modal-streak">
+            <Flame />
+            <div>
+              <span>Current Streak</span>
+              <strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong>
+              <small>Best: {stats.bestStreak} {stats.bestStreak === 1 ? "day" : "days"}</small>
+            </div>
+          </div>
           <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
           <div className="stat-row"><span>Holy Splits</span><strong>{stats.perfectSplits}</strong></div>
           <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
