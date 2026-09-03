@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  Archive, ChartNoAxesColumn, Flame, HelpCircle, Lightbulb, Lock, RotateCcw,
-  Share2, Trophy, Undo2, Volume2, VolumeX, X,
+  ArrowLeft, ArrowRight, ChartNoAxesColumn, Flame, HelpCircle, Lightbulb, Lock,
+  RotateCcw, Share2, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
@@ -10,7 +10,7 @@ import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 
-type ModalName = "how" | "stats" | "archive" | "victory" | null;
+type ModalName = "how" | "stats" | "victory" | null;
 
 type DragState = {
   tileID: TileID;
@@ -52,10 +52,6 @@ function longDate(date: Date): string {
   return `${weekday}, ${month} ${ordinal(date.getDate())}`;
 }
 
-function shortDate(date: Date): string {
-  return `${date.toLocaleDateString(undefined, { month: "long" })} ${ordinal(date.getDate())}`;
-}
-
 const MONTH_ABBREVIATIONS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
@@ -91,6 +87,7 @@ export default function App() {
   const [modal, setModal] = useState<ModalName>(null);
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
+  const [archivePage, setArchivePage] = useState(0);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [dragHover, setDragHover] = useState<SlotID | "source" | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -117,8 +114,10 @@ export default function App() {
 
   const activeLevel = useMemo(() => content?.levels.find((level) => level.id === activeLevelID) ?? null, [content, activeLevelID]);
   const scheduleEntry = useMemo(() => content?.schedule.find((entry) => entry.levelID === activeLevelID) ?? null, [content, activeLevelID]);
-  const releasedEntries = useMemo(() => content?.schedule.filter((entry) => entry.date <= localDateKey(now)).slice().reverse() ?? [], [content, now]);
-  const recentEntries = useMemo(() => recentScheduleEntries(content?.schedule ?? [], now), [content, now]);
+  const releasedEntries = useMemo(() => content?.schedule.filter((entry) => entry.date <= localDateKey(now)) ?? [], [content, now]);
+  const recentEntries = useMemo(() => recentScheduleEntries(content?.schedule ?? [], now, 9, archivePage), [content, now, archivePage]);
+  const hasPreviousPage = releasedEntries.length > (archivePage + 1) * 9;
+  const hasNextPage = archivePage > 0;
 
   useEffect(() => {
     if (!activeLevel || !words) return;
@@ -501,6 +500,7 @@ export default function App() {
         <section className="sidebar-stats">
           <h2>Recent puzzles</h2>
           <div className="puzzle-date-grid" aria-label="Recent puzzles">
+            {Array.from({ length: 9 - recentEntries.length }, (_, index) => <span className="puzzle-date-placeholder" aria-hidden="true" key={`placeholder-${index}`} />)}
             {recentEntries.map((entry) => {
               const date = parseLocalDate(entry.date);
               const level = content.levels.find((item) => item.id === entry.levelID);
@@ -520,7 +520,10 @@ export default function App() {
               </button>;
             })}
           </div>
-          <button className="archive-button" onClick={() => setModal("archive")}><Archive />View Archive</button>
+          <div className="puzzle-pagination" aria-label="Archive navigation">
+            <button className="archive-button" disabled={!hasPreviousPage} onClick={() => setArchivePage((page) => page + 1)}><ArrowLeft /><span>Prev.</span></button>
+            <button className="archive-button" disabled={!hasNextPage} onClick={() => setArchivePage((page) => Math.max(0, page - 1))}><span>Next</span><ArrowRight /></button>
+          </div>
         </section>
       </aside>
 
@@ -649,19 +652,6 @@ export default function App() {
           <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
           <div className="stat-row"><span>Holy Splits</span><strong>{stats.perfectSplits}</strong></div>
           <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
-        </div>
-      </Modal>}
-
-      {modal === "archive" && <Modal title="Puzzle Archive" onClose={() => setModal(null)} wide>
-        <div className="archive-grid">
-          {releasedEntries.map((entry) => {
-            const level = content.levels.find((item) => item.id === entry.levelID);
-            const saved = persisted.levels[entry.levelID];
-            if (!level) return null;
-            return <button key={entry.levelID} className={entry.levelID === activeLevel.id ? "active" : ""} onClick={() => { setActiveLevelID(entry.levelID); setModal(null); }}>
-              <span>{shortDate(parseLocalDate(entry.date))}</span><strong>{level.goldWord}</strong><small>{saved?.perfectSplit ? "Holy Split" : saved?.firstGoldAt ? "Perfect Split" : saved?.firstSplitAt ? "Split" : "Not played"}</small>
-            </button>;
-          })}
         </div>
       </Modal>}
 

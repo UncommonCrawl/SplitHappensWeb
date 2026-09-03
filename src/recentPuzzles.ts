@@ -4,12 +4,10 @@ import type { LevelDefinition, LevelProgress, ScheduleEntry } from "./types";
 
 export type PuzzleTier = "none" | "bronze" | "silver" | "gold";
 
-export function recentScheduleEntries(schedule: ScheduleEntry[], now: Date, count = 9): ScheduleEntry[] {
-  const entriesByDate = new Map(schedule.map((entry) => [entry.date, entry]));
-  return Array.from({ length: count }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (count - 1 - index));
-    return entriesByDate.get(localDateKey(date));
-  }).filter((entry): entry is ScheduleEntry => Boolean(entry));
+export function recentScheduleEntries(schedule: ScheduleEntry[], now: Date, count = 9, page = 0): ScheduleEntry[] {
+  const released = schedule.filter((entry) => entry.date <= localDateKey(now));
+  const end = Math.max(0, released.length - page * count);
+  return released.slice(Math.max(0, end - count), end);
 }
 
 export function highestPuzzleTier(level: LevelDefinition, progress: LevelProgress | undefined, words: Set<string>): PuzzleTier {

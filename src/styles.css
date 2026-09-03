@@ -87,6 +87,9 @@ button { color: inherit; }
 .archive-button:hover:not(:disabled) { border-color: rgb(0 0 0 / 40%); background: rgb(255 255 255 / 22%); }
 .archive-button:disabled { opacity: .45; cursor: not-allowed; }
 .archive-button svg { width: 20px; }
+.puzzle-pagination { margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.puzzle-pagination .archive-button { min-width: 0; margin-top: 0; }
+.puzzle-pagination .archive-button:disabled { opacity: 1; border-color: rgb(96 96 96 / 50%); background: rgb(96 96 96 / 50%); color: rgb(0 0 0 / 45%); }
 .puzzle-date-grid {
   width: 100%;
   margin: 16px auto 0;
@@ -120,6 +123,7 @@ button { color: inherit; }
 .puzzle-date-button.tier-bronze { background: var(--bronze); }
 .puzzle-date-button.tier-silver { background: var(--silver); }
 .puzzle-date-button.tier-gold { background: var(--gold); }
+.puzzle-date-placeholder { width: 100%; aspect-ratio: 1; visibility: hidden; }
 .puzzle-date-month { font-size: var(--puzzle-month-size); font-weight: 750; letter-spacing: .04em; }
 .puzzle-date-day { font-size: calc(var(--puzzle-month-size) * 2); line-height: .95; }
 
@@ -309,6 +313,7 @@ button { color: inherit; }
   .rail-row, .stat-row { min-height: 36px; }
   .archive-button { height: 42px; margin-top: 8px; }
   .puzzle-date-grid { margin-top: 8px; gap: 4px; }
+  .puzzle-pagination { margin-top: 8px; gap: 6px; }
 }
 
 @media (hover: hover) and (pointer: fine) and (max-height: 650px) {
@@ -330,6 +335,7 @@ button { color: inherit; }
   .archive-button { height: 30px; margin-top: 4px; font-size: 12px; }
   .archive-button svg { width: 16px; }
   .puzzle-date-grid { margin-top: 4px; gap: 3px; }
+  .puzzle-pagination { margin-top: 4px; gap: 4px; }
   .puzzle-date-button { --puzzle-month-size: clamp(6px, 5cqw, 8px); }
 }
 

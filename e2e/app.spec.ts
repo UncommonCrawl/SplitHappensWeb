@@ -27,8 +27,9 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(howToPlay).toContainText("Holy Split");
   await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
   await page.getByRole("button", { name: "Close" }).click();
-  await page.getByRole("button", { name: /View Archive/i }).click();
-  await expect(page.getByRole("dialog")).toContainText("Puzzle Archive");
+  await expect(page.getByRole("button", { name: "Prev." })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Next" })).toHaveCSS("background-color", "rgba(96, 96, 96, 0.5)");
 });
 
 test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
@@ -63,6 +64,35 @@ test("shows nine equal recent-puzzle buttons ending with today and navigates by 
   await expect(dates.first()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 3px inset/);
   await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
   await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Prev." }).click();
+  await expect(dates.first().locator(".puzzle-date-day")).toHaveText("17");
+  await expect(dates.last().locator(".puzzle-date-day")).toHaveText("25");
+  await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
+  await expect(page.getByRole("button", { name: "Next" })).toBeEnabled();
+
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(dates.first().locator(".puzzle-date-day")).toHaveText("26");
+  await expect(dates.first()).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
+
+  const previousPage = page.getByRole("button", { name: "Prev." });
+  for (let pageIndex = 0; pageIndex < 20 && await previousPage.isEnabled(); pageIndex += 1) await previousPage.click();
+  await expect(previousPage).toBeDisabled();
+  await expect(page.locator(".puzzle-date-placeholder")).toHaveCount(2);
+  await expect(dates).toHaveCount(7);
+  await expect(dates.first()).toHaveAttribute("data-date", "2026-05-01");
+  await expect(dates.last()).toHaveAttribute("data-date", "2026-05-07");
+  const gridBox = await page.locator(".puzzle-date-grid").boundingBox();
+  const oldestLastBox = await dates.last().boundingBox();
+  expect(gridBox).not.toBeNull();
+  expect(oldestLastBox).not.toBeNull();
+  if (gridBox && oldestLastBox) {
+    expect(oldestLastBox.x).toBeGreaterThan(gridBox.x + gridBox.width * .6);
+    expect(oldestLastBox.y).toBeGreaterThan(gridBox.y + gridBox.height * .6);
+  }
+  await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
 });
 
 test("colors recent puzzles by their highest saved tier", async ({ page }) => {
@@ -395,8 +425,7 @@ test("fits the daily game within the reported short desktop viewport", async ({ 
   await page.goto("/");
   const game = page.locator(".game-area");
   await expect(game).toBeVisible({ timeout: 15_000 });
-  await page.getByRole("button", { name: /View Archive/i }).click();
-  await page.getByRole("button", { name: /CATS/i }).click();
+  await page.locator('[data-date="2026-09-02"]').click();
   await expect(page.locator(".target-row")).toHaveCount(5);
   const criteria = await page.locator(".criteria").boundingBox();
   const target = await page.locator(".target-board").boundingBox();
@@ -433,8 +462,7 @@ test("reserves a fifth target row and keeps four- and five-row tile sizes consis
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
 
-  await page.getByRole("button", { name: /View Archive/i }).click();
-  await page.getByRole("button", { name: /COFFEE/i }).click();
+  await page.locator('[data-date="2026-08-26"]').click();
   await expect(page.locator(".target-row")).toHaveCount(4);
   const fourRowBoard = await page.locator(".target-board").boundingBox();
   const fourRowTile = await page.locator(".target-slot").first().boundingBox();
@@ -442,8 +470,7 @@ test("reserves a fifth target row and keeps four- and five-row tile sizes consis
   expect(fourRowTile).not.toBeNull();
   if (!fourRowBoard || !fourRowTile) return;
 
-  await page.getByRole("button", { name: /View Archive/i }).click();
-  await page.getByRole("button", { name: /CATS/i }).click();
+  await page.locator('[data-date="2026-08-28"]').click();
   await expect(page.locator(".target-row")).toHaveCount(5);
   const fiveRowBoard = await page.locator(".target-board").boundingBox();
   const fiveRowTile = await page.locator(".target-slot").first().boundingBox();
@@ -484,8 +511,6 @@ for (const viewport of layoutViewports) {
     await page.goto("/");
     await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
 
-    await page.getByRole("button", { name: /View Archive/i }).click();
-    await page.getByRole("button", { name: /DENZEL/i }).click();
     await expect(page.locator(".target-row")).toHaveCount(6);
     await page.evaluate(() => window.scrollTo(0, 0));
 

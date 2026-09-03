@@ -29,6 +29,28 @@ describe("recent puzzle grid", () => {
     expect(entries[8].date).toBe("2026-08-31");
   });
 
+  it("pages backward in non-overlapping groups of nine", () => {
+    const schedule: ScheduleEntry[] = Array.from({ length: 18 }, (_, index) => ({
+      date: `2026-08-${String(14 + index).padStart(2, "0")}`,
+      levelID: `level-${index}`,
+    }));
+    const olderEntries = recentScheduleEntries(schedule, new Date(2026, 7, 31), 9, 1);
+    expect(olderEntries).toHaveLength(9);
+    expect(olderEntries[0].date).toBe("2026-08-14");
+    expect(olderEntries[8].date).toBe("2026-08-22");
+  });
+
+  it("returns only the remaining dates on the oldest partial page", () => {
+    const schedule: ScheduleEntry[] = Array.from({ length: 16 }, (_, index) => ({
+      date: `2026-08-${String(16 + index).padStart(2, "0")}`,
+      levelID: `level-${index}`,
+    }));
+    const oldestEntries = recentScheduleEntries(schedule, new Date(2026, 7, 31), 9, 1);
+    expect(oldestEntries).toHaveLength(7);
+    expect(oldestEntries[0].date).toBe("2026-08-16");
+    expect(oldestEntries[6].date).toBe("2026-08-22");
+  });
+
   it("reports the highest earned tier and infers legacy Silver progress", () => {
     const reduce = gameReducer(level, words);
     let silverGame = createGame(level);
