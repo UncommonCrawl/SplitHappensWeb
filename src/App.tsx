@@ -26,15 +26,15 @@ type DragState = {
   moved: boolean;
 };
 
-function Seal({ tone, achieved = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean }) {
+function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (
     <span className={`seal ${tone} ${achieved ? "achieved" : ""}`} aria-hidden="true">
       <svg viewBox="0 0 100 100" role="img">
         <path className="seal-fill" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
-        {achieved && <>
+        {satisfied &&
           <path className="seal-outline" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
-          <path className="seal-check" d="M29 51L43 65L72 35" />
-        </>}
+        }
+        {achieved && <path className="seal-check" d="M29 51L43 65L72 35" />}
       </svg>
     </span>
   );
@@ -499,24 +499,42 @@ export default function App() {
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
   const savedProgress = persisted.levels[activeLevel.id];
-  const hardUnlocked = derived.allWordsValid || Boolean(
+  const normalAchieved = derived.allWordsValid || Boolean(
     savedProgress?.firstSplitAt || savedProgress?.firstSilverAt || savedProgress?.firstGoldAt,
   );
-  const goldUnlocked = derived.silverSatisfied || Boolean(savedProgress?.firstSilverAt || savedProgress?.firstGoldAt);
+  const hardAchieved = derived.silverSatisfied || Boolean(savedProgress?.firstSilverAt || savedProgress?.firstGoldAt);
+  const goldAchieved = derived.victorySatisfied || Boolean(savedProgress?.firstGoldAt);
+  const hardUnlocked = normalAchieved;
+  const goldUnlocked = hardAchieved;
   const goldLevelReached = goldUnlocked;
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
   const achievementTiers = [
-    { name: "Normal", tone: "bronze" as const, unlocked: true, complete: derived.allWordsValid },
-    { name: "Hard", tone: "silver" as const, unlocked: hardUnlocked, complete: hardUnlocked && derived.bonus.satisfied },
-    { name: "Perfect Split", tone: "gold" as const, unlocked: goldUnlocked, complete: goldUnlocked && derived.goldSatisfied },
+    { name: "Normal", tone: "bronze" as const, unlocked: true, achieved: normalAchieved, satisfied: derived.allWordsValid },
+    { name: "Hard", tone: "silver" as const, unlocked: hardUnlocked, achieved: hardAchieved, satisfied: hardUnlocked && derived.bonus.satisfied },
+    { name: "Perfect Split", tone: "gold" as const, unlocked: goldUnlocked, achieved: goldAchieved, satisfied: goldUnlocked && derived.goldSatisfied },
   ];
   const activeTierIndex = goldUnlocked ? 2 : hardUnlocked ? 1 : 0;
-  const activeObjective = activeTierIndex === 0
-    ? <span>REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS</span>
-    : activeTierIndex === 1
-      ? <span>{derived.bonus.label}</span>
-      : <><span>Highlighted tiles spell <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> in order.</span></>;
+  const criterionLines = [
+    {
+      name: "Normal",
+      unlocked: true,
+      met: derived.allWordsValid,
+      content: <>REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS</>,
+    },
+    {
+      name: "Hard",
+      unlocked: hardUnlocked,
+      met: derived.bonus.satisfied,
+      content: <>{derived.bonus.label}</>,
+    },
+    {
+      name: "Perfect Split",
+      unlocked: goldUnlocked,
+      met: derived.goldSatisfied,
+      content: <>HIGHLIGHTED TILES SPELL <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> IN ORDER.</>,
+    },
+  ];
   const canRecall = game.hintedRows.length > 0
     || game.targetSlots.some((row) => row.some(Boolean))
     || game.sourceSlots.some((row, rowIndex) => row.some((id, columnIndex) => {
@@ -632,20 +650,26 @@ export default function App() {
               {achievementTiers.map((tier, index) => <Fragment key={tier.name}>
                 {index > 0 && <span className={`tier-connector ${tier.unlocked ? "complete" : ""}`} aria-hidden="true" />}
                 <div
-                  className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.complete ? "complete" : ""} ${index === activeTierIndex ? "active" : ""}`}
+                  className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.achieved ? "complete" : ""} ${tier.satisfied ? "satisfied" : ""} ${index === activeTierIndex ? "active" : ""}`}
                   role="listitem"
                   aria-current={index === activeTierIndex ? "step" : undefined}
-                  aria-label={`${tier.name}: ${tier.complete ? "currently satisfied" : tier.unlocked ? "unlocked, not currently satisfied" : "not yet available"}`}
+                  aria-label={`${tier.name}: ${tier.achieved ? `achieved, ${tier.satisfied ? "currently satisfied" : "not currently satisfied"}` : tier.unlocked ? "unlocked, not currently satisfied" : "not yet available"}`}
                 >
                   <span className="tier-seal">
-                    <Seal tone={tier.tone} achieved={tier.complete} />
+                    <Seal tone={tier.tone} achieved={tier.achieved} satisfied={tier.satisfied} />
                     {!tier.unlocked && <Lock className="tier-lock" aria-hidden="true" />}
                   </span>
                   <strong>{tier.name}</strong>
                 </div>
               </Fragment>)}
             </div>
-            <div className="tier-objective" aria-live="polite" aria-label={`${achievementTiers[activeTierIndex].name} objective`}>{activeObjective}</div>
+            <div className="tier-objective" aria-live="polite" aria-label="Puzzle criteria">
+              {criterionLines.map((criterion) => <div
+                className={`criterion-line ${criterion.unlocked ? criterion.met ? "met" : "active-goal" : "locked"}`}
+                aria-hidden={!criterion.unlocked}
+                key={criterion.name}
+              >{criterion.content}</div>)}
+            </div>
           </section>
 
           <section className="target-board" aria-label="Target words">

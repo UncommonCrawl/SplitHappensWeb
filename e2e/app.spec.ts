@@ -23,6 +23,10 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(steps.nth(2)).toContainText("Perfect Split");
   await expect(page.locator(".tier-lock")).toHaveCount(2);
   await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS");
+  await expect(page.locator(".criterion-line")).toHaveCount(3);
+  await expect(page.locator(".criterion-line").nth(0)).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(page.locator(".criterion-line").nth(1)).toHaveCSS("visibility", "hidden");
+  await expect(page.locator(".criterion-line").nth(2)).toHaveCSS("visibility", "hidden");
   await expect(page.locator(".gold-slot")).toHaveCount(0);
   await expect(page.locator(".app-sidebar")).not.toContainText("Streak");
   await openSidebarIfNeeded(page);
@@ -148,6 +152,8 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
 
   await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
   await expect(page.locator(".tier-step.complete")).toHaveCount(3);
+  await expect(page.locator(".criterion-line.met")).toHaveCount(3);
+  await expect(page.locator(".criterion-line.met").first()).toHaveCSS("color", "rgb(119, 119, 119)");
   await expect(page.locator('[data-date="2026-09-03"]')).toHaveCSS("background-color", "rgb(255, 216, 107)");
   await expect(page.locator(".tier-lock")).toHaveCount(0);
   const perfectStep = page.locator(".tier-step").filter({ hasText: "Perfect Split" });
@@ -181,6 +187,7 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
 test("keeps criteria unlocked while their live completion borders update", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  const lockedHeight = (await page.locator(".tier-objective").boundingBox())?.height;
 
   await page.evaluate(() => {
     const storageKey = "split-happens.web.v2";
@@ -195,12 +202,18 @@ test("keeps criteria unlocked while their live completion borders update", async
 
   const steps = page.locator(".tier-step");
   await expect(steps.filter({ has: page.locator(".seal-outline") })).toHaveCount(0);
+  await expect(page.locator(".seal-check")).toHaveCount(2);
   await expect(steps.nth(0)).toHaveClass(/unlocked/);
   await expect(steps.nth(1)).toHaveClass(/unlocked/);
   await expect(steps.nth(2)).toHaveClass(/unlocked/);
   await expect(page.locator(".tier-lock")).toHaveCount(0);
   await expect(steps.nth(2)).toHaveClass(/active/);
   await expect(page.locator(".tier-objective")).toContainText(/Highlighted tiles spell .* in order/i);
+  await expect(page.locator(".criterion-line").nth(0)).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(page.locator(".criterion-line").nth(1)).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(page.locator(".criterion-line").nth(2)).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(page.locator(".criterion-line.locked")).toHaveCount(0);
+  expect((await page.locator(".tier-objective").boundingBox())?.height).toBeCloseTo(lockedHeight ?? 0, 0);
   await expect(page.locator(".gold-slot")).not.toHaveCount(0);
 });
 
