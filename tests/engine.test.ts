@@ -42,6 +42,25 @@ describe("game engine", () => {
     expect(state.sourceSlots[0]).toEqual(["0:1", null, "0:0"]);
   });
 
+  it("moves target tiles into exact source slots and swaps across boards", () => {
+    const reduce = gameReducer(level, words);
+    let state = createGame(level);
+
+    state = reduce(state, { type: "PLACE", tileID: "0:0", slotID: "0:0" });
+    state = reduce(state, { type: "PLACE", tileID: "0:1", slotID: "0:1" });
+    state = reduce(state, { type: "MOVE_SOURCE", tileID: "0:0", row: 0, column: 1 });
+    expect(state.sourceSlots[0]).toEqual([null, "0:0", "0:2"]);
+    expect(state.targetSlots[0]).toEqual([null, "0:1", null]);
+
+    state = reduce(state, { type: "MOVE_SOURCE", tileID: "0:1", row: 0, column: 2 });
+    expect(state.sourceSlots[0]).toEqual([null, "0:0", "0:1"]);
+    expect(state.targetSlots[0]).toEqual([null, "0:2", null]);
+
+    state = reduce(state, { type: "UNDO" });
+    expect(state.sourceSlots[0]).toEqual([null, "0:0", "0:2"]);
+    expect(state.targetSlots[0]).toEqual([null, "0:1", null]);
+  });
+
   it("returns a target tile to the first free source slot when requested", () => {
     const reduce = gameReducer(level, words);
     let state = createGame(level);

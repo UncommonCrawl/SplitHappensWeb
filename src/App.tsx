@@ -26,6 +26,10 @@ type DragState = {
   moved: boolean;
 };
 
+type DragHover =
+  | { kind: "target"; slotID: SlotID }
+  | { kind: "source"; row: number; column: number };
+
 function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (
     <span className={`seal ${tone} ${achieved ? "achieved" : ""}`} aria-hidden="true">
@@ -91,7 +95,7 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isConstrained, setIsConstrained] = useState(() => window.matchMedia("(max-width: 1050px)").matches);
   const [drag, setDrag] = useState<DragState | null>(null);
-  const [dragHover, setDragHover] = useState<SlotID | "source" | null>(null);
+  const [dragHover, setDragHover] = useState<DragHover | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const previousGold = useRef(false);
@@ -351,6 +355,23 @@ export default function App() {
     setSelectedTile((current) => current === id ? null : id);
   };
 
+  const handleSourceTileClick = (id: TileID, row: number, column: number) => {
+    if (suppressClick.current) { suppressClick.current = false; return; }
+    if (selectedTargetSlot) {
+      send({ type: "PLACE", tileID: id, slotID: selectedTargetSlot });
+      playPlacementSound();
+      clearSelection();
+      return;
+    }
+    if (selectedTile && selectedTile !== id) {
+      send({ type: "MOVE_SOURCE", tileID: selectedTile, row, column });
+      playPlacementSound();
+      clearSelection();
+      return;
+    }
+    setSelectedTile((current) => current === id ? null : id);
+  };
+
   const handleSourceTileDoubleClick = (id: TileID) => {
     if (!game) return;
     const target = game.targetSlots
@@ -386,9 +407,12 @@ export default function App() {
   };
 
   const handleEmptySourceClick = (row: number, column: number) => {
-    if (!game || !selectedTargetSlot) return;
-    const [targetRow, targetColumn] = selectedTargetSlot.split(":").map(Number);
-    const tileID = game.hintedRows.includes(targetRow) ? null : game.targetSlots[targetRow]?.[targetColumn] ?? null;
+    if (!game) return;
+    let tileID = selectedTile;
+    if (!tileID && selectedTargetSlot) {
+      const [targetRow, targetColumn] = selectedTargetSlot.split(":").map(Number);
+      tileID = game.hintedRows.includes(targetRow) ? null : game.targetSlots[targetRow]?.[targetColumn] ?? null;
+    }
     if (!tileID) return;
 
     send({ type: "MOVE_SOURCE", tileID, row, column });
@@ -443,7 +467,18 @@ export default function App() {
     if (moved) {
       const hit = document.elementFromPoint(event.clientX, event.clientY);
       const target = hit?.closest<HTMLElement>("[data-slot-id]");
-      setDragHover((target?.dataset.slotId as SlotID | undefined) ?? (hit?.closest("[data-source-board]") ? "source" : null));
+      const sourceSlot = hit?.closest<HTMLElement>("[data-source-row][data-source-column]");
+      if (target?.dataset.slotId) {
+        setDragHover({ kind: "target", slotID: target.dataset.slotId as SlotID });
+      } else if (sourceSlot?.dataset.sourceRow !== undefined && sourceSlot.dataset.sourceColumn !== undefined) {
+        setDragHover({
+          kind: "source",
+          row: Number(sourceSlot.dataset.sourceRow),
+          column: Number(sourceSlot.dataset.sourceColumn),
+        });
+      } else {
+        setDragHover(null);
+      }
     }
   };
 
@@ -457,16 +492,16 @@ export default function App() {
       if (target?.dataset.slotId) {
         send({ type: "PLACE", tileID: drag.tileID, slotID: target.dataset.slotId as `${number}:${number}` });
         playPlacementSound();
-      } else if (source && drag.fromTarget) {
-        send({ type: "RETURN_FIRST_FREE", tileID: drag.tileID });
-        playPlacementSound();
-      } else if (sourceSlot?.dataset.sourceRow && sourceSlot.dataset.sourceColumn) {
+      } else if (sourceSlot?.dataset.sourceRow !== undefined && sourceSlot.dataset.sourceColumn !== undefined) {
         send({
           type: "MOVE_SOURCE",
           tileID: drag.tileID,
           row: Number(sourceSlot.dataset.sourceRow),
           column: Number(sourceSlot.dataset.sourceColumn),
         });
+        playPlacementSound();
+      } else if (source && drag.fromTarget) {
+        send({ type: "RETURN_FIRST_FREE", tileID: drag.tileID });
         playPlacementSound();
       } else if (source) send({ type: "RETURN", tileID: drag.tileID });
       suppressClick.current = true;
@@ -696,7 +731,7 @@ export default function App() {
                     const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
                     return (
                       <button
-                        className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${selectedTargetSlot === target ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
+                        className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${selectedTargetSlot === target ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover?.kind === "target" && dragHover.slotID === target ? "drop-hover" : ""}`}
                         key={target}
                         data-slot-id={target}
                         disabled={locked}
@@ -729,22 +764,23 @@ export default function App() {
               <div className="source-row" key={rowIndex}>
                 {row.map((id, columnIndex) => id ? (
                   <button
-                    className={`letter-tile tile ${selectedTile === id ? "selected" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""}`}
+                    className={`letter-tile tile ${selectedTile === id ? "selected" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover?.kind === "source" && dragHover.row === rowIndex && dragHover.column === columnIndex ? "drop-hover" : ""}`}
                     key={id}
                     data-source-row={rowIndex}
                     data-source-column={columnIndex}
                     aria-label={`Letter ${game.tiles[id].character}`}
-                    onClick={() => handleTileClick(id)}
+                    onClick={() => handleSourceTileClick(id, rowIndex, columnIndex)}
                     onDoubleClick={() => handleSourceTileDoubleClick(id)}
                     onPointerDown={(event) => handlePointerDown(event, id)}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
                   ><span className="tile-letter">{game.tiles[id].character}</span></button>
-                ) : <span
-                  className="source-hole tile"
+                ) : <button
+                  className={`source-hole tile ${dragHover?.kind === "source" && dragHover.row === rowIndex && dragHover.column === columnIndex ? "drop-hover" : ""}`}
                   key={`hole-${rowIndex}-${columnIndex}`}
                   data-source-row={rowIndex}
                   data-source-column={columnIndex}
+                  aria-label={`Source row ${rowIndex + 1}, position ${columnIndex + 1}, empty`}
                   onClick={() => handleEmptySourceClick(rowIndex, columnIndex)}
                 />)}
               </div>

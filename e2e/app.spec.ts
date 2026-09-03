@@ -252,6 +252,44 @@ test("moves a selected target tile into a clicked empty source slot", async ({ p
   await expect(page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`)).toHaveClass(/letter-tile/);
 });
 
+test("moves and swaps source tiles with select-then-tap", async ({ page }) => {
+  await page.goto("/");
+  const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);
+  const target = page.locator(".target-slot").first();
+  const firstLabel = await sourceAt(0).getAttribute("aria-label");
+  const secondLabel = await sourceAt(1).getAttribute("aria-label");
+  const thirdLabel = await sourceAt(2).getAttribute("aria-label");
+  expect(firstLabel).not.toBeNull();
+  expect(secondLabel).not.toBeNull();
+  expect(thirdLabel).not.toBeNull();
+  if (!firstLabel || !secondLabel || !thirdLabel) return;
+
+  await sourceAt(0).click();
+  await sourceAt(1).click();
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", secondLabel);
+  await expect(sourceAt(1)).toHaveAttribute("aria-label", firstLabel);
+
+  await sourceAt(2).click();
+  await target.click();
+  await expect(sourceAt(2)).toHaveClass(/source-hole/);
+  await sourceAt(0).click();
+  await sourceAt(2).click();
+  await expect(sourceAt(0)).toHaveClass(/source-hole/);
+  await expect(sourceAt(2)).toHaveAttribute("aria-label", secondLabel);
+
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", secondLabel);
+  await expect(sourceAt(2)).toHaveClass(/source-hole/);
+
+  await target.click();
+  await sourceAt(0).click();
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", thirdLabel);
+  await expect(target).toHaveAccessibleName(new RegExp(secondLabel.replace("Letter ", "letter "), "i"));
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", secondLabel);
+  await expect(target).toHaveAccessibleName(new RegExp(thirdLabel.replace("Letter ", "letter "), "i"));
+});
+
 test("places a typed source letter into a selected target slot", async ({ page }) => {
   await page.goto("/");
   const source = page.locator(".letter-tile").first();
@@ -384,6 +422,35 @@ test("uses target-tile sizing and preserves the proportional grab offset while d
   await expect(target).not.toHaveAccessibleName(/empty$/);
 });
 
+test("shows exact source drop hover and swaps source tiles by dragging", async ({ page }) => {
+  await page.goto("/");
+  const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);
+  const origin = sourceAt(0);
+  const destination = sourceAt(1);
+  const originLabel = await origin.getAttribute("aria-label");
+  const destinationLabel = await destination.getAttribute("aria-label");
+  const originBox = await origin.boundingBox();
+  const destinationBox = await destination.boundingBox();
+  expect(originLabel).not.toBeNull();
+  expect(destinationLabel).not.toBeNull();
+  expect(originBox).not.toBeNull();
+  expect(destinationBox).not.toBeNull();
+  if (!originLabel || !destinationLabel || !originBox || !destinationBox) return;
+
+  await page.mouse.move(originBox.x + originBox.width / 2, originBox.y + originBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(destinationBox.x + destinationBox.width / 2, destinationBox.y + destinationBox.height / 2);
+  await expect(destination).toHaveClass(/drop-hover/);
+  await expect(origin).not.toHaveClass(/drop-hover/);
+  await page.mouse.up();
+
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", destinationLabel);
+  await expect(sourceAt(1)).toHaveAttribute("aria-label", originLabel);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", originLabel);
+  await expect(sourceAt(1)).toHaveAttribute("aria-label", destinationLabel);
+});
+
 test("clears another letter's selection when a tile is dragged", async ({ page }) => {
   await page.goto("/");
   const selected = page.locator(".letter-tile").first();
@@ -449,7 +516,7 @@ test("does not reselect a tile's old slot after dragging it", async ({ page }) =
   await expect(page.locator(".target-slot.selected")).toHaveCount(0);
 });
 
-test("returns a target tile to the first free source slot regardless of where it lands", async ({ page }) => {
+test("moves a target tile into the exact empty source slot", async ({ page }) => {
   await page.goto("/");
   const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);
   const targets = page.locator(".target-slot");
@@ -462,19 +529,51 @@ test("returns a target tile to the first free source slot regardless of where it
   await targets.nth(1).click();
 
   const placedTileBox = await targets.nth(0).boundingBox();
-  const occupiedSourceBox = await sourceAt(2).boundingBox();
+  const emptySourceBox = await sourceAt(1).boundingBox();
   expect(placedTileBox).not.toBeNull();
-  expect(occupiedSourceBox).not.toBeNull();
-  if (!placedTileBox || !occupiedSourceBox || !returningTileLabel) return;
+  expect(emptySourceBox).not.toBeNull();
+  if (!placedTileBox || !emptySourceBox || !returningTileLabel) return;
 
   await page.mouse.move(placedTileBox.x + placedTileBox.width / 2, placedTileBox.y + placedTileBox.height / 2);
   await page.mouse.down();
-  await page.mouse.move(occupiedSourceBox.x + occupiedSourceBox.width / 2, occupiedSourceBox.y + occupiedSourceBox.height / 2);
+  await page.mouse.move(emptySourceBox.x + emptySourceBox.width / 2, emptySourceBox.y + emptySourceBox.height / 2);
+  await expect(sourceAt(1)).toHaveClass(/drop-hover/);
   await page.mouse.up();
 
-  await expect(sourceAt(0)).toHaveAttribute("aria-label", returningTileLabel);
-  await expect(sourceAt(1)).toHaveClass(/source-hole/);
+  await expect(sourceAt(0)).toHaveClass(/source-hole/);
+  await expect(sourceAt(1)).toHaveAttribute("aria-label", returningTileLabel);
   await expect(targets.nth(0)).toHaveAccessibleName(/empty$/);
+});
+
+test("swaps target and source tiles at the exact occupied source slot", async ({ page }) => {
+  await page.goto("/");
+  const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);
+  const target = page.locator(".target-slot").first();
+  const returningLabel = await sourceAt(1).getAttribute("aria-label");
+  const displacedLabel = await sourceAt(2).getAttribute("aria-label");
+  expect(returningLabel).not.toBeNull();
+  expect(displacedLabel).not.toBeNull();
+  if (!returningLabel || !displacedLabel) return;
+
+  await sourceAt(1).click();
+  await target.click();
+  const targetBox = await target.boundingBox();
+  const sourceBox = await sourceAt(2).boundingBox();
+  expect(targetBox).not.toBeNull();
+  expect(sourceBox).not.toBeNull();
+  if (!targetBox || !sourceBox) return;
+
+  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+  await expect(sourceAt(2)).toHaveClass(/drop-hover/);
+  await page.mouse.up();
+
+  await expect(sourceAt(2)).toHaveAttribute("aria-label", returningLabel);
+  await expect(target).toHaveAccessibleName(new RegExp(displacedLabel.replace("Letter ", "letter "), "i"));
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(sourceAt(2)).toHaveAttribute("aria-label", displacedLabel);
+  await expect(target).toHaveAccessibleName(new RegExp(returningLabel.replace("Letter ", "letter "), "i"));
 });
 
 test("fits the daily game within the reported short desktop viewport", async ({ page }) => {
