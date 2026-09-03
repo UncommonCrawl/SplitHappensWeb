@@ -644,39 +644,52 @@ export default function App() {
           </section>
 
           <section className="target-board" aria-label="Target words">
-            {game.targetSlots.map((row, rowIndex) => (
-              <div className="target-row" key={rowIndex}>
-                {row.map((id, columnIndex) => {
-                  const target = slotID(rowIndex, columnIndex);
-                  const locked = game.hintedRows.includes(rowIndex);
-                  const rowComplete = row.every(Boolean);
-                  const rowValid = derived.validRows.has(rowIndex);
-                  const isGoldSlot = goldLevelReached && goldSlots.has(target);
-                  const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
-                  return (
-                    <button
-                      className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${selectedTargetSlot === target ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
-                      key={target}
-                      data-slot-id={target}
-                      disabled={locked}
-                      aria-label={`Row ${rowIndex + 1}, position ${columnIndex + 1}${id ? `, letter ${game.tiles[id].character}` : ", empty"}`}
-                      onClick={() => {
-                        if (suppressClick.current) {
-                          suppressClick.current = false;
-                          return;
-                        }
-                        if (!id) handleEmptyTargetClick(target);
-                        else handleOccupiedTargetClick(id, target);
-                      }}
-                      onDoubleClick={() => id && send({ type: "RETURN", tileID: id })}
-                      onPointerDown={(event) => id && !locked && handlePointerDown(event, id)}
-                      onPointerMove={handlePointerMove}
-                      onPointerUp={handlePointerUp}
-                    >{id ? <span className="tile-letter">{game.tiles[id].character}</span> : ""}</button>
-                  );
-                })}
-              </div>
-            ))}
+            {game.targetSlots.map((row, rowIndex) => {
+              const nextRow = game.targetSlots[rowIndex + 1];
+              const dividerSlots = nextRow ? Math.min(row.length, nextRow.length) : undefined;
+              const dividerStyle = dividerSlots === undefined ? undefined : {
+                "--divider-slots": dividerSlots,
+              } as CSSProperties;
+
+              return (
+                <div
+                  className="target-row"
+                  key={rowIndex}
+                  data-divider-slots={dividerSlots}
+                  style={dividerStyle}
+                >
+                  {row.map((id, columnIndex) => {
+                    const target = slotID(rowIndex, columnIndex);
+                    const locked = game.hintedRows.includes(rowIndex);
+                    const rowComplete = row.every(Boolean);
+                    const rowValid = derived.validRows.has(rowIndex);
+                    const isGoldSlot = goldLevelReached && goldSlots.has(target);
+                    const correctGold = Boolean(id && isGoldSlot && game.tiles[id].character === goldExpectations.get(target));
+                    return (
+                      <button
+                        className={`target-slot tile ${id ? "occupied" : "empty"} ${rowComplete ? rowValid ? "row-valid" : "row-invalid" : ""} ${isGoldSlot ? "gold-slot" : ""} ${correctGold ? "correct-gold" : ""} ${selectedTargetSlot === target ? "selected" : ""} ${locked ? "hint-locked" : ""} ${drag?.moved && drag.tileID === id ? "drag-origin" : ""} ${dragHover === target ? "drop-hover" : ""}`}
+                        key={target}
+                        data-slot-id={target}
+                        disabled={locked}
+                        aria-label={`Row ${rowIndex + 1}, position ${columnIndex + 1}${id ? `, letter ${game.tiles[id].character}` : ", empty"}`}
+                        onClick={() => {
+                          if (suppressClick.current) {
+                            suppressClick.current = false;
+                            return;
+                          }
+                          if (!id) handleEmptyTargetClick(target);
+                          else handleOccupiedTargetClick(id, target);
+                        }}
+                        onDoubleClick={() => id && send({ type: "RETURN", tileID: id })}
+                        onPointerDown={(event) => id && !locked && handlePointerDown(event, id)}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                      >{id ? <span className="tile-letter">{game.tiles[id].character}</span> : ""}</button>
+                    );
+                  })}
+                </div>
+              );
+            })}
             {Array.from({ length: targetSizingRows - game.targetSlots.length }, (_, index) => (
               <div className="target-row-placeholder" aria-hidden="true" key={`placeholder-${index}`} />
             ))}

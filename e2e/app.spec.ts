@@ -541,6 +541,31 @@ test("reserves a fifth target row and keeps four- and five-row tile sizes consis
   }
 });
 
+test("sizes each row divider to the shorter adjacent word", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await page.locator('[data-date="2026-08-26"]').click();
+
+  const rows = page.locator(".target-row");
+  await expect(rows).toHaveCount(4);
+  for (let index = 0; index < await rows.count() - 1; index += 1) {
+    const rowLength = await rows.nth(index).locator(".target-slot").count();
+    const nextRowLength = await rows.nth(index + 1).locator(".target-slot").count();
+    const dividerSlots = Math.min(rowLength, nextRowLength);
+    await expect(rows.nth(index)).toHaveAttribute("data-divider-slots", String(dividerSlots));
+
+    const dividerWidth = await rows.nth(index).evaluate((row) =>
+      Number.parseFloat(getComputedStyle(row, "::after").width),
+    );
+    const slotWidth = await rows.nth(index).locator(".target-slot").first().evaluate((slot) =>
+      slot.getBoundingClientRect().width,
+    );
+    expect(dividerWidth).toBeCloseTo(slotWidth * dividerSlots + 6 * (dividerSlots - 1), 1);
+  }
+  await expect(rows.last()).not.toHaveAttribute("data-divider-slots", /.+/);
+});
+
 test("lets game controls shrink below their preferred sizes for a tiny window", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 360 });
   await page.goto("/");
