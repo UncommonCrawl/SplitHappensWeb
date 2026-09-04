@@ -389,6 +389,70 @@ test("moves a selected target tile into a clicked empty source slot", async ({ p
   await expect(page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`)).toHaveClass(/letter-tile/);
 });
 
+test("selects an empty source slot and moves a subsequently clicked source letter there", async ({ page }) => {
+  await page.goto("/");
+  const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);
+  const target = page.locator(".target-slot").first();
+  const movedLabel = await sourceAt(1).getAttribute("aria-label");
+  expect(movedLabel).not.toBeNull();
+  if (!movedLabel) return;
+
+  await sourceAt(0).click();
+  await target.click();
+  await sourceAt(0).click();
+  await expect(sourceAt(0)).toHaveClass(/selected/);
+  await sourceAt(1).click();
+
+  await expect(sourceAt(0)).toHaveAttribute("aria-label", movedLabel);
+  await expect(sourceAt(1)).toHaveClass(/source-hole/);
+  await expect(page.locator(".source-hole.selected")).toHaveCount(0);
+});
+
+test("selects an empty source slot and moves a subsequently clicked target letter there", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const sourceRow = await source.getAttribute("data-source-row");
+  const sourceColumn = await source.getAttribute("data-source-column");
+  const sourceLabel = await source.getAttribute("aria-label");
+  expect(sourceRow).not.toBeNull();
+  expect(sourceColumn).not.toBeNull();
+  expect(sourceLabel).not.toBeNull();
+  if (sourceRow === null || sourceColumn === null || !sourceLabel) return;
+  const sourceSlot = page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`);
+  const target = page.locator(".target-slot").first();
+
+  await source.click();
+  await target.click();
+  await sourceSlot.click();
+  await expect(sourceSlot).toHaveClass(/selected/);
+  await target.click();
+
+  await expect(sourceSlot).toHaveAttribute("aria-label", sourceLabel);
+  await expect(target).toHaveAccessibleName(/empty$/);
+  await expect(page.locator(".source-hole.selected")).toHaveCount(0);
+});
+
+test("moves empty-source selection and toggles it off", async ({ page }) => {
+  await page.goto("/");
+  const sources = page.locator(".letter-tile");
+  const targets = page.locator(".target-slot");
+  await sources.nth(0).click();
+  await targets.nth(0).click();
+  await sources.nth(0).click();
+  await targets.nth(1).click();
+  const holes = page.locator(".source-hole");
+  const first = holes.nth(0);
+  const second = holes.nth(1);
+
+  await first.click();
+  await expect(first).toHaveClass(/selected/);
+  await second.click();
+  await expect(first).not.toHaveClass(/selected/);
+  await expect(second).toHaveClass(/selected/);
+  await second.click();
+  await expect(second).not.toHaveClass(/selected/);
+});
+
 test("moves and swaps source tiles with select-then-tap", async ({ page }) => {
   await page.goto("/");
   const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);

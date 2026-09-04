@@ -88,6 +88,7 @@ export default function App() {
   const [game, setGame] = useState<GameState | null>(null);
   const [selectedTile, setSelectedTile] = useState<TileID | null>(null);
   const [selectedTargetSlot, setSelectedTargetSlot] = useState<SlotID | null>(null);
+  const [selectedSourceSlot, setSelectedSourceSlot] = useState<SlotID | null>(null);
   const [modal, setModal] = useState<ModalName>(null);
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
@@ -183,6 +184,7 @@ export default function App() {
     setGame(createGame(activeLevel, persisted.levels[activeLevel.id]));
     setSelectedTile(null);
     setSelectedTargetSlot(null);
+    setSelectedSourceSlot(null);
     previousGold.current = Boolean(persisted.levels[activeLevel.id]?.firstGoldAt);
   // Persisted state is intentionally read only when a level is opened.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,7 +287,7 @@ export default function App() {
 
       if (event.key === "Backspace") {
         event.preventDefault();
-        if (selectedTile) {
+        if (selectedTile || selectedSourceSlot) {
           clearSelection();
           return;
         }
@@ -346,7 +348,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [game, selectedTile, selectedTargetSlot, send]);
+  }, [game, selectedTile, selectedTargetSlot, selectedSourceSlot, send]);
 
   const handleTileClick = (id: TileID) => {
     if (suppressClick.current) { suppressClick.current = false; return; }
@@ -361,6 +363,13 @@ export default function App() {
 
   const handleSourceTileClick = (id: TileID, row: number, column: number) => {
     if (suppressClick.current) { suppressClick.current = false; return; }
+    if (selectedSourceSlot) {
+      const [selectedRow, selectedColumn] = selectedSourceSlot.split(":").map(Number);
+      send({ type: "MOVE_SOURCE", tileID: id, row: selectedRow, column: selectedColumn });
+      playPlacementSound();
+      clearSelection();
+      return;
+    }
     if (selectedTargetSlot) {
       send({ type: "PLACE", tileID: id, slotID: selectedTargetSlot });
       playPlacementSound();
@@ -393,6 +402,11 @@ export default function App() {
       placeSelected(target);
       return;
     }
+    if (selectedSourceSlot) {
+      setSelectedSourceSlot(null);
+      setSelectedTargetSlot(target);
+      return;
+    }
     if (selectedTargetSlot && game) {
       const [row, column] = selectedTargetSlot.split(":").map(Number);
       const selectedTargetTile = game.targetSlots[row]?.[column] ?? null;
@@ -411,6 +425,13 @@ export default function App() {
       placeSelected(target);
       return;
     }
+    if (selectedSourceSlot) {
+      const [row, column] = selectedSourceSlot.split(":").map(Number);
+      send({ type: "MOVE_SOURCE", tileID: id, row, column });
+      playPlacementSound();
+      clearSelection();
+      return;
+    }
     if (selectedTargetSlot) {
       if (selectedTargetSlot === target) setSelectedTargetSlot(null);
       else handleTileClick(id);
@@ -426,7 +447,12 @@ export default function App() {
       const [targetRow, targetColumn] = selectedTargetSlot.split(":").map(Number);
       tileID = game.hintedRows.includes(targetRow) ? null : game.targetSlots[targetRow]?.[targetColumn] ?? null;
     }
-    if (!tileID) return;
+    if (!tileID) {
+      const source = slotID(row, column);
+      setSelectedTargetSlot(null);
+      setSelectedSourceSlot((current) => current === source ? null : source);
+      return;
+    }
 
     send({ type: "MOVE_SOURCE", tileID, row, column });
     playPlacementSound();
@@ -436,6 +462,7 @@ export default function App() {
   const clearSelection = () => {
     setSelectedTile(null);
     setSelectedTargetSlot(null);
+    setSelectedSourceSlot(null);
   };
 
   const handlePointerDown = (event: ReactPointerEvent, id: TileID) => {
@@ -470,7 +497,7 @@ export default function App() {
   const handlePointerMove = (event: ReactPointerEvent) => {
     if (!drag || !dragStart.current) return;
     const moved = drag.moved || Math.hypot(event.clientX - dragStart.current.x, event.clientY - dragStart.current.y) > 6;
-    if (moved && !drag.moved && (selectedTile || selectedTargetSlot)) clearSelection();
+    if (moved && !drag.moved && (selectedTile || selectedTargetSlot || selectedSourceSlot)) clearSelection();
     setDrag({
       ...drag,
       left: event.clientX - drag.grabOffsetX,
@@ -804,7 +831,7 @@ export default function App() {
                     onPointerUp={handlePointerUp}
                   ><span className="tile-letter">{game.tiles[id].character}</span></button>
                 ) : <button
-                  className={`source-hole tile ${dragHover?.kind === "source" && dragHover.row === rowIndex && dragHover.column === columnIndex ? "drop-hover" : ""}`}
+                  className={`source-hole tile ${selectedSourceSlot === slotID(rowIndex, columnIndex) ? "selected" : ""} ${dragHover?.kind === "source" && dragHover.row === rowIndex && dragHover.column === columnIndex ? "drop-hover" : ""}`}
                   key={`hole-${rowIndex}-${columnIndex}`}
                   data-source-row={rowIndex}
                   data-source-column={columnIndex}
