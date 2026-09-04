@@ -6,6 +6,7 @@
   --yellow: #ffd86b;
   --yellow-deep: #f7b900;
   --cream: #f8eed2;
+  --blank: #fafaf8;
   --placeholder: #dedede;
   --valid: #def1d3;
   --invalid: #fbe2e0;
@@ -261,7 +262,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .source-row { max-width: 100%; display: flex; justify-content: flex-start; gap: 5px; }
 .letter-tile { width: var(--source-size); height: var(--source-size); flex-basis: var(--source-size); font-size: min(28px, calc(var(--source-size) * .48)); background: var(--cream); box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .letter-tile.drag-origin { background: rgb(248 238 210 / 20%); box-shadow: inset 0 1px 1px var(--inner-shadow); }
-.source-hole { padding: 0; background: rgb(248 238 210 / 20%); border: 0; border-radius: 10%; box-shadow: inset 0 1px 1px var(--inner-shadow); cursor: pointer; }
+.source-hole { padding: 0; background: var(--blank); border: 0; border-radius: 10%; box-shadow: inset 0 1px 1px var(--inner-shadow); cursor: pointer; }
 .source-hole.drop-hover { border: 1.5px solid var(--selection); }
 .source-hole { width: var(--source-size); height: var(--source-size); flex: 0 0 var(--source-size); }
 .game-toolbar { width: min(340px, 100%); height: max-content; display: flex; align-items: center; justify-content: space-between; gap: var(--toolbar-gap); margin: 0; }
@@ -294,28 +295,28 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .modal h2 { margin: 0 40px 26px; text-align: center; font-size: 32px; }
 .modal:has(.modal-stats) { width: min(700px, 100%); padding: 34px 44px 38px; }
 .modal:has(.modal-stats) h2 { margin-bottom: 26px; font-size: 42px; }
-.modal-stats { font-size: 20px; }
-.modal-stats h3 { margin: 0; text-align: center; font-size: 28px; line-height: 1.1; }
-.stats-streak-card { padding: 26px 38px 24px; border-radius: 28px; background: #fff8df; }
+.modal-stats { font-size: 17px; }
+.modal-stats h3 { margin: 0; text-align: center; font-size: 23px; line-height: 1.1; }
+.stats-streak-card { padding: 26px 38px 24px; border-radius: 28px; background: var(--blank); }
 .stats-streak-card h3 { margin-bottom: 14px; }
 .stats-streak-row { min-height: 112px; display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 24px; }
 .stats-streak-row + .stats-streak-row { border-top: 1px solid rgb(0 0 0 / 17%); }
 .stats-streak-row > div { display: grid; gap: 2px; }
-.stats-streak-row span { color: rgb(0 0 0 / 64%); font-size: 16px; font-weight: 750; letter-spacing: .045em; text-transform: uppercase; }
-.stats-streak-row strong { font-size: 32px; line-height: 1.05; }
-.stats-streak-row small { color: rgb(0 0 0 / 64%); font-size: 18px; font-weight: 650; }
+.stats-streak-row span { color: rgb(0 0 0 / 64%); font-size: 14px; font-weight: 750; letter-spacing: .045em; text-transform: uppercase; }
+.stats-streak-row strong { font-size: 27px; line-height: 1.05; }
+.stats-streak-row small { color: rgb(0 0 0 / 64%); font-size: 15px; font-weight: 650; }
 .stats-flame { width: 54px; height: 54px; fill: currentColor; stroke: none; }
 .stats-flame.gold { color: var(--yellow-deep); }
 .stats-flame.silver { color: var(--silver); }
 .stats-flame.bronze { color: var(--bronze); }
 .stats-progress { padding: 20px 12px 0; }
 .stats-progress h3 { margin-bottom: 10px; }
-.stats-progress-bar { width: 100%; height: 32px; margin: 16px 0 10px; border-radius: 8px; overflow: hidden; display: flex; background: #fff8df; }
+.stats-progress-bar { width: 100%; height: 32px; margin: 16px 0 10px; border-radius: 8px; overflow: hidden; display: flex; background: var(--blank); }
 .stats-progress-bar span { min-width: 0; flex-basis: 0; border-radius: 0; }
 .stats-progress-bar .perfect { background: var(--yellow-deep); }
 .stats-progress-bar .hard { background: var(--silver); }
 .stats-progress-bar .normal { background: var(--bronze); }
-.stats-progress-bar .incomplete { background: #fff8df; }
+.stats-progress-bar .incomplete { background: var(--blank); }
 .stats-progress .stat-row { min-height: 48px; gap: 20px; }
 .stats-progress .stat-row strong { font-weight: 500; }
 .modal-close {
@@ -374,7 +375,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .stats-streak-card { padding: 16px 34px 14px; }
   .stats-streak-card h3 { margin-bottom: 8px; }
   .stats-streak-row { min-height: 84px; }
-  .stats-streak-row strong { font-size: 28px; }
+  .stats-streak-row strong { font-size: 25px; }
   .stats-flame { width: 46px; height: 46px; }
   .stats-progress { padding-top: 14px; }
   .stats-progress h3 { margin-bottom: 4px; }
@@ -432,9 +433,9 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .modal:has(.modal-stats) { padding: 16px 18px 14px; }
   .stats-streak-card { padding: 12px 20px; }
   .stats-streak-row { min-height: 72px; grid-template-columns: 42px minmax(0, 1fr); gap: 14px; }
-  .stats-streak-row span { font-size: 14px; }
-  .stats-streak-row strong { font-size: 26px; }
-  .stats-streak-row small { font-size: 16px; }
+  .stats-streak-row span { font-size: 12px; }
+  .stats-streak-row strong { font-size: 23px; }
+  .stats-streak-row small { font-size: 14px; }
   .stats-flame { width: 42px; height: 42px; }
   .stats-progress-bar { height: 22px; margin-block: 8px 4px; }
   .stats-progress .stat-row { min-height: 32px; }
