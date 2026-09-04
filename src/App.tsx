@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, ChartNoAxesColumn, Flame, HelpCircle, Lightbulb, Lock,
+  ArrowLeft, ArrowRight, ChartNoAxesColumn, Flame, HelpCircle, Info, Lightbulb, Lock,
   Menu, RotateCcw, Share2, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
@@ -10,7 +10,7 @@ import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 
-type ModalName = "how" | "stats" | "victory" | null;
+type ModalName = "about" | "how" | "stats" | "victory" | null;
 
 type DragState = {
   tileID: TileID;
@@ -236,7 +236,7 @@ export default function App() {
   }, [activeLevel, words]);
 
   useEffect(() => {
-    if (!game || !activeLevel || !derived || !scheduleEntry) return;
+    if (!game || !activeLevel || game.levelID !== activeLevel.id || !derived || !scheduleEntry) return;
     setPersisted((current) => {
       const previous = current.levels[activeLevel.id];
       const progress = progressFromGame(game, previous);
@@ -258,6 +258,10 @@ export default function App() {
           solvedOnReleaseDate: scheduleEntry.date === localDateKey(new Date(progress.firstSplitAt!)),
           splitElapsedMs: game.splitElapsedMs,
           perfectSplit: progress.perfectSplit,
+          hardOrHigher: Boolean(progress.firstSilverAt || progress.firstGoldAt),
+          hardOnReleaseDate: Boolean(progress.firstSilverAt && scheduleEntry.date === localDateKey(new Date(progress.firstSilverAt))),
+          achievedPerfectSplit: Boolean(progress.firstGoldAt),
+          perfectOnReleaseDate: Boolean(progress.firstGoldAt && scheduleEntry.date === localDateKey(new Date(progress.firstGoldAt))),
         };
       }
       const next = { ...current, levels: { ...current.levels, [activeLevel.id]: progress }, dailyResults };
@@ -286,7 +290,26 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const stats = useMemo(() => calculateStats(persisted.dailyResults, now), [persisted.dailyResults, now]);
+  const stats = useMemo(() => {
+    const results = Object.fromEntries(Object.entries(persisted.dailyResults).map(([date, result]) => {
+      const progress = persisted.levels[result.levelID];
+      const firstSilverAt = progress?.firstSilverAt || progress?.firstGoldAt;
+      return [date, {
+        ...result,
+        hardOrHigher: result.hardOrHigher ?? Boolean(firstSilverAt),
+        hardOnReleaseDate: result.hardOnReleaseDate ?? Boolean(firstSilverAt && date === localDateKey(new Date(firstSilverAt))),
+        achievedPerfectSplit: result.achievedPerfectSplit ?? Boolean(progress?.firstGoldAt || result.perfectSplit),
+        perfectOnReleaseDate: result.perfectOnReleaseDate ?? Boolean(progress?.firstGoldAt && date === localDateKey(new Date(progress.firstGoldAt))),
+      }];
+    }));
+    return calculateStats(results, now, releasedEntries.length);
+  }, [persisted.dailyResults, persisted.levels, now, releasedEntries.length]);
+  const progressSegments = {
+    perfect: Math.min(stats.tiers.perfect.completed, stats.totalPuzzles),
+    hard: Math.max(0, Math.min(stats.tiers.hard.completed, stats.totalPuzzles) - stats.tiers.perfect.completed),
+    normal: Math.max(0, Math.min(stats.tiers.normal.completed, stats.totalPuzzles) - stats.tiers.hard.completed),
+    incomplete: Math.max(0, stats.totalPuzzles - stats.tiers.normal.completed) || (stats.totalPuzzles === 0 ? 1 : 0),
+  };
   const playPlacementSound = () => {
     if (persisted.settings.soundEnabled) new Audio(staticAssetPath("/sounds/tile-place.wav")).play().catch(() => undefined);
   };
@@ -747,6 +770,7 @@ export default function App() {
             {persisted.settings.soundEnabled ? <Volume2 /> : <VolumeX />}
             <span>Sound</span>
           </button>
+          <button aria-label="About" onClick={() => handleSidebarAction(() => setModal("about"))}><Info /><span>About</span></button>
         </nav>
 
         <section className="sidebar-stats">
@@ -910,18 +934,46 @@ export default function App() {
         </div>
       </Modal>}
 
-      {modal === "stats" && <Modal title="Daily Stats" onClose={() => setModal(null)}>
+      {modal === "stats" && <Modal title="Daily Stats" onClose={() => setModal(null)} wide>
         <div className="modal-stats">
-          <div className="modal-streak">
-            <Flame />
-            <div>
-              <span>Current Streak</span>
-              <strong>{stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}</strong>
-              <small>Best: {stats.bestStreak} {stats.bestStreak === 1 ? "day" : "days"}</small>
+          <section className="stats-streak-card" aria-labelledby="streaks-heading">
+            <h3 id="streaks-heading">Streaks</h3>
+            {([
+              ["Perfect Split", "gold", stats.tiers.perfect],
+              ["Hard or Higher", "silver", stats.tiers.hard],
+              ["Normal or Higher", "bronze", stats.tiers.normal],
+            ] as const).map(([label, tone, tier]) => <div className="stats-streak-row" key={label}>
+              <Flame className={`stats-flame ${tone}`} />
+              <div>
+                <span>{label}</span>
+                <strong>{tier.currentStreak} {tier.currentStreak === 1 ? "day" : "days"}</strong>
+                <small>Best: {tier.bestStreak} {tier.bestStreak === 1 ? "day" : "days"}</small>
+              </div>
+            </div>)}
+          </section>
+          <section className="stats-progress" aria-labelledby="progress-heading">
+            <h3 id="progress-heading">Progress</h3>
+            <div
+              className="stats-progress-bar"
+              role="img"
+              aria-label={`${stats.tiers.perfect.completed} perfect, ${stats.tiers.hard.completed} hard or higher, and ${stats.tiers.normal.completed} normal or higher out of ${stats.totalPuzzles} puzzles`}
+            >
+              <span className="perfect" style={{ flexGrow: progressSegments.perfect }} aria-hidden="true" />
+              <span className="hard" style={{ flexGrow: progressSegments.hard }} aria-hidden="true" />
+              <span className="normal" style={{ flexGrow: progressSegments.normal }} aria-hidden="true" />
+              <span className="incomplete" style={{ flexGrow: progressSegments.incomplete }} aria-hidden="true" />
             </div>
-          </div>
-          <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
-          <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
+            <div className="stat-row"><span>Perfect Split</span><strong>{stats.tiers.perfect.completed}/{stats.totalPuzzles}</strong></div>
+            <div className="stat-row"><span>Hard or Higher</span><strong>{stats.tiers.hard.completed}/{stats.totalPuzzles}</strong></div>
+            <div className="stat-row"><span>Normal or Higher</span><strong>{stats.tiers.normal.completed}/{stats.totalPuzzles}</strong></div>
+          </section>
+        </div>
+      </Modal>}
+
+      {modal === "about" && <Modal title="About" onClose={() => setModal(null)}>
+        <div className="about-content">
+          <p>© 2026 Keith Herrmann</p>
+          <a href="https://linktr.ee/keithherrmann" target="_blank" rel="noreferrer">Check out my other stuff</a>
         </div>
       </Modal>}
 

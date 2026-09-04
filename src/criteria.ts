@@ -93,7 +93,9 @@ export function evaluateCriterion(raw: string | null, rowWords: Array<string | n
   const satisfied = qualifier.negated ? matches === 0 : matches >= qualifier.requiredRows;
   const valueLabel = qualifier.value ?? "LETTER";
   const row = qualifier.negated && qualifier.rowNumber === null ? "ALL ROWS" : rowLabel(qualifier);
-  const verb = operation === "DOUBLE" ? `HAVE DOUBLE '${valueLabel}'`
+  const verb = operation === "DOUBLE" ? qualifier.value
+    ? `HAVE DOUBLE '${qualifier.value}'`
+    : "HAVE A DOUBLE LETTER"
     : operation === "STARTS" || operation === "START" ? `START WITH '${valueLabel}'`
       : operation === "ENDS" || operation === "END" ? `END IN '${valueLabel}'`
         : `CONTAIN '${valueLabel}'`;

@@ -74,6 +74,10 @@ export interface DailyResult {
   solvedOnReleaseDate: boolean;
   splitElapsedMs: number;
   perfectSplit: boolean;
+  hardOrHigher?: boolean;
+  hardOnReleaseDate?: boolean;
+  achievedPerfectSplit?: boolean;
+  perfectOnReleaseDate?: boolean;
 }
 
 export interface WebSettings {
@@ -94,4 +98,16 @@ export interface UserStats {
   averageTimeMs: number;
   currentStreak: number;
   bestStreak: number;
+  totalPuzzles: number;
+  tiers: {
+    perfect: TierStats;
+    hard: TierStats;
+    normal: TierStats;
+  };
+}
+
+export interface TierStats {
+  currentStreak: number;
+  bestStreak: number;
+  completed: number;
 }

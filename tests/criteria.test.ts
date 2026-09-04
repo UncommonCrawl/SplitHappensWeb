@@ -18,6 +18,9 @@ describe("criteria parser", () => {
   it("formats Silver criteria with spelled-out numbers and MUST", () => {
     expect(evaluateCriterion("4_STARTS_A", []).label).toBe("ROW FOUR MUST START WITH 'A'");
     expect(evaluateCriterion("2X_CONTAINS_A", []).label).toBe("TWO ROWS MUST CONTAIN 'A'");
+    expect(evaluateCriterion("3_DOUBLE_*", []).label).toBe("ROW THREE MUST HAVE A DOUBLE LETTER");
+    expect(evaluateCriterion("2X_DOUBLE_*", []).label).toBe("TWO ROWS MUST HAVE A DOUBLE LETTER");
+    expect(evaluateCriterion("1X_DOUBLE_E", []).label).toBe("ANY ROW MUST HAVE DOUBLE 'E'");
     expect(evaluateCriterion("*_ENDS_S_NONE", []).label).toBe("ALL ROWS MUST NOT END IN 'S'");
     expect(evaluateCriterion("INCLUDES_CAT", []).label).toBe("ONE WORD MUST BE 'CAT'");
   });

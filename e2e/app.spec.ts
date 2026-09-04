@@ -40,9 +40,13 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: "Stats" }).click();
   await expect(page.getByRole("dialog")).toContainText("Daily Stats");
-  await expect(page.getByRole("dialog")).toContainText("Current Streak");
+  await expect(page.getByRole("dialog")).toContainText("Streaks");
   await expect(page.getByRole("dialog")).toContainText("Best:");
-  await expect(page.getByRole("dialog")).toContainText("Puzzles Solved");
+  await expect(page.getByRole("dialog")).toContainText("Progress");
+  await expect(page.getByRole("dialog")).toContainText("Hard or Higher");
+  await expect(page.locator(".stats-progress-bar span")).toHaveCount(4);
+  await expect(page.locator(".stats-progress-bar")).toHaveCSS("overflow", "hidden");
+  await expect(page.locator(".stats-progress-bar span").first()).toHaveCSS("border-radius", "0px");
   await page.getByRole("button", { name: "Close" }).click();
   await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: /How to Play/i }).click();
@@ -51,6 +55,12 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(howToPlay).toContainText("Normal, Hard, and Perfect Split");
   await expect(howToPlay).not.toContainText("Holy Split");
   await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
+  await page.getByRole("button", { name: "Close" }).click();
+  await openSidebarIfNeeded(page);
+  await page.getByRole("button", { name: "About" }).click();
+  const about = page.getByRole("dialog");
+  await expect(about).toContainText("© 2026 Keith Herrmann");
+  await expect(about.getByRole("link", { name: "Check out my other stuff" })).toHaveAttribute("href", "https://linktr.ee/keithherrmann");
   await page.getByRole("button", { name: "Close" }).click();
   await openSidebarIfNeeded(page);
   await expect(page.getByRole("button", { name: "Prev." })).toBeEnabled();
@@ -153,6 +163,42 @@ test("colors recent puzzles by their highest saved tier", async ({ page }) => {
   await expect(page.locator('[data-date="2026-08-27"]')).toHaveCSS("background-color", "rgb(209, 209, 209)");
   await expect(page.locator('[data-date="2026-08-28"]')).toHaveCSS("background-color", "rgb(255, 216, 107)");
   await expect(page.locator('[data-date="2026-09-03"]')).toHaveCSS("background-color", "rgb(255, 255, 255)");
+});
+
+test("does not copy solved progress to the first puzzle selected after refresh", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const hint = page.getByRole("button", { name: "Hint" });
+  const rowCount = await page.locator(".target-row").count();
+  for (let row = 0; row < rowCount; row += 1) await hint.click();
+  await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
+  await page.getByRole("button", { name: "Close" }).click();
+
+  await page.reload();
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await openSidebarIfNeeded(page);
+
+  const firstUnselected = page.locator('.puzzle-date-button:not([aria-pressed="true"])').first();
+  const destinationDate = await firstUnselected.getAttribute("data-date");
+  if (!destinationDate) throw new Error("Expected a destination date");
+  const destination = page.locator(`[data-date="${destinationDate}"]`);
+  await destination.click();
+  await expect(destination).toHaveAttribute("aria-pressed", "true");
+  await expect(destination).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+  const copiedMilestone = await page.evaluate((date) => {
+    const saved = JSON.parse(localStorage.getItem("split-happens.web.v2") ?? "null");
+    if (!saved || !date) throw new Error("Expected saved progress and a destination date");
+    return fetch("/daily_schedule.json")
+      .then((response) => response.json())
+      .then(({ schedule }) => {
+        const levelID = schedule.find((entry: { date: string; ID: string }) => entry.date === date)?.ID;
+        if (!levelID) throw new Error("Expected destination level in the schedule");
+        return saved.levels[levelID]?.firstSplitAt ?? null;
+      });
+  }, destinationDate);
+  expect(copiedMilestone).toBeNull();
 });
 
 test("shows completed progression and uses Perfect Split for every victory", async ({ page }) => {
