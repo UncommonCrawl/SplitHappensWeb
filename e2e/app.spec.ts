@@ -623,6 +623,73 @@ test("uses target-tile sizing and preserves the proportional grab offset while d
   await expect(target).not.toHaveAccessibleName(/empty$/);
 });
 
+test("selects a target tile on the first click after dragging it into place", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const targetID = await page.locator(".target-slot.empty").first().getAttribute("data-slot-id");
+  expect(targetID).not.toBeNull();
+  if (!targetID) return;
+  const target = page.locator(`[data-slot-id="${targetID}"]`);
+  const sourceBox = await source.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(sourceBox).not.toBeNull();
+  expect(targetBox).not.toBeNull();
+  if (!sourceBox || !targetBox) return;
+
+  await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2);
+  await page.mouse.up();
+  await expect(target).not.toHaveAccessibleName(/empty$/);
+
+  await target.click();
+
+  await expect(target).toHaveClass(/selected/);
+});
+
+test("returns a target tile only when its second click is within 500ms", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const target = page.locator(".target-slot").first();
+  await source.click();
+  await target.click();
+
+  await target.click();
+  await page.waitForTimeout(550);
+  await target.click();
+  await expect(target).not.toHaveAccessibleName(/empty$/);
+  await expect(target).not.toHaveClass(/selected/);
+
+  await target.click();
+  await page.waitForTimeout(100);
+  await target.click();
+  await expect(target).toHaveAccessibleName(/empty$/);
+});
+
+test("auto-places a source tile only when its second click is within 500ms", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const sourceRow = await source.getAttribute("data-source-row");
+  const sourceColumn = await source.getAttribute("data-source-column");
+  expect(sourceRow).not.toBeNull();
+  expect(sourceColumn).not.toBeNull();
+  if (sourceRow === null || sourceColumn === null) return;
+  const sourceSlot = page.locator(`[data-source-row="${sourceRow}"][data-source-column="${sourceColumn}"]`);
+  const target = page.locator(".target-slot").first();
+
+  await sourceSlot.click();
+  await page.waitForTimeout(550);
+  await sourceSlot.click();
+  await expect(sourceSlot).toHaveClass(/letter-tile/);
+  await expect(sourceSlot).not.toHaveClass(/selected/);
+
+  await sourceSlot.click();
+  await page.waitForTimeout(100);
+  await sourceSlot.click();
+  await expect(sourceSlot).toHaveClass(/source-hole/);
+  await expect(target).not.toHaveAccessibleName(/empty$/);
+});
+
 test("shows exact source drop hover and swaps source tiles by dragging", async ({ page }) => {
   await page.goto("/");
   const sourceAt = (column: number) => page.locator(`[data-source-row="0"][data-source-column="${column}"]`);

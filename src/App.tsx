@@ -30,6 +30,8 @@ type DragHover =
   | { kind: "target"; slotID: SlotID }
   | { kind: "source"; row: number; column: number };
 
+const TILE_DOUBLE_CLICK_MS = 500;
+
 function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (
     <span className={`seal ${tone} ${achieved ? "achieved" : ""}`} aria-hidden="true">
@@ -99,6 +101,8 @@ export default function App() {
   const [dragHover, setDragHover] = useState<DragHover | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
+  const lastTargetSelectionClick = useRef<{ target: SlotID; at: number } | null>(null);
+  const lastSourceSelectionClick = useRef<{ tileID: TileID; at: number } | null>(null);
   const previousGold = useRef(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -364,6 +368,7 @@ export default function App() {
   const handleSourceTileClick = (id: TileID, row: number, column: number) => {
     if (suppressClick.current) { suppressClick.current = false; return; }
     if (selectedSourceSlot) {
+      lastSourceSelectionClick.current = null;
       const [selectedRow, selectedColumn] = selectedSourceSlot.split(":").map(Number);
       send({ type: "MOVE_SOURCE", tileID: id, row: selectedRow, column: selectedColumn });
       playPlacementSound();
@@ -371,30 +376,38 @@ export default function App() {
       return;
     }
     if (selectedTargetSlot) {
+      lastSourceSelectionClick.current = null;
       send({ type: "PLACE", tileID: id, slotID: selectedTargetSlot });
       playPlacementSound();
       clearSelection();
       return;
     }
     if (selectedTile && selectedTile !== id) {
+      lastSourceSelectionClick.current = null;
       send({ type: "MOVE_SOURCE", tileID: selectedTile, row, column });
       playPlacementSound();
       clearSelection();
       return;
     }
-    setSelectedTile((current) => current === id ? null : id);
-  };
-
-  const handleSourceTileDoubleClick = (id: TileID) => {
-    if (!game) return;
-    const target = game.targetSlots
-      .flatMap((row, rowIndex) => row.map((occupant, columnIndex) => ({ occupant, rowIndex, columnIndex })))
-      .find(({ occupant, rowIndex }) => !occupant && !game.hintedRows.includes(rowIndex));
-    if (!target) return;
-
-    send({ type: "PLACE", tileID: id, slotID: slotID(target.rowIndex, target.columnIndex) });
-    playPlacementSound();
-    clearSelection();
+    if (selectedTile === id) {
+      const previous = lastSourceSelectionClick.current;
+      const isQuickSecondClick = previous?.tileID === id
+        && performance.now() - previous.at <= TILE_DOUBLE_CLICK_MS;
+      lastSourceSelectionClick.current = null;
+      if (isQuickSecondClick && game) {
+        const target = game.targetSlots
+          .flatMap((targetRow, rowIndex) => targetRow.map((occupant, columnIndex) => ({ occupant, rowIndex, columnIndex })))
+          .find(({ occupant, rowIndex }) => !occupant && !game.hintedRows.includes(rowIndex));
+        if (target) {
+          send({ type: "PLACE", tileID: id, slotID: slotID(target.rowIndex, target.columnIndex) });
+          playPlacementSound();
+        }
+      }
+      clearSelection();
+      return;
+    }
+    lastSourceSelectionClick.current = { tileID: id, at: performance.now() };
+    setSelectedTile(id);
   };
 
   const handleEmptyTargetClick = (target: SlotID) => {
@@ -422,10 +435,12 @@ export default function App() {
 
   const handleOccupiedTargetClick = (id: TileID, target: SlotID) => {
     if (selectedTile) {
+      lastTargetSelectionClick.current = null;
       placeSelected(target);
       return;
     }
     if (selectedSourceSlot) {
+      lastTargetSelectionClick.current = null;
       const [row, column] = selectedSourceSlot.split(":").map(Number);
       send({ type: "MOVE_SOURCE", tileID: id, row, column });
       playPlacementSound();
@@ -433,10 +448,25 @@ export default function App() {
       return;
     }
     if (selectedTargetSlot) {
-      if (selectedTargetSlot === target) setSelectedTargetSlot(null);
-      else handleTileClick(id);
+      if (selectedTargetSlot === target) {
+        const previous = lastTargetSelectionClick.current;
+        const isQuickSecondClick = previous?.target === target
+          && performance.now() - previous.at <= TILE_DOUBLE_CLICK_MS;
+        lastTargetSelectionClick.current = null;
+        if (isQuickSecondClick) {
+          send({ type: "RETURN", tileID: id });
+          playPlacementSound();
+          clearSelection();
+        } else {
+          setSelectedTargetSlot(null);
+        }
+      } else {
+        lastTargetSelectionClick.current = null;
+        handleTileClick(id);
+      }
       return;
     }
+    lastTargetSelectionClick.current = { target, at: performance.now() };
     setSelectedTargetSlot(target);
   };
 
@@ -545,6 +575,7 @@ export default function App() {
         playPlacementSound();
       } else if (source) send({ type: "RETURN", tileID: drag.tileID });
       suppressClick.current = true;
+      window.setTimeout(() => { suppressClick.current = false; }, 0);
     }
     setDrag(null);
     setDragHover(null);
@@ -799,7 +830,6 @@ export default function App() {
                           if (!id) handleEmptyTargetClick(target);
                           else handleOccupiedTargetClick(id, target);
                         }}
-                        onDoubleClick={() => id && send({ type: "RETURN", tileID: id })}
                         onPointerDown={(event) => id && !locked && handlePointerDown(event, id)}
                         onPointerMove={handlePointerMove}
                         onPointerUp={handlePointerUp}
@@ -825,7 +855,6 @@ export default function App() {
                     data-source-column={columnIndex}
                     aria-label={`Letter ${game.tiles[id].character}`}
                     onClick={() => handleSourceTileClick(id, rowIndex, columnIndex)}
-                    onDoubleClick={() => handleSourceTileDoubleClick(id)}
                     onPointerDown={(event) => handlePointerDown(event, id)}
                     onPointerMove={handlePointerMove}
                     onPointerUp={handlePointerUp}
