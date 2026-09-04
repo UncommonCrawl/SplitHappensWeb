@@ -38,7 +38,7 @@ function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | 
         {satisfied &&
           <path className="seal-outline" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
         }
-        {achieved && <path className="seal-check" d="M29 51L43 65L72 35" />}
+        {achieved && <path className="seal-check" d="M33 51L44 62L68 38" />}
       </svg>
     </span>
   );
@@ -224,8 +224,12 @@ export default function App() {
       if (derived.allWordsValid && !progress.firstSplitAt) progress.firstSplitAt = timestamp;
       if (derived.silverSatisfied && !progress.firstSilverAt) progress.firstSilverAt = timestamp;
       if (derived.victorySatisfied && !progress.firstGoldAt) progress.firstGoldAt = timestamp;
-      progress.perfectSplit = Boolean(derived.victorySatisfied && game.hintedRows.length === 0);
-      progress.licketySplit = Boolean(derived.victorySatisfied && scheduleEntry.date === localDateKey());
+      progress.perfectSplit = Boolean(
+        previous?.perfectSplit || (derived.victorySatisfied && game.hintedRows.length === 0),
+      );
+      progress.licketySplit = Boolean(
+        previous?.licketySplit || (derived.victorySatisfied && scheduleEntry.date === localDateKey()),
+      );
       const dailyResults = { ...current.dailyResults };
       if (derived.allWordsValid && game.splitElapsedMs !== null) {
         dailyResults[scheduleEntry.date] = {
@@ -544,6 +548,19 @@ export default function App() {
   const goldLevelReached = goldUnlocked;
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
+  const handleGoldWordClick = () => {
+    const action = { type: "ARRANGE_GOLD" } as const;
+    const preview = gameReducer(activeLevel, words)(game, action);
+    const boardChanged = preview.sourceSlots !== game.sourceSlots || preview.targetSlots !== game.targetSlots;
+    if (boardChanged) {
+      send(action);
+      playPlacementSound();
+    }
+    clearSelection();
+  };
+  const goldWord = <>{[...activeLevel.goldWord].map((letter, index) =>
+    <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>,
+  )}</>;
   const achievementTiers = [
     { name: "Normal", tone: "bronze" as const, unlocked: true, achieved: normalAchieved, satisfied: derived.allWordsValid },
     { name: "Hard", tone: "silver" as const, unlocked: hardUnlocked, achieved: hardAchieved, satisfied: hardUnlocked && derived.bonus.satisfied },
@@ -567,7 +584,9 @@ export default function App() {
       name: "Perfect Split",
       unlocked: goldUnlocked,
       met: derived.goldSatisfied,
-      content: <>HIGHLIGHTED TILES SPELL <span className="gold-word">{[...activeLevel.goldWord].map((letter, index) => <em className={derived.goldMatches[index] ? "correct" : ""} key={`${letter}-${index}`}>{letter}</em>)}</span> IN ORDER.</>,
+      content: <>HIGHLIGHTED TILES MUST SPELL {goldUnlocked
+        ? <button className="gold-word" type="button" onClick={handleGoldWordClick} aria-label={`Arrange highlighted tiles to spell ${activeLevel.goldWord}`}>{goldWord}</button>
+        : <span className="gold-word">{goldWord}</span>} IN ORDER</>,
     },
   ];
   const canRecall = game.hintedRows.length > 0
@@ -807,7 +826,7 @@ export default function App() {
           <p>Rearrange every letter to form a valid English word in each row.</p>
           <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
           <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
-          <p>Hints fill one official answer row at a time. A Holy Split is a Perfect Split earned without a hint.</p>
+          <p>Hints fill one official answer row at a time.</p>
         </div>
       </Modal>}
 
@@ -822,12 +841,11 @@ export default function App() {
             </div>
           </div>
           <div className="stat-row"><span>Puzzles Solved</span><strong>{stats.puzzlesSolved}</strong></div>
-          <div className="stat-row"><span>Holy Splits</span><strong>{stats.perfectSplits}</strong></div>
           <div className="stat-row"><span>Avg. Time</span><strong>{formatDuration(stats.averageTimeMs)}</strong></div>
         </div>
       </Modal>}
 
-      {modal === "victory" && <Modal title={game.hintedRows.length === 0 ? "Holy Split!" : "Perfect Split!"} onClose={() => setModal(null)}>
+      {modal === "victory" && <Modal title="Perfect Split!" onClose={() => setModal(null)}>
         <div className="victory-content"><span className="victory-seal"><Trophy /></span><p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p><button className="primary-button" onClick={shareResult}><Share2 />Share result</button></div>
       </Modal>}
     </div>

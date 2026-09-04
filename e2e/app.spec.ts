@@ -22,6 +22,14 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(steps.nth(2)).toHaveClass(/future/);
   await expect(steps.nth(2)).toContainText("Perfect Split");
   await expect(page.locator(".tier-lock")).toHaveCount(2);
+  await expect(page.locator(".tier-connector").first()).toHaveCSS("height", "2px");
+  await expect(page.locator(".tier-connector").first()).toHaveCSS("background-color", "rgb(222, 222, 222)");
+  const sealBox = await page.locator(".seal").first().boundingBox();
+  const connectorBox = await page.locator(".tier-connector").first().boundingBox();
+  expect(sealBox).not.toBeNull();
+  expect(connectorBox).not.toBeNull();
+  expect((connectorBox?.y ?? 0) + (connectorBox?.height ?? 0) / 2)
+    .toBeCloseTo((sealBox?.y ?? 0) + (sealBox?.height ?? 0) / 2, 1);
   await expect(page.locator(".tier-objective")).toContainText("REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS");
   await expect(page.locator(".criterion-line")).toHaveCount(3);
   await expect(page.locator(".criterion-line").nth(0)).toHaveCSS("color", "rgb(0, 0, 0)");
@@ -41,13 +49,18 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");
   await expect(howToPlay).toContainText("Normal, Hard, and Perfect Split");
-  await expect(howToPlay).toContainText("Holy Split");
+  await expect(howToPlay).not.toContainText("Holy Split");
   await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
   await page.getByRole("button", { name: "Close" }).click();
   await openSidebarIfNeeded(page);
   await expect(page.getByRole("button", { name: "Prev." })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Next" })).toHaveCSS("background-color", "rgba(96, 96, 96, 0.5)");
+  const nextButton = page.getByRole("button", { name: "Next" });
+  await expect(nextButton).toBeDisabled();
+  await expect(nextButton).toHaveCSS("border-color", "rgba(0, 0, 0, 0.22)");
+  await expect(nextButton).toHaveCSS("background-color", "rgba(255, 255, 255, 0.08)");
+  await expect(nextButton).toHaveCSS("color", "rgba(0, 0, 0, 0.22)");
+  await expect(nextButton.locator("svg")).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(nextButton.locator("svg")).toHaveCSS("opacity", "0.22");
 });
 
 test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
@@ -64,7 +77,7 @@ test("shows nine equal recent-puzzle buttons ending with today and navigates by 
   await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(dates.last()).toHaveCSS("border-color", "rgb(0, 0, 0)");
   await expect(dates.last()).toHaveCSS("outline-style", "none");
-  await expect(dates.last()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 3px inset/);
+  await expect(dates.last()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 1px inset/);
 
   const firstBox = await dates.first().boundingBox();
   const lastBox = await dates.last().boundingBox();
@@ -80,7 +93,7 @@ test("shows nine equal recent-puzzle buttons ending with today and navigates by 
   await dates.first().click();
   await expect(dates.first()).toHaveAttribute("aria-pressed", "true");
   await expect(dates.first()).toHaveCSS("border-color", "rgb(0, 0, 0)");
-  await expect(dates.first()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 3px inset/);
+  await expect(dates.first()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 1px inset/);
   await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
   await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await openSidebarIfNeeded(page);
@@ -142,7 +155,7 @@ test("colors recent puzzles by their highest saved tier", async ({ page }) => {
   await expect(page.locator('[data-date="2026-09-03"]')).toHaveCSS("background-color", "rgb(255, 255, 255)");
 });
 
-test("shows completed progression and distinguishes Perfect Split from Holy Split", async ({ page }) => {
+test("shows completed progression and uses Perfect Split for every victory", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
 
@@ -159,7 +172,7 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
   const perfectStep = page.locator(".tier-step").filter({ hasText: "Perfect Split" });
   await expect(perfectStep).toHaveClass(/active/);
   await expect(perfectStep).toHaveAttribute("aria-current", "step");
-  await expect(page.locator(".tier-objective")).toContainText(/Highlighted tiles spell .* in order/i);
+  await expect(page.locator(".tier-objective")).toHaveText(/Highlighted tiles must spell .* in order\s*$/i);
   await expect(page.locator(".gold-slot")).toHaveCount(await page.locator(".gold-word em").count());
 
   await page.getByRole("button", { name: "Close" }).click();
@@ -177,11 +190,11 @@ test("shows completed progression and distinguishes Perfect Split from Holy Spli
   });
   await page.reload();
 
-  await expect(page.getByRole("dialog")).toContainText("Holy Split!");
+  await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
   await page.getByRole("button", { name: "Close" }).click();
   await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: "Stats" }).click();
-  await expect(page.locator(".stat-row").filter({ hasText: "Holy Splits" })).toBeVisible();
+  await expect(page.getByRole("dialog")).not.toContainText("Holy Split");
 });
 
 test("keeps criteria unlocked while their live completion borders update", async ({ page }) => {
@@ -208,13 +221,100 @@ test("keeps criteria unlocked while their live completion borders update", async
   await expect(steps.nth(2)).toHaveClass(/unlocked/);
   await expect(page.locator(".tier-lock")).toHaveCount(0);
   await expect(steps.nth(2)).toHaveClass(/active/);
-  await expect(page.locator(".tier-objective")).toContainText(/Highlighted tiles spell .* in order/i);
+  await expect(steps.nth(2).locator(".seal")).toHaveCSS("filter", "none");
+  await expect(page.locator(".tier-connector.complete")).toHaveCount(2);
+  await expect(page.locator(".tier-connector.complete").first()).toHaveCSS("height", "2px");
+  await expect(page.locator(".tier-connector.complete").first()).toHaveCSS("background-color", "rgb(96, 96, 96)");
+  await expect(page.locator(".tier-objective")).toHaveText(/Highlighted tiles must spell .* in order\s*$/i);
   await expect(page.locator(".criterion-line").nth(0)).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(page.locator(".criterion-line").nth(1)).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(page.locator(".criterion-line").nth(2)).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(page.locator(".criterion-line.locked")).toHaveCount(0);
   expect((await page.locator(".tier-objective").boundingBox())?.height).toBeCloseTo(lockedHeight ?? 0, 0);
   await expect(page.locator(".gold-slot")).not.toHaveCount(0);
+});
+
+test("clicking the Perfect Split keyword arranges gold letters and returns displaced tiles in order", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const setup = await page.evaluate(async () => {
+    const storageKey = "split-happens.web.v2";
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+    if (!saved) throw new Error("Expected saved game progress");
+    const [levelID, progress] = Object.entries(saved.levels)[0] as [string, any];
+    const levelsDocument = await fetch("/levels.json").then((response) => response.json());
+    const level = levelsDocument.levels.find((item: any) => item.ID === levelID);
+    if (!level) throw new Error("Expected current level definition");
+
+    const expectations: Array<{ rowIndex: number; columnIndex: number; letter: string }> = [];
+    level.answers.forEach((answer: string, rowIndex: number) => {
+      let columnIndex = 0;
+      let previous: { columnIndex: number; letter: string } | null = null;
+      for (const character of answer.toUpperCase()) {
+        if (character === "*") {
+          if (previous) expectations.push({ rowIndex, ...previous });
+        } else {
+          previous = { columnIndex, letter: character };
+          columnIndex += 1;
+        }
+      }
+    });
+    if (expectations.length < 2) throw new Error("Expected at least two gold slots");
+
+    const goldLetters = new Set(expectations.map(({ letter }) => letter));
+    const tiles = level.source.flatMap((word: string, row: number) =>
+      [...word].map((letter, column) => ({ id: `${row}:${column}`, letter, row, column })),
+    );
+    const wrongTiles = tiles.filter(({ letter }) => !goldLetters.has(letter)).slice(0, 2);
+    if (wrongTiles.length < 2) throw new Error("Expected two non-gold letters");
+
+    wrongTiles.forEach((tile, index) => {
+      progress.sourceSlots[tile.row][tile.column] = null;
+      const expectation = expectations[index];
+      progress.targetSlots[expectation.rowIndex][expectation.columnIndex] = tile.id;
+    });
+    progress.firstSplitAt = "2026-09-03T12:00:00.000Z";
+    progress.firstSilverAt = "2026-09-03T12:01:00.000Z";
+    progress.history = [];
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+
+    const characterByID = new Map(tiles.map(({ id, letter }) => [id, letter]));
+    const candidates = [...progress.sourceSlots.flat(), ...progress.targetSlots.flat()].filter(Boolean) as string[];
+    const used = new Set<string>();
+    const selected = expectations.map(({ letter }) => {
+      const id = candidates.find((candidate) => !used.has(candidate) && characterByID.get(candidate) === letter);
+      if (!id) throw new Error(`Missing candidate for ${letter}`);
+      used.add(id);
+      return id;
+    });
+    const plannedSourceSlots = structuredClone(progress.sourceSlots) as Array<Array<string | null>>;
+    selected.forEach((id) => {
+      plannedSourceSlots.forEach((row) => {
+        const column = row.indexOf(id);
+        if (column >= 0) row[column] = null;
+      });
+    });
+    const emptySourcePositions = plannedSourceSlots.flatMap((row, rowIndex) =>
+      row.flatMap((id, columnIndex) => id ? [] : [{ rowIndex, columnIndex }]),
+    );
+    const destinations = wrongTiles.map((tile, index) => ({ ...emptySourcePositions[index], letter: tile.letter }));
+
+    return { word: level.GOLD_WORD, destinations };
+  });
+
+  await page.reload();
+  const keyword = page.getByRole("button", { name: `Arrange highlighted tiles to spell ${setup.word}` });
+  await expect(keyword).toBeVisible();
+  await keyword.click();
+
+  const goldSlots = page.locator(".gold-slot");
+  await expect(goldSlots).toHaveCount(setup.word.length);
+  await expect(page.locator(".gold-slot.correct-gold")).toHaveCount(setup.word.length);
+  for (const destination of setup.destinations) {
+    await expect(page.locator(`[data-source-row="${destination.rowIndex}"][data-source-column="${destination.columnIndex}"]`))
+      .toHaveAccessibleName(`Letter ${destination.letter}`);
+  }
 });
 
 test("supports keyboard-style select then place", async ({ page }) => {

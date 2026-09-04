@@ -91,7 +91,6 @@ export interface PersistedAppState {
 
 export interface UserStats {
   puzzlesSolved: number;
-  perfectSplits: number;
   averageTimeMs: number;
   currentStreak: number;
   bestStreak: number;

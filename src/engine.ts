@@ -10,6 +10,7 @@ export type GameAction =
   | { type: "RECALL" }
   | { type: "UNDO" }
   | { type: "HINT" }
+  | { type: "ARRANGE_GOLD" }
   | { type: "SHUFFLE"; allLetters: boolean; includeGold: boolean }
   | { type: "TICK"; milliseconds: number };
 
@@ -194,6 +195,78 @@ function hint(state: GameState, level: LevelDefinition): GameState {
   return next;
 }
 
+function arrangeGold(state: GameState, level: LevelDefinition): GameState {
+  if (level.goldTileExpectations.length === 0) return state;
+
+  const assignments = new Map<SlotID, TileID>();
+  const used = new Set<TileID>();
+
+  // Reserve correct gold placements before choosing interchangeable tiles for
+  // the remaining slots. This keeps a correct letter in place even when the
+  // same character occurs more than once.
+  for (const expectation of level.goldTileExpectations) {
+    const id = state.targetSlots[expectation.rowIndex]?.[expectation.columnIndex];
+    if (id && state.tiles[id].character === expectation.letter) {
+      assignments.set(slotID(expectation.rowIndex, expectation.columnIndex), id);
+      used.add(id);
+    }
+  }
+
+  const candidates = [
+    ...state.sourceSlots.flatMap((row) => row.flatMap((id) => id ? [id] : [])),
+    ...state.targetSlots.flatMap((row, rowIndex) => state.hintedRows.includes(rowIndex)
+      ? []
+      : row.flatMap((id) => id ? [id] : [])),
+  ];
+
+  for (const expectation of level.goldTileExpectations) {
+    const target = slotID(expectation.rowIndex, expectation.columnIndex);
+    if (assignments.has(target)) continue;
+    if (state.hintedRows.includes(expectation.rowIndex)) return state;
+
+    const candidate = candidates.find((id) =>
+      !used.has(id) && state.tiles[id].character === expectation.letter,
+    );
+    if (!candidate) return state;
+    assignments.set(target, candidate);
+    used.add(candidate);
+  }
+
+  const moving = [...assignments].filter(([target, id]) => {
+    const [row, column] = target.split(":").map(Number);
+    return state.targetSlots[row][column] !== id;
+  });
+  if (moving.length === 0) return state;
+
+  const next = pushHistory(structuredClone(state));
+  const movingIDs = new Set(moving.map(([, id]) => id));
+
+  // Lift every selected tile first so assignments cannot swap identities or
+  // disturb a tile that another gold slot is about to use.
+  movingIDs.forEach((id) => {
+    const location = locate(next, id);
+    if (location) setLocation(next, location, null);
+  });
+
+  const displaced: TileID[] = [];
+  for (const [target, id] of moving) {
+    const [row, column] = target.split(":").map(Number);
+    const occupant = next.targetSlots[row][column];
+    if (occupant && !movingIDs.has(occupant)) displaced.push(occupant);
+    next.targetSlots[row][column] = id;
+  }
+
+  // Each displacement consumes the next source hole, keeping the return order
+  // identical to the displayed order of the gold slots.
+  for (const id of displaced) {
+    const destination = firstEmptySource(next);
+    if (!destination) return state;
+    setLocation(next, destination, id);
+  }
+
+  return next;
+}
+
 function shuffled<T>(items: T[]): T[] {
   const result = [...items];
   for (let index = result.length - 1; index > 0; index -= 1) {
@@ -252,6 +325,7 @@ export function gameReducer(level: LevelDefinition, words: Set<string>) {
         if (previous) next = { ...state, ...structuredClone(previous), history: state.history.slice(0, -1) };
         break;
       }
+      case "ARRANGE_GOLD": next = arrangeGold(state, level); break;
       case "TICK": next = { ...state, elapsedMs: state.elapsedMs + action.milliseconds }; break;
     }
     const derived = deriveGame(next, level, words);

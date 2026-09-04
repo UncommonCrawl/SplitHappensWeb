@@ -202,8 +202,6 @@ Each level tile contains a white, filled `seal` SF Symbol at 90% of tile width/h
 - Featured label: full uppercase month over day.
 - Grid label: 3-letter uppercase month over day.
 - Earned special badges appear near `y = 82%` as palette-rendered symbols. Primary palette is cream `#F8EED2`; secondary palette is control gray `#606060`.
-- `Holy Split`: `trophy.circle.fill`.
-- `Lickety Split`: `timer.circle.fill`.
 
 ## 7. Game-screen composition
 
@@ -539,8 +537,6 @@ Off-state Sound/Haptics text uses `#606060`; on-state uses black. Feedback opens
 - Buttons: Share (`square.and.arrow.up`) and the milestone-specific secondary action.
 - Button icons are 45pt semibold; labels are 20pt bold.
 - Gold may show special-badge cards with gray `#DEDEDE` backgrounds and 12pt radius.
-- `Holy Split`: trophy circle; earned for Gold with zero hints.
-- `Lickety Split`: timer circle; earned for Gold during the release-day window.
 
 ## 13. Assets
 

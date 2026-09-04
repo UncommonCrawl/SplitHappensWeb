@@ -26,7 +26,6 @@ export function calculateStats(results: Record<string, DailyResult>, today = new
   }
   return {
     puzzlesSolved: values.length,
-    perfectSplits: values.filter((item) => item.perfectSplit).length,
     averageTimeMs,
     currentStreak,
     bestStreak,
