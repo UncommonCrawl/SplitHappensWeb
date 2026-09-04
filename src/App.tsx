@@ -107,6 +107,20 @@ export default function App() {
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
+  useEffect(() => {
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest("button.tile")) return;
+      setSelectedTile(null);
+      setSelectedTargetSlot(null);
+      setSelectedSourceSlot(null);
+      lastTargetSelectionClick.current = null;
+      lastSourceSelectionClick.current = null;
+    };
+    document.addEventListener("click", handleDocumentClick);
+    return () => document.removeEventListener("click", handleDocumentClick);
+  }, []);
+
   const refreshContent = useCallback(() => {
     setLoadError(null);
     loadContent().then(({ snapshot, words: loadedWords }) => {
@@ -766,14 +780,7 @@ export default function App() {
       </aside>
 
       <div className="workspace">
-        <main
-          className="game-area"
-          style={gameLayoutStyle}
-          onClick={(event) => {
-            const target = event.target;
-            if (target instanceof Element && !target.closest("button.tile")) clearSelection();
-          }}
-        >
+        <main className="game-area" style={gameLayoutStyle}>
           <section className="criteria" aria-label="Puzzle goals">
             <div className="achievement-track" role="list" aria-label="Normal, Hard, Perfect Split progression">
               {achievementTiers.map((tier, index) => <Fragment key={tier.name}>

@@ -352,6 +352,31 @@ test("uses Escape to clear tile and slot selections", async ({ page }) => {
   await expect(sourceHole).not.toHaveClass(/selected/);
 });
 
+test("clears selection when clicking outside the tile and slot areas", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const target = page.locator(".target-slot").first();
+  const clickOutside = () => page.mouse.click(5, 5);
+
+  await source.click();
+  await expect(source).toHaveClass(/selected/);
+  await clickOutside();
+  await expect(source).not.toHaveClass(/selected/);
+
+  await target.click();
+  await expect(target).toHaveClass(/selected/);
+  await clickOutside();
+  await expect(target).not.toHaveClass(/selected/);
+
+  await source.click();
+  await target.click();
+  const sourceHole = page.locator(".source-hole").first();
+  await sourceHole.click();
+  await expect(sourceHole).toHaveClass(/selected/);
+  await clickOutside();
+  await expect(sourceHole).not.toHaveClass(/selected/);
+});
+
 test("moves empty-target selection to another empty target and toggles it off", async ({ page }) => {
   await page.goto("/");
   const targets = page.locator(".target-slot.empty");
