@@ -1,6 +1,6 @@
 # Split Happens Web
 
-The standalone responsive browser client for Split Happens. The iOS app remains the behavioral reference; this repository owns the React, TypeScript, and Vite implementation deployed to Firebase Hosting.
+The standalone responsive browser client for Split Happens. This repository owns the React, TypeScript, and Vite implementation deployed to Firebase Hosting.
 
 ## Local development
 

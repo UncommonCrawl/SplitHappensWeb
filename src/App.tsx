@@ -393,8 +393,17 @@ export default function App() {
       placeSelected(target);
       return;
     }
-    // A second empty target is a cancellation, not a new destination.
-    setSelectedTargetSlot((current) => current ? null : target);
+    if (selectedTargetSlot && game) {
+      const [row, column] = selectedTargetSlot.split(":").map(Number);
+      const selectedTargetTile = game.targetSlots[row]?.[column] ?? null;
+      if (selectedTargetTile) {
+        send({ type: "PLACE", tileID: selectedTargetTile, slotID: target });
+        playPlacementSound();
+        clearSelection();
+        return;
+      }
+    }
+    setSelectedTargetSlot((current) => current === target ? null : target);
   };
 
   const handleOccupiedTargetClick = (id: TileID, target: SlotID) => {

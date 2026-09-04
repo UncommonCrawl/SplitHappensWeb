@@ -328,6 +328,43 @@ test("supports keyboard-style select then place", async ({ page }) => {
   await expect(slot).not.toHaveAccessibleName(/empty$/);
 });
 
+test("moves empty-target selection to another empty target and toggles it off", async ({ page }) => {
+  await page.goto("/");
+  const targets = page.locator(".target-slot.empty");
+  const first = targets.nth(0);
+  const second = targets.nth(1);
+
+  await first.click();
+  await expect(first).toHaveClass(/selected/);
+
+  await second.click();
+  await expect(first).not.toHaveClass(/selected/);
+  await expect(second).toHaveClass(/selected/);
+
+  await second.click();
+  await expect(second).not.toHaveClass(/selected/);
+  await expect(page.locator(".target-slot.selected")).toHaveCount(0);
+});
+
+test("moves a selected target letter into a clicked empty target", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const firstTarget = page.locator(".target-slot").nth(0);
+  const secondTarget = page.locator(".target-slot").nth(1);
+  const sourceLabel = await source.getAttribute("aria-label");
+  expect(sourceLabel).not.toBeNull();
+  if (!sourceLabel) return;
+
+  await source.click();
+  await firstTarget.click();
+  await firstTarget.click();
+  await secondTarget.click();
+
+  await expect(firstTarget).toHaveAccessibleName(/empty$/);
+  await expect(secondTarget).toHaveAccessibleName(new RegExp(sourceLabel.replace("Letter ", "letter "), "i"));
+  await expect(page.locator(".target-slot.selected")).toHaveCount(0);
+});
+
 test("moves a selected target tile into a clicked empty source slot", async ({ page }) => {
   await page.goto("/");
   const source = page.locator(".letter-tile").first();
