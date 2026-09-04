@@ -328,6 +328,30 @@ test("supports keyboard-style select then place", async ({ page }) => {
   await expect(slot).not.toHaveAccessibleName(/empty$/);
 });
 
+test("uses Escape to clear tile and slot selections", async ({ page }) => {
+  await page.goto("/");
+  const source = page.locator(".letter-tile").first();
+  const target = page.locator(".target-slot").first();
+
+  await source.click();
+  await expect(source).toHaveClass(/selected/);
+  await page.keyboard.press("Escape");
+  await expect(source).not.toHaveClass(/selected/);
+
+  await target.click();
+  await expect(target).toHaveClass(/selected/);
+  await page.keyboard.press("Escape");
+  await expect(target).not.toHaveClass(/selected/);
+
+  await source.click();
+  await target.click();
+  const sourceHole = page.locator(".source-hole").first();
+  await sourceHole.click();
+  await expect(sourceHole).toHaveClass(/selected/);
+  await page.keyboard.press("Escape");
+  await expect(sourceHole).not.toHaveClass(/selected/);
+});
+
 test("moves empty-target selection to another empty target and toggles it off", async ({ page }) => {
   await page.goto("/");
   const targets = page.locator(".target-slot.empty");

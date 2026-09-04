@@ -289,6 +289,12 @@ export default function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!game || event.altKey || event.ctrlKey || event.metaKey) return;
 
+      if (event.key === "Escape" && (selectedTile || selectedTargetSlot || selectedSourceSlot)) {
+        event.preventDefault();
+        clearSelection();
+        return;
+      }
+
       if (event.key === "Backspace") {
         event.preventDefault();
         if (selectedTile || selectedSourceSlot) {
@@ -493,6 +499,8 @@ export default function App() {
     setSelectedTile(null);
     setSelectedTargetSlot(null);
     setSelectedSourceSlot(null);
+    lastTargetSelectionClick.current = null;
+    lastSourceSelectionClick.current = null;
   };
 
   const handlePointerDown = (event: ReactPointerEvent, id: TileID) => {
