@@ -12,6 +12,8 @@
   --bronze: #af916e;
   --silver: #d1d1d1;
   --gold: #ffd86b;
+  --correct-gold-fill: radial-gradient(circle at center, rgb(255 216 107 / 10%) 0, #ffd86b 90%), #fff;
+  --correct-gold-shadow: inset 0 1px 3px #fff, 0 0 4px rgb(255 216 107 / 30%);
   --green: #00b050;
   --control: #606060;
   --selection: rgb(0 0 0 / 30%);
@@ -92,7 +94,8 @@ button { color: inherit; }
   margin: 16px auto 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(4px, .7vw, 7px);
+  column-gap: clamp(12px, 2.1vw, 21px);
+  row-gap: clamp(8px, 1.4vw, 14px);
   container-type: inline-size;
 }
 .puzzle-date-button {
@@ -104,10 +107,10 @@ button { color: inherit; }
   aspect-ratio: 1;
   padding: 3px;
   border: 0;
-  border-radius: 10%;
+  border-radius: 20%;
   background: #fff;
   color: #000;
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 22%);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -115,11 +118,16 @@ button { color: inherit; }
   line-height: 1;
   cursor: pointer;
 }
-.puzzle-date-button:hover:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 1px rgb(0 0 0 / 55%); filter: brightness(.97); }
+.puzzle-date-button:hover:not([aria-pressed="true"]) { box-shadow: none; filter: brightness(.97); }
 .puzzle-date-button[aria-pressed="true"] { outline: 0; box-shadow: inset 0 0 0 2px #000; }
 .puzzle-date-button.tier-bronze { background: var(--bronze); }
 .puzzle-date-button.tier-silver { background: var(--silver); }
-.puzzle-date-button.tier-gold { background: var(--gold); }
+.puzzle-date-button.tier-gold {
+  background: #ffc34d;
+  border: 0;
+  border-radius: 20%;
+  opacity: 1;
+}
 .puzzle-date-placeholder { width: 100%; aspect-ratio: 1; visibility: hidden; }
 .puzzle-date-month { font-size: var(--puzzle-month-size); font-weight: 750; letter-spacing: .04em; }
 .puzzle-date-day { font-size: calc(var(--puzzle-month-size) * 2); line-height: .95; }
@@ -234,9 +242,9 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .target-slot.gold-slot { background: var(--gold); box-shadow: inset 0 -1px 1px var(--inner-shadow); }
 .target-slot.gold-slot.empty { box-shadow: inset 0 1px 1px var(--inner-shadow); }
 .target-slot.correct-gold {
-  background: radial-gradient(circle at center, rgb(255 216 107 / 10%) 0, #ffd86b 90%);
-  border: 1px solid rgb(255 216 107 / 70%);
-  box-shadow: inset 0 1px 3px #fff, 0 0 4px rgb(255 216 107 / 30%);
+  background: var(--correct-gold-fill);
+  border: 1px solid var(--gold);
+  box-shadow: var(--correct-gold-shadow);
 }
 .target-slot.drag-origin:not(.gold-slot):not(.correct-gold) { background: var(--placeholder); box-shadow: inset 0 1px 1px var(--inner-shadow); }
 .target-slot.hint-locked { opacity: 1; cursor: default; }
@@ -322,7 +330,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .progress-rail h2 { margin-bottom: 10px; }
   .rail-row, .stat-row { min-height: 36px; }
   .archive-button { height: 42px; margin-top: 8px; }
-  .puzzle-date-grid { margin-top: 8px; gap: 4px; }
+  .puzzle-date-grid { margin-top: 8px; gap: 8px; }
   .puzzle-pagination { margin-top: 8px; gap: 6px; }
 }
 
@@ -339,7 +347,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .rail-row, .stat-row { min-height: 24px; font-size: 12px; }
   .archive-button { height: 30px; margin-top: 4px; font-size: 12px; }
   .archive-button svg { width: 16px; }
-  .puzzle-date-grid { margin-top: 4px; gap: 3px; }
+  .puzzle-date-grid { margin-top: 4px; gap: 6px; }
   .puzzle-pagination { margin-top: 4px; gap: 4px; }
   .puzzle-date-button { --puzzle-month-size: clamp(6px, 5cqw, 8px); }
 }
