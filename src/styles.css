@@ -10,7 +10,7 @@
   --placeholder: #dedede;
   --valid: #def1d3;
   --invalid: #fbe2e0;
-  --bronze: #af916e;
+  --bronze: #cca981;
   --silver: #d1d1d1;
   --gold: #ffd86b;
   --correct-gold-fill: radial-gradient(circle at center, rgb(255 216 107 / 10%) 0, #ffd86b 90%), #fff;
@@ -188,13 +188,13 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .tier-objective em { color: rgb(0 176 80 / 50%); font-style: normal; }
 .tier-objective em.correct { color: var(--green); }
 .seal { width: var(--seal-size); height: var(--seal-size); flex: 0 0 auto; display: grid; place-items: center; }
-.seal svg { width: 100%; height: 100%; overflow: visible; }
+.seal > svg { width: 100%; height: 100%; overflow: visible; }
 .seal-fill { fill: currentColor; }
-.seal-outline { fill: none; stroke: #000; stroke-width: 5; }
-.seal-check { fill: none; stroke: #000; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
-.seal.bronze { color: var(--bronze); }
-.seal.silver { color: var(--silver); }
-.seal.gold { color: var(--gold); }
+.seal-outline { fill: none; stroke: var(--seal-mark); stroke-width: 5; }
+.seal-trophy { fill: var(--seal-mark); pointer-events: none; }
+.seal.bronze { color: var(--bronze); --seal-mark: #3d3327; }
+.seal.silver { color: var(--silver); --seal-mark: #3f3f3f; }
+.seal.gold { color: var(--gold); --seal-mark: #4d4120; }
 
 .target-board { width: 100%; min-width: 0; height: max-content; }
 .target-row, .target-row-placeholder { width: 100%; display: flex; justify-content: flex-start; align-items: center; gap: 6px; padding: var(--target-row-padding) 0; }

@@ -9,6 +9,7 @@ import { loadPersistedState, progressFromGame, savePersistedState } from "./pers
 import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
+import trophyIconUrl from "../Trophy.svg";
 
 type ModalName = "about" | "how" | "stats" | "victory" | null;
 
@@ -40,7 +41,9 @@ function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | 
         {satisfied &&
           <path className="seal-outline" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
         }
-        {achieved && <path className="seal-check" d="M33 51L44 62L68 38" />}
+        {achieved && <svg className="seal-trophy" x="27" y="30" width="46" height="41" viewBox="0 0 91.5 81.9">
+          <use href={`${trophyIconUrl}#Layer_1`} />
+        </svg>}
       </svg>
     </span>
   );
