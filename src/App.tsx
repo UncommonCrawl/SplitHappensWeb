@@ -1,7 +1,7 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, ChartNoAxesColumn, Flame, HelpCircle, Info, Lightbulb, Lock,
-  Menu, RotateCcw, Share2, Trophy, Undo2, Volume2, VolumeX, X,
+  ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lightbulb, Lock,
+  Menu, RotateCcw, Share2, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import { loadPuzzleContent, loadWords, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
@@ -11,7 +11,7 @@ import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 import trophyIconUrl from "../Trophy.svg";
 
-type ModalName = "about" | "how" | "stats" | "victory" | null;
+type ModalName = "about" | "how" | "recent" | "stats" | "victory" | null;
 
 type DragState = {
   tileID: TileID;
@@ -33,6 +33,9 @@ type DragHover =
 
 const TILE_DOUBLE_CLICK_MS = 500;
 const EMPTY_WORDS = new Set<string>();
+const TARGET_BOARD_HEIGHT_PERCENT = 45;
+const SOURCE_BOARD_HEIGHT_PERCENT = 18.75;
+const COMPACT_TILE_SCALE = 0.7;
 
 function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (
@@ -114,6 +117,7 @@ export default function App() {
   const [archivePage, setArchivePage] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isConstrained, setIsConstrained] = useState(() => window.matchMedia("(max-width: 1050px)").matches);
+  const [recentPuzzlesCollapsed, setRecentPuzzlesCollapsed] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [dragHover, setDragHover] = useState<DragHover | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
@@ -123,6 +127,17 @@ export default function App() {
   const previousGold = useRef(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) return;
+    const handleLocalVictoryShortcut = (event: KeyboardEvent) => {
+      if (!event.altKey || event.key.toLowerCase() !== "v" || event.repeat) return;
+      event.preventDefault();
+      setModal("victory");
+    };
+    window.addEventListener("keydown", handleLocalVictoryShortcut);
+    return () => window.removeEventListener("keydown", handleLocalVictoryShortcut);
+  }, []);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
@@ -216,6 +231,37 @@ export default function App() {
   const recentEntries = useMemo(() => recentScheduleEntries(content?.schedule ?? [], now, 9, archivePage), [content, now, archivePage]);
   const hasPreviousPage = releasedEntries.length > (archivePage + 1) * 9;
   const hasNextPage = archivePage > 0;
+
+  useLayoutEffect(() => {
+    if (isConstrained) {
+      setRecentPuzzlesCollapsed(false);
+      return;
+    }
+    const checkFit = () => {
+      const sidebar = drawerRef.current;
+      if (!recentPuzzlesCollapsed && sidebar && sidebar.scrollHeight > sidebar.clientHeight) {
+        setRecentPuzzlesCollapsed(true);
+      }
+    };
+    checkFit();
+    const frame = window.requestAnimationFrame(checkFit);
+    return () => window.cancelAnimationFrame(frame);
+  }, [archivePage, isConstrained, recentEntries, recentPuzzlesCollapsed]);
+
+  useEffect(() => {
+    const recheckExpandedSidebar = () => {
+      setRecentPuzzlesCollapsed(false);
+      window.requestAnimationFrame(() => {
+        const sidebar = drawerRef.current;
+        if (!window.matchMedia("(max-width: 1050px)").matches && sidebar && sidebar.scrollHeight > sidebar.clientHeight) {
+          setRecentPuzzlesCollapsed(true);
+        }
+      });
+    };
+    window.addEventListener("resize", recheckExpandedSidebar);
+    document.fonts?.ready.then(recheckExpandedSidebar);
+    return () => window.removeEventListener("resize", recheckExpandedSidebar);
+  }, []);
 
   useEffect(() => {
     if (!activeLevel) return;
@@ -733,9 +779,10 @@ export default function App() {
   const gameLayoutStyle = {
     "--target-columns": Math.max(...game.targetSlots.map((row) => row.length)),
     "--source-columns": Math.max(...game.sourceSlots.map((row) => row.length)),
-    "--target-height-limit": `calc(${45 / targetSizingRows}cqh - 0.5px)`,
-    "--target-compact-height-limit": `calc(${36 / targetSizingRows}cqh - 0.5px)`,
-    "--source-height-limit": `${18.75 / game.sourceSlots.length}cqh`,
+    "--target-height-limit": `calc(${TARGET_BOARD_HEIGHT_PERCENT / targetSizingRows}cqh - 0.5px)`,
+    "--target-compact-height-limit": `calc(${TARGET_BOARD_HEIGHT_PERCENT * COMPACT_TILE_SCALE / targetSizingRows}cqh - 0.5px)`,
+    "--source-height-limit": `${SOURCE_BOARD_HEIGHT_PERCENT / game.sourceSlots.length}cqh`,
+    "--source-compact-height-limit": `${SOURCE_BOARD_HEIGHT_PERCENT * COMPACT_TILE_SCALE / game.sourceSlots.length}cqh`,
   } as CSSProperties;
   const handleSidebarAction = (action: () => void) => {
     action();
@@ -743,8 +790,36 @@ export default function App() {
   };
   const handlePuzzleSelection = (levelID: string) => {
     setActiveLevelID(levelID);
+    setModal(null);
     if (isConstrained) closeDrawer();
   };
+  const recentPuzzleGrid = <>
+    <div className="puzzle-date-grid" aria-label="Recent puzzles">
+      {Array.from({ length: 9 - recentEntries.length }, (_, index) => <span className="puzzle-date-placeholder" aria-hidden="true" key={`placeholder-${index}`} />)}
+      {recentEntries.map((entry) => {
+        const date = parseLocalDate(entry.date);
+        const level = content.levels.find((item) => item.id === entry.levelID);
+        const today = entry.date === localDateKey(now);
+        const tier = level ? highestPuzzleTier(level, persisted.levels[entry.levelID], words ?? EMPTY_WORDS) : "none";
+        const tierLabel = tier === "none" ? "not completed" : `${tier} tier`;
+        return <button
+          key={entry.date}
+          className={`puzzle-date-button tier-${tier}`}
+          data-date={entry.date}
+          aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}`}
+          aria-pressed={entry.levelID === activeLevel.id}
+          onClick={() => handlePuzzleSelection(entry.levelID)}
+        >
+          <span className="puzzle-date-month">{MONTH_ABBREVIATIONS[date.getMonth()]}</span>
+          <strong className="puzzle-date-day">{date.getDate()}</strong>
+        </button>;
+      })}
+    </div>
+    <div className="puzzle-pagination" aria-label="Archive navigation">
+      <button className="archive-button" disabled={!hasPreviousPage} onClick={() => setArchivePage((page) => page + 1)}><ArrowLeft /><span>Prev.</span></button>
+      <button className="archive-button" disabled={!hasNextPage} onClick={() => setArchivePage((page) => Math.max(0, page - 1))}><span>Next</span><ArrowRight /></button>
+    </div>
+  </>;
   return (
     <div className={`app-shell ${words ? "" : "app-shell-loading-content"}`}>
       <header className="mobile-header">
@@ -798,36 +873,13 @@ export default function App() {
             <span>Sound</span>
           </button>
           <button aria-label="About" onClick={() => handleSidebarAction(() => setModal("about"))}><Info /><span>About</span></button>
+          {recentPuzzlesCollapsed && <button aria-label="Recent Puzzles" onClick={() => setModal("recent")}><CalendarDays /><span>Recent Puzzles</span></button>}
         </nav>
 
-        <section className="sidebar-stats">
+        {!recentPuzzlesCollapsed && <section className="sidebar-stats">
           <h2>Recent puzzles</h2>
-          <div className="puzzle-date-grid" aria-label="Recent puzzles">
-            {Array.from({ length: 9 - recentEntries.length }, (_, index) => <span className="puzzle-date-placeholder" aria-hidden="true" key={`placeholder-${index}`} />)}
-            {recentEntries.map((entry) => {
-              const date = parseLocalDate(entry.date);
-              const level = content.levels.find((item) => item.id === entry.levelID);
-              const today = entry.date === localDateKey(now);
-              const tier = level ? highestPuzzleTier(level, persisted.levels[entry.levelID], words ?? EMPTY_WORDS) : "none";
-              const tierLabel = tier === "none" ? "not completed" : `${tier} tier`;
-              return <button
-                key={entry.date}
-                className={`puzzle-date-button tier-${tier}`}
-                data-date={entry.date}
-                aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}`}
-                aria-pressed={entry.levelID === activeLevel.id}
-                onClick={() => handlePuzzleSelection(entry.levelID)}
-              >
-                <span className="puzzle-date-month">{MONTH_ABBREVIATIONS[date.getMonth()]}</span>
-                <strong className="puzzle-date-day">{date.getDate()}</strong>
-              </button>;
-            })}
-          </div>
-          <div className="puzzle-pagination" aria-label="Archive navigation">
-            <button className="archive-button" disabled={!hasPreviousPage} onClick={() => setArchivePage((page) => page + 1)}><ArrowLeft /><span>Prev.</span></button>
-            <button className="archive-button" disabled={!hasNextPage} onClick={() => setArchivePage((page) => Math.max(0, page - 1))}><span>Next</span><ArrowRight /></button>
-          </div>
-        </section>
+          {recentPuzzleGrid}
+        </section>}
 
         <footer className="sidebar-controls" aria-label="Game controls">
           <p>Click to select</p>
@@ -955,6 +1007,10 @@ export default function App() {
         </div>}
       </div>
 
+      {modal === "recent" && <Modal title="Recent Puzzles" onClose={() => setModal(null)}>
+        <div className="recent-puzzles-popup">{recentPuzzleGrid}</div>
+      </Modal>}
+
       {drag?.moved && <div
         aria-hidden="true"
         className={`drag-tile ${drag.tileClassName}`}
@@ -1014,7 +1070,7 @@ export default function App() {
       </Modal>}
 
       {modal === "victory" && <Modal title="Perfect Split!" onClose={() => setModal(null)}>
-        <div className="victory-content"><span className="victory-seal"><Trophy /></span><p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p><button className="primary-button" onClick={shareResult}><Share2 />Share result</button></div>
+        <div className="victory-content"><span className="victory-seal" aria-hidden="true"><span className="victory-banana" /></span><p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p><button className="primary-button" onClick={shareResult}><Share2 />Share result</button></div>
       </Modal>}
     </div>
   );

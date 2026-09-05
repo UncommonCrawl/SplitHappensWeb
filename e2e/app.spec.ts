@@ -89,6 +89,16 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(nextButton.locator("svg")).toHaveCSS("opacity", "0.22");
 });
 
+test("opens the victory popup with the localhost-only shortcut", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  await page.keyboard.press("Alt+v");
+
+  await expect(page.getByRole("dialog", { name: "Perfect Split!" })).toBeVisible();
+  await expect(page.locator(".victory-banana")).toBeVisible();
+});
+
 test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
@@ -228,6 +238,15 @@ test("shows completed progression and uses Perfect Split for every victory", asy
   for (let row = 0; row < rowCount; row += 1) await hint.click();
 
   await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
+  const victorySeal = page.locator(".victory-seal");
+  const victoryBanana = victorySeal.locator(".victory-banana");
+  await expect(victorySeal).toHaveCSS("background-color", "rgb(250, 250, 248)");
+  await expect(victorySeal).toHaveCSS("animation-name", "victory-pulse");
+  await expect(victoryBanana).toHaveCSS("background-color", "rgb(255, 216, 107)");
+  await expect(victoryBanana).not.toHaveCSS("mask-image", "none");
+  const victorySealBox = await victorySeal.boundingBox();
+  const victoryBananaBox = await victoryBanana.boundingBox();
+  expect(victoryBananaBox?.width).toBeGreaterThan(victorySealBox?.width ?? Infinity);
   await expect(page.locator(".tier-step.complete")).toHaveCount(3);
   await expect(page.locator(".criterion-line.met")).toHaveCount(3);
   await expect(page.locator(".criterion-line.met").first()).toHaveCSS("color", "rgb(119, 119, 119)");
@@ -1104,8 +1123,37 @@ test("lets game controls shrink below their preferred sizes for a tiny window", 
   expect(targetTileBox?.width).toBeLessThan(68);
   expect(sourceTileBox?.width).toBeLessThan(58);
   expect(toolbarButtonBox?.width).toBeLessThan(52);
+  if (targetTileBox && sourceTileBox) {
+    const sourceToTargetRatio = sourceTileBox.width / targetTileBox.width;
+    expect(sourceToTargetRatio).toBeGreaterThan(0.65);
+    expect(sourceToTargetRatio).toBeLessThan(0.8);
+  }
   expect(overflow).toBeLessThanOrEqual(1);
   if (gameBox && toolbarBox) expect(toolbarBox.y + toolbarBox.height).toBeLessThanOrEqual(gameBox.y + gameBox.height + 1);
+});
+
+test("moves recent puzzles into a popup when a desktop sidebar cannot fit", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 450 });
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const sidebar = page.locator(".app-sidebar");
+  const recentPuzzlesButton = page.getByRole("button", { name: "Recent Puzzles", exact: true });
+  await expect(page.locator(".sidebar-stats")).toBeHidden();
+  await expect(recentPuzzlesButton).toBeVisible();
+  await expect(recentPuzzlesButton).toHaveCSS("font-size", "13px");
+  expect(await sidebar.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0);
+
+  await recentPuzzlesButton.click();
+  const popup = page.getByRole("dialog", { name: "Recent Puzzles" });
+  await expect(popup).toBeVisible();
+  await expect(popup.locator(".puzzle-date-button")).toHaveCount(9);
+  await expect(popup.locator(".puzzle-date-button.tier-none").first()).toHaveCSS("background-color", "rgb(250, 250, 248)");
+
+  await popup.getByRole("button", { name: "Close" }).click();
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await expect(page.locator(".sidebar-stats")).toBeVisible();
+  await expect(recentPuzzlesButton).toBeHidden();
 });
 
 for (const viewport of layoutViewports) {
