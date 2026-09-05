@@ -40,7 +40,7 @@ button { color: inherit; }
 h1, h2, h3, strong, b { font-weight: 500; }
 
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 294px minmax(0, 1fr); }
-.mobile-header, .drawer-backdrop, .drawer-close { display: none; }
+.mobile-header, .drawer-backdrop, .drawer-close, .mobile-help-button { display: none; }
 .app-sidebar {
   min-height: 100vh;
   height: 100dvh;
@@ -371,6 +371,10 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .modal-close:hover { color: #494949; }
 .modal-close svg { width: 28px; height: 28px; stroke-width: 2.5; }
 .instructions { text-align: center; font-size: 17px; line-height: 1.45; }
+.popup-controls { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.popup-controls h3 { margin: 0 0 14px; font-size: 20px; }
+.popup-controls p { margin: 0; }
+.popup-controls p + p { margin-top: 7px; }
 .about-content { text-align: center; font-size: 17px; line-height: 1.45; }
 .about-content p { margin: 0 0 14px; }
 .about-content a { color: inherit; font-weight: 500; text-underline-offset: 3px; }
@@ -511,7 +515,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
     align-items: center;
     z-index: 20;
   }
-  .mobile-menu-button, .drawer-close {
+  .mobile-menu-button, .mobile-help-button, .drawer-close {
     width: 44px;
     height: 44px;
     min-height: 44px;
@@ -524,12 +528,12 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
     place-items: center;
     cursor: pointer;
   }
-  .mobile-menu-button:hover, .drawer-close:hover { background: rgb(255 255 255 / 28%); }
-  .mobile-menu-button svg, .drawer-close svg { width: 28px; height: 28px; stroke-width: 2.5; }
+  .mobile-menu-button:hover, .mobile-help-button:hover, .drawer-close:hover { background: rgb(255 255 255 / 28%); }
+  .mobile-menu-button svg, .mobile-help-button svg, .drawer-close svg { width: 28px; height: 28px; stroke-width: 2.5; }
   .mobile-brand { min-width: 0; display: grid; justify-items: center; gap: 1px; text-align: center; }
   .mobile-wordmark { width: min(230px, 100%); height: 34px; object-fit: contain; }
   .mobile-brand h1 { margin: 0; font-size: 13px; line-height: 1.15; white-space: nowrap; }
-  .mobile-header-spacer { width: 44px; height: 44px; }
+  .app-sidebar .sidebar-help-action, .app-sidebar .sidebar-controls { display: none; }
   .workspace { width: 100%; height: 100%; min-height: 0; overflow: hidden; padding: 8px 12px max(16px, env(safe-area-inset-bottom)); }
   .game-area { width: min(760px, 100%); height: 100%; min-height: 0; align-self: center; }
   .app-sidebar {
@@ -572,11 +576,10 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 
 @media (max-width: 360px), (max-height: 430px) {
   .mobile-header { min-height: 38px; padding-block: max(1px, env(safe-area-inset-top)) 1px; grid-template-columns: 36px minmax(0, 1fr) 36px; }
-  .mobile-menu-button { width: 36px; height: 36px; min-height: 36px; }
-  .mobile-menu-button svg { width: 25px; height: 25px; }
+  .mobile-menu-button, .mobile-help-button { width: 36px; height: 36px; min-height: 36px; }
+  .mobile-menu-button svg, .mobile-help-button svg { width: 25px; height: 25px; }
   .mobile-wordmark { height: 22px; }
   .mobile-brand h1 { font-size: 10px; }
-  .mobile-header-spacer { width: 36px; height: 36px; }
   .workspace { padding-block: 0 max(0px, env(safe-area-inset-bottom)); }
   .game-area { row-gap: 1.8cqh; }
 }

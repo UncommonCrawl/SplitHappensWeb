@@ -836,7 +836,11 @@ export default function App() {
             <span className="level-title">'{activeLevel.goldWord}'</span>
           </h1>
         </div>
-        <span className="mobile-header-spacer" aria-hidden="true" />
+        <button
+          className="mobile-help-button"
+          aria-label="How to Play"
+          onClick={() => setModal("how")}
+        ><HelpCircle /></button>
       </header>
 
       {isConstrained && drawerOpen && <button className="drawer-backdrop" aria-label="Close sidebar menu" onClick={() => closeDrawer()} />}
@@ -860,7 +864,7 @@ export default function App() {
         </header>
 
         <nav className="sidebar-actions" aria-label="Game actions">
-          <button aria-label="How to Play" onClick={() => handleSidebarAction(() => setModal("how"))}><HelpCircle /><span>How to Play</span></button>
+          <button className="sidebar-help-action" aria-label="How to Play" onClick={() => handleSidebarAction(() => setModal("how"))}><HelpCircle /><span>How to Play</span></button>
           <button aria-label="Stats" onClick={() => handleSidebarAction(() => setModal("stats"))}><ChartNoAxesColumn /><span>Stats</span></button>
           <button
             onClick={() => handleSidebarAction(() => updateSettings({ soundEnabled: !persisted.settings.soundEnabled }))}
@@ -1020,7 +1024,14 @@ export default function App() {
         <div className="instructions">
           <p>Rearrange every letter to form a valid English word in each row.</p>
           <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
-          <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
+          {!isConstrained && <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>}
+          {isConstrained && <section className="popup-controls" aria-labelledby="popup-controls-title">
+            <h3 id="popup-controls-title">Controls</h3>
+            <p>Click to select</p>
+            <p>Drag to place</p>
+            <p>Click any two tiles to swap positions</p>
+            <p>Double-click to move tile to/from source</p>
+          </section>}
         </div>
       </Modal>}
 

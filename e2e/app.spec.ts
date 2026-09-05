@@ -64,8 +64,12 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(page.locator(".stats-progress-bar")).toHaveCSS("overflow", "hidden");
   await expect(page.locator(".stats-progress-bar span").first()).toHaveCSS("border-radius", "0px");
   await page.getByRole("button", { name: "Close" }).click();
-  await openSidebarIfNeeded(page);
-  await page.getByRole("button", { name: /How to Play/i }).click();
+  const headerHelp = page.locator(".mobile-header").getByRole("button", { name: "How to Play" });
+  if (await headerHelp.isVisible()) {
+    await headerHelp.click();
+  } else {
+    await page.getByRole("button", { name: "How to Play" }).click();
+  }
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");
   await expect(howToPlay).toContainText("Normal, Hard, and Perfect Split");
@@ -1020,17 +1024,31 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
 
   const header = page.locator(".mobile-header");
   const menu = page.getByRole("button", { name: "Open sidebar menu" });
+  const help = header.getByRole("button", { name: "How to Play" });
   const drawer = page.locator("#sidebar-menu");
   await expect(header).toBeVisible();
+  await expect(help).toBeVisible();
   await expect(page.locator(".workspace")).toHaveCSS("padding-bottom", "16px");
   await expect(menu).toHaveAttribute("aria-expanded", "false");
   await expect(drawer).toHaveAttribute("aria-hidden", "true");
+
+  await help.click();
+  const helpPopup = page.getByRole("dialog", { name: "How to Play" });
+  await expect(helpPopup).toContainText("Rearrange every letter");
+  await expect(helpPopup.getByRole("heading", { name: "Controls" })).toBeVisible();
+  await expect(helpPopup).toContainText("Click to select");
+  await expect(helpPopup).toContainText("Drag to place");
+  await expect(helpPopup).toContainText("Click any two tiles to swap positions");
+  await expect(helpPopup).toContainText("Double-click to move tile to/from source");
+  await helpPopup.getByRole("button", { name: "Close" }).click();
 
   await menu.click();
   await expect(menu).toHaveAttribute("aria-expanded", "true");
   await expect(drawer).toHaveAttribute("aria-modal", "true");
   await expect(drawer).toHaveClass(/drawer-open/);
   await expect(page.getByRole("button", { name: "Close sidebar menu" }).last()).toBeFocused();
+  await expect(drawer.getByRole("button", { name: "How to Play" })).toBeHidden();
+  await expect(drawer.locator(".sidebar-controls")).toBeHidden();
 
   await page.keyboard.press("Escape");
   await expect(drawer).toHaveAttribute("aria-hidden", "true");
@@ -1041,8 +1059,8 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
   await expect(menu).toBeFocused();
 
   await menu.click();
-  await page.locator('[data-date="2026-08-26"]').click();
-  await expect(header.locator("h1")).toContainText("August 26th");
+  await page.locator('[data-date="2026-08-31"]').click();
+  await expect(header.locator("h1")).toContainText("August 31st");
   await expect(menu).toHaveAttribute("aria-expanded", "false");
 
   await page.setViewportSize({ width: 500, height: 718 });
