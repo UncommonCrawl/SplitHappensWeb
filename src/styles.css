@@ -51,6 +51,8 @@ h1, h2, h3, strong, b { font-weight: 500; }
   position: sticky;
   top: 0;
   z-index: 5;
+  display: flex;
+  flex-direction: column;
 }
 .sidebar-brand { padding: 0 0 18px; text-align: center; border-bottom: 1px solid rgb(0 0 0 / 11%); }
 .wordmark { width: 100%; height: 48px; object-fit: contain; object-position: center; }
@@ -76,6 +78,16 @@ h1, h2, h3, strong, b { font-weight: 500; }
 .sidebar-actions button:hover:not(:disabled) { background: rgb(255 255 255 / 28%); }
 .sidebar-actions button:disabled { opacity: .45; cursor: not-allowed; }
 .sidebar-actions svg { width: 25px; height: 25px; stroke-width: 2.2; }
+.sidebar-controls {
+  margin-top: auto;
+  padding: 18px 5px 0;
+  color: #000;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+}
+.sidebar-controls p { margin: 0; }
+.sidebar-controls p + p { margin-top: 5px; }
 
 .workspace {
   position: relative;
@@ -394,6 +406,8 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .archive-button { height: 42px; margin-top: 8px; }
   .puzzle-date-grid { margin-top: 8px; gap: 8px; }
   .puzzle-pagination { margin-top: 8px; gap: 6px; }
+  .sidebar-controls { padding-top: 12px; font-size: 11px; }
+  .sidebar-controls p + p { margin-top: 3px; }
   .modal:has(.modal-stats) { padding: 22px 36px 18px; }
   .modal:has(.modal-stats) h2 { margin-bottom: 14px; font-size: 36px; }
   .stats-streak-card { padding: 16px 34px 14px; }
@@ -423,6 +437,8 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .puzzle-date-grid { margin-top: 4px; gap: 6px; }
   .puzzle-pagination { margin-top: 4px; gap: 4px; }
   .puzzle-date-button { --puzzle-month-size: clamp(6px, 5cqw, 8px); }
+  .sidebar-controls { padding-top: 7px; font-size: 10px; }
+  .sidebar-controls p + p { margin-top: 1px; }
 }
 
 @media (hover: hover) and (pointer: fine) and (min-width: 1051px) {

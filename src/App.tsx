@@ -828,6 +828,13 @@ export default function App() {
             <button className="archive-button" disabled={!hasNextPage} onClick={() => setArchivePage((page) => Math.max(0, page - 1))}><span>Next</span><ArrowRight /></button>
           </div>
         </section>
+
+        <footer className="sidebar-controls" aria-label="Game controls">
+          <p>Click to select</p>
+          <p>Drag to place</p>
+          <p>Click any two tiles to swap positions</p>
+          <p>Double-click to move tile to/from source</p>
+        </footer>
       </aside>
 
       <div className="workspace" aria-busy={!words}>
@@ -960,7 +967,6 @@ export default function App() {
           <p>Rearrange every letter to form a valid English word in each row.</p>
           <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
           <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
-          <p>Hints fill one official answer row at a time.</p>
         </div>
       </Modal>}
 
