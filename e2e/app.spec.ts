@@ -105,6 +105,8 @@ test("shows nine equal recent-puzzle buttons ending with today and navigates by 
   await expect(dates.first()).toHaveCSS("border-color", "rgb(0, 0, 0)");
   await expect(dates.first()).toHaveCSS("box-shadow", /rgb\(0, 0, 0\) 0px 0px 0px 1px inset/);
   await expect(page.locator(".sidebar-brand h1")).toContainText("August 26th");
+  await expect(page.locator(".sidebar-brand h1 span")).toHaveCount(2);
+  await expect(page.locator(".sidebar-brand h1 span").last()).toHaveText(/^'[^']+'$/);
   await expect(dates.last()).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await openSidebarIfNeeded(page);
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();

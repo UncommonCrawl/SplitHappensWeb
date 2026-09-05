@@ -1,5 +1,14 @@
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/Inter-Latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
   font-family: Inter, ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 500;
   color: #000;
   background: #fff;
   font-synthesis: none;
@@ -28,6 +37,7 @@ html, body, #root { min-height: 100%; margin: 0; }
 body { min-width: 320px; background: #fff; }
 button, input { font: inherit; }
 button { color: inherit; }
+h1, h2, h3, strong, b { font-weight: 500; }
 
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 294px minmax(0, 1fr); }
 .mobile-header, .drawer-backdrop, .drawer-close { display: none; }
@@ -45,6 +55,9 @@ button { color: inherit; }
 .sidebar-brand { padding: 0 0 18px; text-align: center; border-bottom: 1px solid rgb(0 0 0 / 11%); }
 .wordmark { width: 100%; height: 48px; object-fit: contain; object-position: center; }
 .sidebar-brand h1 { margin: 8px 0 0; font-size: 16px; line-height: 1.2; white-space: nowrap; }
+.sidebar-brand h1 span, .mobile-brand h1 span { display: block; }
+.sidebar-brand .level-date, .mobile-brand .level-date { font-weight: 600; }
+.sidebar-brand .level-title, .mobile-brand .level-title { color: #000; font-size: 80%; font-weight: 500; line-height: 1.68; }
 .sidebar-actions { padding: 9px 0; border-bottom: 1px solid rgb(0 0 0 / 11%); }
 .sidebar-actions button {
   width: 100%;
@@ -56,7 +69,7 @@ button { color: inherit; }
   display: flex;
   align-items: center;
   gap: 14px;
-  font-weight: 700;
+  font-weight: 500;
   text-align: left;
   cursor: pointer;
 }
@@ -82,7 +95,7 @@ button { color: inherit; }
 .progress-rail h2 { margin: 0 0 17px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: rgb(0 0 0 / 68%); }
 .rail-row, .stat-row { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
 .rail-row + .rail-row { border-top: 1px solid #eee; }
-.archive-button { width: 100%; height: 46px; margin-top: 16px; border: 1px solid rgb(0 0 0 / 22%); background: rgb(255 255 255 / 8%); border-radius: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+.archive-button { width: 100%; height: 46px; margin-top: 16px; border: 1px solid rgb(0 0 0 / 22%); background: rgb(255 255 255 / 8%); border-radius: 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
 .archive-button:hover:not(:disabled) { border-color: rgb(0 0 0 / 40%); background: rgb(255 255 255 / 22%); }
 .archive-button:disabled { opacity: .45; cursor: not-allowed; }
 .archive-button svg { width: 20px; }
@@ -130,7 +143,7 @@ button { color: inherit; }
   opacity: 1;
 }
 .puzzle-date-placeholder { width: 100%; aspect-ratio: 1; visibility: hidden; }
-.puzzle-date-month { font-size: var(--puzzle-month-size); font-weight: 750; letter-spacing: .04em; }
+.puzzle-date-month { font-size: var(--puzzle-month-size); font-weight: 500; letter-spacing: .04em; }
 .puzzle-date-day { font-size: calc(var(--puzzle-month-size) * 2); line-height: .95; }
 
 .game-area {
@@ -177,7 +190,7 @@ button { color: inherit; }
 .tier-lock { position: absolute; width: 42%; height: 42%; color: var(--control); stroke-width: 2.8; }
 .tier-connector { height: 2px; min-width: 18px; max-width: 72px; flex: 1 1 72px; margin: calc((var(--seal-size) - 2px) / 2) -20px 0; border-radius: 999px; background: var(--placeholder); }
 .tier-connector.complete { background: var(--control); }
-.tier-objective { width: 100%; max-width: 560px; margin-top: clamp(8px, 1.2dvh, 14px); display: grid; grid-template-rows: repeat(3, auto); gap: 1px; text-align: center; font-size: clamp(11px, 1.65dvh, 15px); font-weight: 750; line-height: 1.25; text-transform: uppercase; }
+.tier-objective { width: 100%; max-width: 560px; margin-top: clamp(8px, 1.2dvh, 14px); display: grid; grid-template-rows: repeat(3, auto); gap: 1px; text-align: center; font-size: clamp(11px, 1.65dvh, 15px); font-weight: 500; line-height: 1.25; text-transform: uppercase; }
 .criterion-line { min-height: 1.25em; }
 .criterion-line.active-goal { color: #000; }
 .criterion-line.met { color: #777; }
@@ -216,7 +229,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   flex: 0 0 var(--target-size);
   border: 0;
   border-radius: 10%;
-  font-weight: 800;
+  font-weight: 500;
   font-size: min(30px, calc(var(--target-size) * .5));
   user-select: none;
   touch-action: none;
@@ -302,9 +315,9 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .stats-streak-row { min-height: 112px; display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 24px; }
 .stats-streak-row + .stats-streak-row { border-top: 1px solid rgb(0 0 0 / 17%); }
 .stats-streak-row > div { display: grid; gap: 2px; }
-.stats-streak-row span { color: rgb(0 0 0 / 64%); font-size: 14px; font-weight: 750; letter-spacing: .045em; text-transform: uppercase; }
+.stats-streak-row span { color: rgb(0 0 0 / 64%); font-size: 14px; font-weight: 500; letter-spacing: .045em; text-transform: uppercase; }
 .stats-streak-row strong { font-size: 27px; line-height: 1.05; }
-.stats-streak-row small { color: rgb(0 0 0 / 64%); font-size: 15px; font-weight: 650; }
+.stats-streak-row small { color: rgb(0 0 0 / 64%); font-size: 15px; font-weight: 500; }
 .stats-flame { width: 54px; height: 54px; fill: currentColor; stroke: none; }
 .stats-flame.gold { color: var(--yellow-deep); }
 .stats-flame.silver { color: var(--silver); }
@@ -339,7 +352,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .instructions { text-align: center; font-size: 17px; line-height: 1.45; }
 .about-content { text-align: center; font-size: 17px; line-height: 1.45; }
 .about-content p { margin: 0 0 14px; }
-.about-content a { color: inherit; font-weight: 700; text-underline-offset: 3px; }
+.about-content a { color: inherit; font-weight: 500; text-underline-offset: 3px; }
 .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .archive-grid button { min-height: 116px; padding: 15px; border: 1px solid #ddd; border-radius: 10px; background: #fff; display: grid; gap: 5px; text-align: left; cursor: pointer; }
 .archive-grid button:hover, .archive-grid button.active { background: #fff8df; border-color: #e3b72f; }
@@ -348,12 +361,12 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .victory-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .victory-seal { width: 110px; height: 110px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; color: var(--yellow-deep); box-shadow: 0 0 0 9px #fff4c8; }
 .victory-seal svg { width: 55px; height: 55px; }
-.primary-button { border: 0; border-radius: 9px; background: var(--yellow); min-height: 48px; padding: 0 22px; font-weight: 800; display: inline-flex; align-items: center; gap: 9px; cursor: pointer; }
+.primary-button { border: 0; border-radius: 9px; background: var(--yellow); min-height: 48px; padding: 0 22px; font-weight: 500; display: inline-flex; align-items: center; gap: 9px; cursor: pointer; }
 .toast { position: fixed; z-index: 80; left: 50%; bottom: 26px; transform: translateX(-50%); background: #191919; color: white; padding: 12px 18px; border-radius: 8px; box-shadow: var(--shadow); }
 .drag-tile { position: fixed; z-index: 100; pointer-events: none; display: grid; place-items: center; margin: 0; opacity: .5; transition: none; cursor: grabbing; }
 .loading-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 30px; text-align: center; background: linear-gradient(135deg, #ffdc77, #fff4c8); }
 .loading-screen img { width: min(440px, 85vw); }
-.loading-screen p { max-width: 520px; font-weight: 650; }
+.loading-screen p { max-width: 520px; font-weight: 500; }
 .loader { width: 40px; height: 40px; border: 4px solid rgb(0 0 0 / 13%); border-top-color: #111; border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 

@@ -740,7 +740,10 @@ export default function App() {
         ><Menu /></button>
         <div className="mobile-brand">
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="mobile-wordmark" />
-          <h1>{longDate(selectedDate)}</h1>
+          <h1>
+            <span className="level-date">{longDate(selectedDate)}</span>
+            <span className="level-title">'{activeLevel.goldWord}'</span>
+          </h1>
         </div>
         <span className="mobile-header-spacer" aria-hidden="true" />
       </header>
@@ -759,7 +762,10 @@ export default function App() {
         <button className="drawer-close" aria-label="Close sidebar menu" onClick={() => closeDrawer()}><X /></button>
         <header className="sidebar-brand">
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
-          <h1>{longDate(selectedDate)}</h1>
+          <h1>
+            <span className="level-date">{longDate(selectedDate)}</span>
+            <span className="level-title">'{activeLevel.goldWord}'</span>
+          </h1>
         </header>
 
         <nav className="sidebar-actions" aria-label="Game actions">
