@@ -8,6 +8,22 @@ async function openSidebarIfNeeded(page: Page) {
   }
 }
 
+test("renders the app behind a game-area loader while the dictionary loads", async ({ page }) => {
+  await page.route("**/words.json", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await route.continue();
+  });
+
+  await page.goto("/");
+  await expect(page.locator(".app-sidebar")).toHaveCSS("background-color", "rgb(255, 216, 107)");
+  await expect(page.locator(".game-area")).toBeAttached();
+  await expect(page.locator(".game-loading-overlay")).toBeVisible();
+  await expect(page.locator(".sidebar-brand")).toBeHidden();
+  await expect(page.locator(".game-loading-overlay")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator(".game-loading-overlay")).toBeHidden({ timeout: 5_000 });
+  await expect(page.locator(".sidebar-brand")).toBeVisible();
+});
+
 test("loads the daily game and opens core dialogs", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("img", { name: "Split Happens" })).toBeVisible();

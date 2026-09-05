@@ -75,15 +75,13 @@ export function staticAssetPath(path: string): string {
   return path;
 }
 
-export async function loadContent(): Promise<{ snapshot: ContentSnapshot; words: Set<string> }> {
-  const [levelsJSON, scheduleJSON, wordsJSON] = await Promise.all([
+export async function loadPuzzleContent(): Promise<ContentSnapshot> {
+  const [levelsJSON, scheduleJSON] = await Promise.all([
     fetchJSON("/levels.json"),
     fetchJSON("/daily_schedule.json"),
-    fetchJSON("/words.json"),
   ]);
   const levelsDocument = levelsDocumentSchema.parse(levelsJSON);
   const scheduleDocument = scheduleDocumentSchema.parse(scheduleJSON);
-  const words = z.array(z.string()).parse(wordsJSON);
   const levels = levelsDocument.levels.map(normalizeLevel).filter((level) => level.isActive);
   const ids = new Set(levels.map((level) => level.id));
   const schedule: ScheduleEntry[] = scheduleDocument.schedule
@@ -91,14 +89,21 @@ export async function loadContent(): Promise<{ snapshot: ContentSnapshot; words:
     .map((entry) => ({ date: entry.date, levelID: entry.ID }))
     .sort((a, b) => a.date.localeCompare(b.date));
   return {
-    snapshot: {
-      levelsVersion: levelsDocument.version,
-      scheduleVersion: scheduleDocument.version,
-      levels,
-      schedule,
-    },
-    words: new Set(words.map((word) => word.toUpperCase())),
+    levelsVersion: levelsDocument.version,
+    scheduleVersion: scheduleDocument.version,
+    levels,
+    schedule,
   };
+}
+
+export async function loadWords(): Promise<Set<string>> {
+  const words = z.array(z.string()).parse(await fetchJSON("/words.json"));
+  return new Set(words.map((word) => word.toUpperCase()));
+}
+
+export async function loadContent(): Promise<{ snapshot: ContentSnapshot; words: Set<string> }> {
+  const [snapshot, words] = await Promise.all([loadPuzzleContent(), loadWords()]);
+  return { snapshot, words };
 }
 
 export function localDateKey(date = new Date()): string {

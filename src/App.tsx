@@ -3,7 +3,7 @@ import {
   ArrowLeft, ArrowRight, ChartNoAxesColumn, Flame, HelpCircle, Info, Lightbulb, Lock,
   Menu, RotateCcw, Share2, Trophy, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
-import { loadContent, localDateKey, parseLocalDate, staticAssetPath } from "./content";
+import { loadPuzzleContent, loadWords, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
 import { loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
 import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
@@ -32,6 +32,7 @@ type DragHover =
   | { kind: "source"; row: number; column: number };
 
 const TILE_DOUBLE_CLICK_MS = 500;
+const EMPTY_WORDS = new Set<string>();
 
 function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (
@@ -76,10 +77,23 @@ function Modal({ title, onClose, children, wide = false }: { title: string; onCl
 }
 
 function LoadingScreen({ error, retry }: { error?: string; retry?: () => void }) {
+  if (!error) {
+    return (
+      <div className="app-shell app-shell-loading-content" aria-busy="true">
+        <header className="mobile-header" />
+        <aside className="app-sidebar" aria-label="Game sidebar" />
+        <div className="workspace">
+          <div className="game-loading-overlay" role="status" aria-label="Loading puzzle">
+            <div className="loader" aria-hidden="true" />
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <main className="loading-screen">
       <img src={staticAssetPath("/images/title.png")} alt="Split Happens" />
-      {error ? <><p>{error}</p><button className="primary-button" onClick={retry}>Try again</button></> : <><div className="loader" /><p>Preparing today’s split…</p></>}
+      <p>{error}</p><button className="primary-button" onClick={retry}>Try again</button>
     </main>
   );
 }
@@ -126,14 +140,17 @@ export default function App() {
 
   const refreshContent = useCallback(() => {
     setLoadError(null);
-    loadContent().then(({ snapshot, words: loadedWords }) => {
+    setWords(null);
+    loadPuzzleContent().then((snapshot) => {
       setContent(snapshot);
-      setWords(loadedWords);
       const today = localDateKey();
       const released = snapshot.schedule.filter((entry) => entry.date <= today);
       const selected = snapshot.schedule.find((entry) => entry.date === today) ?? released.at(-1);
       setActiveLevelID(selected?.levelID ?? null);
     }).catch((error: unknown) => setLoadError(error instanceof Error ? error.message : "The puzzles could not be loaded."));
+    loadWords()
+      .then(setWords)
+      .catch((error: unknown) => setLoadError(error instanceof Error ? error.message : "The dictionary could not be loaded."));
   }, []);
 
   useEffect(refreshContent, [refreshContent]);
@@ -201,7 +218,7 @@ export default function App() {
   const hasNextPage = archivePage > 0;
 
   useEffect(() => {
-    if (!activeLevel || !words) return;
+    if (!activeLevel) return;
     setGame(createGame(activeLevel, persisted.levels[activeLevel.id]));
     setSelectedTile(null);
     setSelectedTargetSlot(null);
@@ -209,7 +226,7 @@ export default function App() {
     previousGold.current = Boolean(persisted.levels[activeLevel.id]?.firstGoldAt);
   // Persisted state is intentionally read only when a level is opened.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeLevel?.id, words]);
+  }, [activeLevel?.id]);
 
   useEffect(() => {
     if (!content || !words) return;
@@ -231,7 +248,7 @@ export default function App() {
     });
   }, [content, words]);
 
-  const derived = useMemo(() => game && activeLevel && words ? deriveGame(game, activeLevel, words) : null, [game, activeLevel, words]);
+  const derived = useMemo(() => game && activeLevel ? deriveGame(game, activeLevel, words ?? EMPTY_WORDS) : null, [game, activeLevel, words]);
 
   const send = useCallback((action: GameAction) => {
     if (!activeLevel || !words) return;
@@ -649,7 +666,7 @@ export default function App() {
   };
 
   if (loadError) return <LoadingScreen error={loadError} retry={refreshContent} />;
-  if (!content || !words || !activeLevel || !game || !derived || !scheduleEntry) return <LoadingScreen />;
+  if (!content || !activeLevel || !game || !derived || !scheduleEntry) return <LoadingScreen />;
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
   const savedProgress = persisted.levels[activeLevel.id];
@@ -664,6 +681,7 @@ export default function App() {
   const goldSlots = new Set(activeLevel.goldTileExpectations.map((item) => slotID(item.rowIndex, item.columnIndex)));
   const goldExpectations = new Map(activeLevel.goldTileExpectations.map((item) => [slotID(item.rowIndex, item.columnIndex), item.letter]));
   const handleGoldWordClick = () => {
+    if (!words) return;
     const action = { type: "ARRANGE_GOLD" } as const;
     const preview = gameReducer(activeLevel, words)(game, action);
     const boardChanged = preview.sourceSlots !== game.sourceSlots || preview.targetSlots !== game.targetSlots;
@@ -728,7 +746,7 @@ export default function App() {
     if (isConstrained) closeDrawer();
   };
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${words ? "" : "app-shell-loading-content"}`}>
       <header className="mobile-header">
         <button
           ref={hamburgerRef}
@@ -790,7 +808,7 @@ export default function App() {
               const date = parseLocalDate(entry.date);
               const level = content.levels.find((item) => item.id === entry.levelID);
               const today = entry.date === localDateKey(now);
-              const tier = level ? highestPuzzleTier(level, persisted.levels[entry.levelID], words) : "none";
+              const tier = level ? highestPuzzleTier(level, persisted.levels[entry.levelID], words ?? EMPTY_WORDS) : "none";
               const tierLabel = tier === "none" ? "not completed" : `${tier} tier`;
               return <button
                 key={entry.date}
@@ -812,7 +830,7 @@ export default function App() {
         </section>
       </aside>
 
-      <div className="workspace">
+      <div className="workspace" aria-busy={!words}>
         <main className="game-area" style={gameLayoutStyle}>
           <section className="criteria" aria-label="Puzzle goals">
             <div className="achievement-track" role="list" aria-label="Normal, Hard, Perfect Split progression">
@@ -925,6 +943,9 @@ export default function App() {
             <button className="recall-action" aria-label="Recall" onClick={() => send({ type: "RECALL" })} disabled={!canRecall}><RotateCcw /><span>Recall</span></button>
           </div>
         </main>
+        {!words && <div className="game-loading-overlay" role="status" aria-label="Loading puzzle">
+          <div className="loader" aria-hidden="true" />
+        </div>}
       </div>
 
       {drag?.moved && <div
