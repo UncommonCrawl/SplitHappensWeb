@@ -35,7 +35,7 @@ const TILE_DOUBLE_CLICK_MS = 500;
 const EMPTY_WORDS = new Set<string>();
 const TARGET_BOARD_HEIGHT_PERCENT = 45;
 const SOURCE_BOARD_HEIGHT_PERCENT = 18.75;
-const TILE_HEIGHT_SCALE = 0.7;
+const TILE_HEIGHT_SCALE = 0.9;
 
 function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (

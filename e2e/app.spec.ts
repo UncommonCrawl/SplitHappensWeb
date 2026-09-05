@@ -1096,7 +1096,9 @@ test("keeps source and target tile scaling proportional at desktop heights", asy
   expect(toolbar).not.toBeNull();
   if (!game || !targetTile || !sourceTile || !toolbar) return;
 
+  expect(targetTile.width).toBeGreaterThan(55);
   expect(targetTile.width).toBeLessThan(60);
+  expect(sourceTile.width).toBeGreaterThan(40);
   expect(sourceTile.width).toBeLessThan(45);
   expect(sourceTile.width / targetTile.width).toBeGreaterThan(0.65);
   expect(sourceTile.width / targetTile.width).toBeLessThan(0.8);
