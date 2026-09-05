@@ -1079,6 +1079,30 @@ test("reserves a fifth target row and keeps four- and five-row tile sizes consis
   }
 });
 
+test("keeps source and target tile scaling proportional at desktop heights", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".target-row")).toHaveCount(5);
+
+  const game = await page.locator(".game-area").boundingBox();
+  const targetTile = await page.locator(".target-slot").first().boundingBox();
+  const sourceTile = await page.locator(".letter-tile").first().boundingBox();
+  const toolbar = await page.locator(".game-toolbar").boundingBox();
+
+  expect(game).not.toBeNull();
+  expect(targetTile).not.toBeNull();
+  expect(sourceTile).not.toBeNull();
+  expect(toolbar).not.toBeNull();
+  if (!game || !targetTile || !sourceTile || !toolbar) return;
+
+  expect(targetTile.width).toBeLessThan(60);
+  expect(sourceTile.width).toBeLessThan(45);
+  expect(sourceTile.width / targetTile.width).toBeGreaterThan(0.65);
+  expect(sourceTile.width / targetTile.width).toBeLessThan(0.8);
+  expect(toolbar.y + toolbar.height).toBeLessThanOrEqual(game.y + game.height + 1);
+});
+
 test("sizes each row divider to the shorter adjacent word", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
   await page.goto("/");

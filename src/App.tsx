@@ -35,7 +35,7 @@ const TILE_DOUBLE_CLICK_MS = 500;
 const EMPTY_WORDS = new Set<string>();
 const TARGET_BOARD_HEIGHT_PERCENT = 45;
 const SOURCE_BOARD_HEIGHT_PERCENT = 18.75;
-const COMPACT_TILE_SCALE = 0.7;
+const TILE_HEIGHT_SCALE = 0.7;
 
 function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
   return (
@@ -779,10 +779,8 @@ export default function App() {
   const gameLayoutStyle = {
     "--target-columns": Math.max(...game.targetSlots.map((row) => row.length)),
     "--source-columns": Math.max(...game.sourceSlots.map((row) => row.length)),
-    "--target-height-limit": `calc(${TARGET_BOARD_HEIGHT_PERCENT / targetSizingRows}cqh - 0.5px)`,
-    "--target-compact-height-limit": `calc(${TARGET_BOARD_HEIGHT_PERCENT * COMPACT_TILE_SCALE / targetSizingRows}cqh - 0.5px)`,
-    "--source-height-limit": `${SOURCE_BOARD_HEIGHT_PERCENT / game.sourceSlots.length}cqh`,
-    "--source-compact-height-limit": `${SOURCE_BOARD_HEIGHT_PERCENT * COMPACT_TILE_SCALE / game.sourceSlots.length}cqh`,
+    "--target-height-limit": `calc(${TARGET_BOARD_HEIGHT_PERCENT * TILE_HEIGHT_SCALE / targetSizingRows}cqh - 0.5px)`,
+    "--source-height-limit": `${SOURCE_BOARD_HEIGHT_PERCENT * TILE_HEIGHT_SCALE / game.sourceSlots.length}cqh`,
   } as CSSProperties;
   const handleSidebarAction = (action: () => void) => {
     action();

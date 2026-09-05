@@ -582,11 +582,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 }
 
 @media (max-height: 700px) {
-  .game-area {
-    --target-row-padding: 2px;
-    --target-size: min(70px, var(--target-compact-height-limit), calc((100cqw - (var(--target-columns) - 1) * 6px) / var(--target-columns)));
-    --source-size: min(60px, var(--source-compact-height-limit), calc((100cqw - (var(--source-columns) - 1) * 5px) / var(--source-columns)));
-  }
+  .game-area { --target-row-padding: 2px; }
   .criteria { min-height: min(var(--criteria-height), 92px); }
 }
 
