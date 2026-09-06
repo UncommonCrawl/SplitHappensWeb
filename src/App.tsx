@@ -31,15 +31,24 @@ type DragHover =
   | { kind: "target"; slotID: SlotID }
   | { kind: "source"; row: number; column: number };
 
+type AchievementTone = "bronze" | "silver" | "gold";
+
+type AchievementPulse = {
+  id: number;
+  tones: AchievementTone[];
+  preview: boolean;
+};
+
 const TILE_DOUBLE_CLICK_MS = 500;
 const EMPTY_WORDS = new Set<string>();
 const TARGET_BOARD_HEIGHT_PERCENT = 45;
 const SOURCE_BOARD_HEIGHT_PERCENT = 18.75;
 const TILE_HEIGHT_SCALE = 0.9;
+const ACHIEVEMENT_PULSE_MS = 800;
 
-function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | "silver" | "gold"; achieved?: boolean; satisfied?: boolean }) {
+function Seal({ tone, achieved = false, satisfied = false, pulsing = false }: { tone: AchievementTone; achieved?: boolean; satisfied?: boolean; pulsing?: boolean }) {
   return (
-    <span className={`seal ${tone} ${achieved ? "achieved" : ""}`} aria-hidden="true">
+    <span className={`seal ${tone} ${achieved ? "achieved" : ""} ${pulsing ? "pulsing" : ""}`} aria-hidden="true">
       <svg viewBox="0 0 100 100" role="img">
         <path className="seal-fill" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
         {satisfied &&
@@ -131,26 +140,46 @@ export default function App() {
   const [recentPuzzlesCollapsed, setRecentPuzzlesCollapsed] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [dragHover, setDragHover] = useState<DragHover | null>(null);
+  const [achievementPulse, setAchievementPulse] = useState<AchievementPulse | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const lastTargetSelectionClick = useRef<{ target: SlotID; at: number } | null>(null);
   const lastSourceSelectionClick = useRef<{ tileID: TileID; at: number } | null>(null);
   const previousGold = useRef(false);
+  const previousAchievements = useRef<Record<AchievementTone, boolean>>({ bronze: false, silver: false, gold: false });
+  const achievementPulseID = useRef(0);
+  const achievementPulseTimer = useRef<number | null>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const helpButtonRef = useRef<HTMLButtonElement>(null);
   const helpDrawerRef = useRef<HTMLElement>(null);
 
+  const pulseAchievements = useCallback((tones: AchievementTone[], preview = false) => {
+    if (achievementPulseTimer.current !== null) window.clearTimeout(achievementPulseTimer.current);
+    achievementPulseID.current += 1;
+    setAchievementPulse({ id: achievementPulseID.current, tones, preview });
+    achievementPulseTimer.current = window.setTimeout(() => {
+      setAchievementPulse(null);
+      achievementPulseTimer.current = null;
+    }, ACHIEVEMENT_PULSE_MS);
+  }, []);
+
+  useEffect(() => () => {
+    if (achievementPulseTimer.current !== null) window.clearTimeout(achievementPulseTimer.current);
+  }, []);
+
   useEffect(() => {
     if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) return;
-    const handleLocalVictoryShortcut = (event: KeyboardEvent) => {
-      if (!event.altKey || event.key.toLowerCase() !== "v" || event.repeat) return;
+    const handleLocalDevShortcut = (event: KeyboardEvent) => {
+      if (!event.altKey || event.repeat) return;
+      if (event.code !== "KeyV" && event.code !== "KeyT") return;
       event.preventDefault();
-      setModal("victory");
+      if (event.code === "KeyV") setModal("victory");
+      else pulseAchievements(["bronze", "silver", "gold"], true);
     };
-    window.addEventListener("keydown", handleLocalVictoryShortcut);
-    return () => window.removeEventListener("keydown", handleLocalVictoryShortcut);
-  }, []);
+    window.addEventListener("keydown", handleLocalDevShortcut);
+    return () => window.removeEventListener("keydown", handleLocalDevShortcut);
+  }, [pulseAchievements]);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
@@ -324,6 +353,11 @@ export default function App() {
     setSelectedTargetSlot(null);
     setSelectedSourceSlot(null);
     previousGold.current = Boolean(persisted.levels[activeLevel.id]?.firstGoldAt);
+    previousAchievements.current = {
+      bronze: Boolean(persisted.levels[activeLevel.id]?.firstSplitAt || persisted.levels[activeLevel.id]?.firstSilverAt || persisted.levels[activeLevel.id]?.firstGoldAt),
+      silver: Boolean(persisted.levels[activeLevel.id]?.firstSilverAt || persisted.levels[activeLevel.id]?.firstGoldAt),
+      gold: Boolean(persisted.levels[activeLevel.id]?.firstGoldAt),
+    };
   // Persisted state is intentionally read only when a level is opened.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLevel?.id]);
@@ -349,6 +383,20 @@ export default function App() {
   }, [content, words]);
 
   const derived = useMemo(() => game && activeLevel ? deriveGame(game, activeLevel, words ?? EMPTY_WORDS) : null, [game, activeLevel, words]);
+
+  useEffect(() => {
+    if (!game || !activeLevel || game.levelID !== activeLevel.id || !derived) return;
+    const savedProgress = persisted.levels[activeLevel.id];
+    const currentAchievements: Record<AchievementTone, boolean> = {
+      bronze: derived.allWordsValid || Boolean(savedProgress?.firstSplitAt || savedProgress?.firstSilverAt || savedProgress?.firstGoldAt),
+      silver: derived.silverSatisfied || Boolean(savedProgress?.firstSilverAt || savedProgress?.firstGoldAt),
+      gold: derived.victorySatisfied || Boolean(savedProgress?.firstGoldAt),
+    };
+    const newlyAchieved = (Object.keys(currentAchievements) as AchievementTone[])
+      .filter((tone) => currentAchievements[tone] && !previousAchievements.current[tone]);
+    previousAchievements.current = currentAchievements;
+    if (newlyAchieved.length) pulseAchievements(newlyAchieved);
+  }, [activeLevel, derived, game, persisted.levels, pulseAchievements]);
 
   const send = useCallback((action: GameAction) => {
     if (!activeLevel || !words) return;
@@ -955,21 +1003,31 @@ export default function App() {
         <main className="game-area" style={gameLayoutStyle}>
           <section className="criteria" aria-label="Puzzle goals">
             <div className="achievement-track" role="list" aria-label="Normal, Hard, Perfect Split progression">
-              {achievementTiers.map((tier, index) => <Fragment key={tier.name}>
-                {index > 0 && <span className={`tier-connector ${tier.unlocked ? "complete" : ""}`} aria-hidden="true" />}
-                <div
-                  className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.achieved ? "complete" : ""} ${tier.satisfied ? "satisfied" : ""} ${index === activeTierIndex ? "active" : ""}`}
-                  role="listitem"
-                  aria-current={index === activeTierIndex ? "step" : undefined}
-                  aria-label={`${tier.name}: ${tier.achieved ? `achieved, ${tier.satisfied ? "currently satisfied" : "not currently satisfied"}` : tier.unlocked ? "unlocked, not currently satisfied" : "not yet available"}`}
-                >
-                  <span className="tier-seal">
-                    <Seal tone={tier.tone} achieved={tier.achieved} satisfied={tier.satisfied} />
-                    {!tier.unlocked && <Lock className="tier-lock" aria-hidden="true" />}
-                  </span>
-                  <strong>{tier.name}</strong>
-                </div>
-              </Fragment>)}
+              {achievementTiers.map((tier, index) => {
+                const isPulsing = achievementPulse?.tones.includes(tier.tone) ?? false;
+                const previewAchieved = isPulsing && Boolean(achievementPulse?.preview);
+                return <Fragment key={tier.name}>
+                  {index > 0 && <span className={`tier-connector ${tier.unlocked ? "complete" : ""}`} aria-hidden="true" />}
+                  <div
+                    className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.achieved ? "complete" : ""} ${tier.satisfied ? "satisfied" : ""} ${index === activeTierIndex ? "active" : ""} ${previewAchieved ? "previewing" : ""}`}
+                    role="listitem"
+                    aria-current={index === activeTierIndex ? "step" : undefined}
+                    aria-label={`${tier.name}: ${tier.achieved ? `achieved, ${tier.satisfied ? "currently satisfied" : "not currently satisfied"}` : tier.unlocked ? "unlocked, not currently satisfied" : "not yet available"}`}
+                  >
+                    <span className="tier-seal">
+                      <Seal
+                        key={isPulsing ? achievementPulse?.id : 0}
+                        tone={tier.tone}
+                        achieved={tier.achieved || previewAchieved}
+                        satisfied={tier.satisfied}
+                        pulsing={isPulsing}
+                      />
+                      {!tier.unlocked && !previewAchieved && <Lock className="tier-lock" aria-hidden="true" />}
+                    </span>
+                    <strong>{tier.name}</strong>
+                  </div>
+                </Fragment>;
+              })}
             </div>
             <div className="tier-objective" aria-live="polite" aria-label="Puzzle criteria">
               {criterionLines.map((criterion) => <div

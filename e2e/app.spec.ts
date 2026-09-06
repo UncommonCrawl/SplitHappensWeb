@@ -129,6 +129,39 @@ test("opens the victory popup with the localhost-only shortcut", async ({ page }
   await expect(page.locator(".victory-banana")).toBeVisible();
 });
 
+test("previews all three trophy pulses without earning criteria", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const achievementTimesBefore = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem("split-happens.web.v2") ?? "null");
+    const current = Object.values(saved?.levels ?? {})[0] as any;
+    return [current?.firstSplitAt ?? null, current?.firstSilverAt ?? null, current?.firstGoldAt ?? null];
+  });
+
+  await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", {
+    altKey: true,
+    code: "KeyT",
+    key: "†",
+  })));
+
+  await expect(page.locator(".seal.pulsing .seal-trophy")).toHaveCount(3);
+  await expect(page.locator(".seal.pulsing .seal-trophy").first()).toHaveCSS("animation-name", "trophy-pulse");
+  await expect(page.locator(".tier-step.complete")).toHaveCount(0);
+  await expect(page.locator(".criterion-line.met")).toHaveCount(0);
+  const achievementTimesAfter = await page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem("split-happens.web.v2") ?? "null");
+    const current = Object.values(saved?.levels ?? {})[0] as any;
+    return [current?.firstSplitAt ?? null, current?.firstSilverAt ?? null, current?.firstGoldAt ?? null];
+  });
+  expect(achievementTimesAfter).toEqual(achievementTimesBefore);
+
+  await page.reload();
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".seal.pulsing")).toHaveCount(0);
+  await expect(page.locator(".seal-trophy")).toHaveCount(0);
+});
+
 test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
@@ -283,6 +316,8 @@ test("shows completed progression and uses Perfect Split for every victory", asy
   await expect(page.locator(".criterion-line.met").first()).toHaveCSS("color", "rgb(119, 119, 119)");
   await expect(page.locator('.puzzle-date-button[aria-pressed="true"]')).toHaveClass(/tier-gold/);
   await expect(page.locator(".tier-lock")).toHaveCount(0);
+  await expect(page.locator(".seal.pulsing .seal-trophy")).toHaveCount(3);
+  await expect(page.locator(".seal.pulsing .seal-trophy").first()).toHaveCSS("animation-name", "trophy-pulse");
   const perfectStep = page.locator(".tier-step").filter({ hasText: "Perfect Split" });
   await expect(perfectStep).toHaveClass(/active/);
   await expect(perfectStep).toHaveAttribute("aria-current", "step");

@@ -213,6 +213,7 @@ h1, h2, h3, strong, b { font-weight: 500; }
 .tier-step.active.satisfied .seal { color: var(--tier-color); }
 .tier-step.future { color: rgb(0 0 0 / 38%); }
 .tier-step.future .seal { color: var(--placeholder); opacity: .82; filter: none; }
+.tier-step.previewing .seal { color: var(--tier-color); opacity: 1; }
 .tier-lock { position: absolute; width: 42%; height: 42%; color: var(--control); stroke-width: 2.8; }
 .tier-connector { height: 2px; min-width: 18px; max-width: 72px; flex: 1 1 72px; margin: calc((var(--seal-size) - 2px) / 2) -20px 0; border-radius: 999px; background: var(--placeholder); }
 .tier-connector.complete { background: var(--control); }
@@ -231,6 +232,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .seal-fill { fill: currentColor; }
 .seal-outline { fill: none; stroke: var(--seal-mark); stroke-width: 5; }
 .seal-trophy { fill: var(--seal-mark); pointer-events: none; }
+.seal.pulsing .seal-trophy { transform-box: fill-box; transform-origin: center; animation: trophy-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
 .seal.bronze { color: var(--bronze); --seal-mark: #3d3327; }
 .seal.silver { color: var(--silver); --seal-mark: #3f3f3f; }
 .seal.gold { color: var(--gold); --seal-mark: #4d4120; }
@@ -414,6 +416,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .app-shell-loading-content .mobile-header > * { visibility: hidden; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes victory-pulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.08); } }
+@keyframes trophy-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.14); } }
 
 @media (max-height: 780px) {
   .app-sidebar { padding-block: 10px 12px; }
