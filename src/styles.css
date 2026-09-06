@@ -40,7 +40,7 @@ button { color: inherit; }
 h1, h2, h3, strong, b { font-weight: 500; }
 
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 294px minmax(0, 1fr); }
-.mobile-header, .drawer-backdrop, .drawer-close, .mobile-help-button { display: none; }
+.mobile-header, .drawer-backdrop, .drawer-header, .drawer-close, .mobile-help-button { display: none; }
 .app-sidebar {
   min-height: 100vh;
   height: 100dvh;
@@ -561,7 +561,25 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   }
   .app-sidebar.drawer-open { transform: translateX(0); visibility: visible; transition: transform .22s ease; }
   .app-sidebar .sidebar-brand { display: none; }
-  .drawer-close { margin: -5px -5px 5px auto; }
+  .drawer-header {
+    position: relative;
+    min-height: 44px;
+    margin: -5px 0 5px;
+    display: grid;
+    place-items: center;
+  }
+  .drawer-header h2 {
+    margin: 0;
+    color: #000;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+  }
+  .drawer-close {
+    position: absolute;
+    left: -4px;
+  }
   .drawer-backdrop {
     position: fixed;
     inset: 0;

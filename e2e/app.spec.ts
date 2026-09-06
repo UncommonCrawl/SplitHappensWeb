@@ -1074,6 +1074,13 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
   await expect(drawer).toHaveAttribute("aria-modal", "true");
   await expect(drawer).toHaveClass(/drawer-open/);
   await expect(page.getByRole("button", { name: "Close sidebar menu" }).last()).toBeFocused();
+  const drawerHeading = drawer.getByRole("heading", { name: "Menu" });
+  await expect(drawerHeading).toBeVisible();
+  await expect(drawerHeading).toHaveText("Menu");
+  await expect(drawerHeading).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(drawerHeading).toHaveCSS("font-size", "24px");
+  await expect(drawerHeading).toHaveCSS("font-weight", "700");
+  await expect(drawerHeading).toHaveCSS("text-align", "center");
   await expect(drawer.getByRole("button", { name: "How to Play" })).toBeHidden();
   await expect(drawer.locator(".sidebar-controls")).toBeHidden();
 

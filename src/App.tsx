@@ -865,7 +865,10 @@ export default function App() {
         aria-label={isConstrained ? "Sidebar menu" : "Game sidebar"}
         aria-hidden={isConstrained && !drawerOpen ? "true" : undefined}
       >
-        <button className="drawer-close" aria-label="Close sidebar menu" onClick={() => closeDrawer()}><X /></button>
+        <header className="drawer-header">
+          <button className="drawer-close" aria-label="Close sidebar menu" onClick={() => closeDrawer()}><X /></button>
+          <h2>Menu</h2>
+        </header>
         <header className="sidebar-brand">
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
           <h1>
