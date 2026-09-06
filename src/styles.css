@@ -184,7 +184,7 @@ h1, h2, h3, strong, b { font-weight: 500; }
   gap: 8%;
   pointer-events: none;
 }
-.puzzle-tile-badges img { width: auto; height: 100%; opacity: .5; }
+.puzzle-tile-badges img { width: auto; height: 100%; opacity: .3; }
 
 .game-area {
   container-type: size;

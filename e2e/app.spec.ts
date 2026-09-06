@@ -176,7 +176,7 @@ test("renders each earned badge combination on victory and recent-puzzle tiles",
     await expect(tileBadges).toHaveCount(variant.names.length);
     await expect(activeTile).toHaveAttribute("aria-label", new RegExp(variant.names.join(" and ")));
     for (let index = 0; index < variant.names.length; index += 1) {
-      await expect(tileBadges.nth(index)).toHaveCSS("opacity", "0.5");
+      await expect(tileBadges.nth(index)).toHaveCSS("opacity", "0.3");
     }
   }
 });
