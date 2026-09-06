@@ -93,6 +93,32 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(nextButton.locator("svg")).toHaveCSS("opacity", "0.22");
 });
 
+test("links the level title to Wikipedia in the visible responsive header", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const titleLink = page.locator(".level-title-link:visible");
+  await expect(titleLink).toHaveCount(1);
+  await expect(titleLink).toHaveAttribute("href", /^https:\/\/en\.wikipedia\.org\/wiki\//);
+  await expect(titleLink).toHaveAttribute("target", "_blank");
+  await expect(titleLink).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(titleLink).toHaveCSS("text-decoration-line", "underline");
+});
+
+test("renders an intentionally unlinked level title as plain text", async ({ page }) => {
+  await page.route("**/levels.json", async (route) => {
+    const response = await route.fetch();
+    const document = await response.json();
+    for (const level of document.levels) level.WIKIPEDIA_ARTICLE = null;
+    await route.fulfill({ response, json: document });
+  });
+
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".level-title:visible")).toHaveCount(1);
+  await expect(page.locator(".level-title-link:visible")).toHaveCount(0);
+});
+
 test("opens the victory popup with the localhost-only shortcut", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });

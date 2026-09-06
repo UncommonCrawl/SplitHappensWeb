@@ -60,6 +60,15 @@ h1, h2, h3, strong, b { font-weight: 500; }
 .sidebar-brand h1 span, .mobile-brand h1 span { display: block; }
 .sidebar-brand .level-date, .mobile-brand .level-date { font-weight: 600; }
 .sidebar-brand .level-title, .mobile-brand .level-title { color: #000; font-size: 80%; font-weight: 500; line-height: 1.68; }
+.level-title-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: rgb(0 0 0 / 38%);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.level-title-link:hover { text-decoration-color: currentColor; }
+.level-title-link:focus-visible { border-radius: 2px; outline: 2px solid currentColor; outline-offset: 2px; }
 .sidebar-actions { padding: 9px 0; border-bottom: 1px solid rgb(0 0 0 / 11%); }
 .sidebar-actions button {
   width: 100%;

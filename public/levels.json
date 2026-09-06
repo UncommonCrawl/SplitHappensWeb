@@ -1,5 +1,5 @@
 {
-  "version": 1787609930,
+  "version": 1788655220,
   "levels": [
     {
       "ID": "coffee",
@@ -13,6 +13,7 @@
       "answers": ["C*O*WBELL","WHARF*","F*ITTE*D","PAPE*R"],
       "CRITERIA_2": "*_STARTS_W",
       "GOLD_WORD": "COFFEE",
+      "WIKIPEDIA_ARTICLE": "Coffee",
       "NOTE": ""
     },
     {
@@ -27,6 +28,7 @@
       "answers": ["C*REDIT","GRA*VY","ARCH","ST*YLES","S*ELF"],
       "CRITERIA_2": "1X_ENDS_F",
       "GOLD_WORD": "CATS",
+      "WIKIPEDIA_ARTICLE": "List of fictional felines",
       "NOTE": ""
     },
     {
@@ -41,6 +43,7 @@
       "answers": ["SAV*E*","G*REEN","TA*IL","ABLE","CAS*INO"],
       "CRITERIA_2": "4_STARTS_A",
       "GOLD_WORD": "VEGAS",
+      "WIKIPEDIA_ARTICLE": "Las Vegas",
       "NOTE": ""
     },
     {
@@ -55,6 +58,7 @@
       "answers": ["MUD","CRUST*Y","H*OUSE","CREA*MY","FI*R"],
       "CRITERIA_2": "2X_STARTS_C",
       "GOLD_WORD": "THAI",
+      "WIKIPEDIA_ARTICLE": "Thai cuisine",
       "NOTE": "Tom yum: a beloved Thai soup that derives its flavor from kaffir leaves, lemongrass, and galangal, a member of the ginger family."
     },
     {
@@ -69,6 +73,7 @@
       "answers": ["RU*SES","TURF","RIN*K","RAVE","PO*WDER"],
       "CRITERIA_2": "2_ENDS_F",
       "GOLD_WORD": "UNO",
+      "WIKIPEDIA_ARTICLE": "Uno (card game)",
       "NOTE": ""
     },
     {
@@ -83,6 +88,7 @@
       "answers": ["MIND*I*NG","CLUE*","CH*A*R*T","ACID*"],
       "CRITERIA_2": "4_STARTS_A",
       "GOLD_WORD": "DIEHARD",
+      "WIKIPEDIA_ARTICLE": "Die Hard",
       "NOTE": ""
     },
     {
@@ -97,6 +103,7 @@
       "answers": ["KEP*T","LOYA*L","SHE","HER*O","LAST*ING"],
       "CRITERIA_2": "3_STARTS_S",
       "GOLD_WORD": "PART",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": ""
     },
     {
@@ -111,6 +118,7 @@
       "answers": ["S*ILK","A*MID","L*OX","M*O*VER","AN*ALOG"],
       "CRITERIA_2": "5_ENDS_G",
       "GOLD_WORD": "SALMON",
+      "WIKIPEDIA_ARTICLE": "Salmon",
       "NOTE": ""
     },
     {
@@ -125,6 +133,7 @@
       "answers": ["E*ND","DRA*W","G*LOB","CL*ONE*D"],
       "CRITERIA_2": "1X_ENDS_B",
       "GOLD_WORD": "EAGLE",
+      "WIKIPEDIA_ARTICLE": "Eagle",
       "NOTE": ""
     },
     {
@@ -139,6 +148,7 @@
       "answers": ["T*YPE","ERR","FL*EET","SC*OUTS","BUNNY"],
       "CRITERIA_2": "1X_DOUBLE_E",
       "GOLD_WORD": "TLC",
+      "WIKIPEDIA_ARTICLE": "TLC (group)",
       "NOTE": "Formed in Atlanta in 1990, TLC became one of the best-selling American girl groups of all time, with their name famously derived from the initials of its founding members: Tionne 'T-Boz' Watkins, Lisa 'Left Eye' Lopes, and Rozonda 'Chilli' Thomas."
     },
     {
@@ -153,6 +163,7 @@
       "answers": ["LIQUID*S","LAX","AME*N*","Z*INC","MARE*","MOL*E"],
       "CRITERIA_2": "1_CONTAINS_Q",
       "GOLD_WORD": "DENZEL",
+      "WIKIPEDIA_ARTICLE": "Denzel Washington",
       "NOTE": ""
     },
     {
@@ -167,6 +178,7 @@
       "answers": ["PIC*K","L*EAP","U*PLIFT","NE*ED","MORPH"],
       "CRITERIA_2": "1X_CONTAINS_ED",
       "GOLD_WORD": "CLUE",
+      "WIKIPEDIA_ARTICLE": "Cluedo",
       "NOTE": ""
     },
     {
@@ -181,6 +193,7 @@
       "answers": ["SIGNAL*","OBTAI*N*","EC*HO*ES","BILL*ION*"],
       "CRITERIA_2": "1X_CONTAINS_IG",
       "GOLD_WORD": "LINCOLN",
+      "WIKIPEDIA_ARTICLE": "Abraham Lincoln",
       "NOTE": ""
     },
     {
@@ -195,6 +208,7 @@
       "answers": ["B*IB","BL*OG","HOU*NDS","DONKE*Y","S*IDE"],
       "CRITERIA_2": "4_STARTS_D",
       "GOLD_WORD": "BLUES",
+      "WIKIPEDIA_ARTICLE": "Blues",
       "NOTE": ""
     },
     {
@@ -209,6 +223,7 @@
       "answers": ["HIK*IN*G","VAPO*R","SHED","T*AR","BLUR"],
       "CRITERIA_2": "3_STARTS_S",
       "GOLD_WORD": "KNOT",
+      "WIKIPEDIA_ARTICLE": "Knot",
       "NOTE": "These three knots relate to three different disciplines - how many can you identify?"
     },
     {
@@ -223,6 +238,7 @@
       "answers": ["M*ERITS","BA*N*G","C*A*TTY","L*IPS","EA*GER"],
       "CRITERIA_2": "5_CONTAINS_E",
       "GOLD_WORD": "MANCALA",
+      "WIKIPEDIA_ARTICLE": "Mancala",
       "NOTE": "Mancala: An ancient strategic board game with popular variants enjoyed from Ethiopia to India to the Baltics."
     },
     {
@@ -237,6 +253,7 @@
       "answers": ["CHA*NC*E","C*ANYON","SIDE*","RAN*K","OUT*"],
       "CRITERIA_2": "1X_STARTS_R",
       "GOLD_WORD": "ACCENT",
+      "WIKIPEDIA_ARTICLE": "Accent (sociolinguistics)",
       "NOTE": ""
     },
     {
@@ -251,6 +268,7 @@
       "answers": ["M*OUND","MOMENT","DI*SC","CL*OAK*"],
       "CRITERIA_2": "*_CONTAINS_OU",
       "GOLD_WORD": "MILK",
+      "WIKIPEDIA_ARTICLE": "Milk",
       "NOTE": ""
     },
     {
@@ -265,6 +283,7 @@
       "answers": ["C*RA*CK","JUMP*","NORT*H","PA*RK","VI*N*ES"],
       "CRITERIA_2": "1X_ENDS_P",
       "GOLD_WORD": "CAPTAIN",
+      "WIKIPEDIA_ARTICLE": "Captain",
       "NOTE": ""
     },
     {
@@ -279,6 +298,7 @@
       "answers": ["HA*BIT","TRUNK","C*HORD","D*ROP","SC*OLD"],
       "CRITERIA_2": "2_CONTAINS_K",
       "GOLD_WORD": "ACDC",
+      "WIKIPEDIA_ARTICLE": "AC/DC",
       "NOTE": ""
     },
     {
@@ -293,6 +313,7 @@
       "answers": ["B*RAIN","CHE*MIS*T*","AGO","P*AI*R","C*AD"],
       "CRITERIA_2": "4X_CONTAINS_A",
       "GOLD_WORD": "BESTPIC",
+      "WIKIPEDIA_ARTICLE": "Academy Award for Best Picture",
       "NOTE": ""
     },
     {
@@ -307,6 +328,7 @@
       "answers": ["CIV*IL","ME*ANT","PICN*I*C","LATC*H","ARE*A"],
       "CRITERIA_2": "1X_ENDS_C",
       "GOLD_WORD": "VENICE",
+      "WIKIPEDIA_ARTICLE": "Venice",
       "NOTE": "The most iconic choices for cicchetti, Venice's iconic bar appetizers, include polpette (fried meatballs) and baccalà mantecato (creamed cod)."
     },
     {
@@ -321,6 +343,7 @@
       "answers": ["GOP*HER","IRO*N","T*A*CTIC","GIST*","TO*E"],
       "CRITERIA_2": "1X_ENDS_C",
       "GOLD_WORD": "POTATO",
+      "WIKIPEDIA_ARTICLE": "Potato",
       "NOTE": ""
     },
     {
@@ -335,6 +358,7 @@
       "answers": ["MULE","ON*ION","GRO*U*P","BLAN*D","CACTUS*"],
       "CRITERIA_2": "1X_STARTS_O",
       "GOLD_WORD": "NOUNS",
+      "WIKIPEDIA_ARTICLE": "Noun",
       "NOTE": ""
     },
     {
@@ -349,6 +373,7 @@
       "answers": ["CHA*NCE","BU*LKS*","T*END","R*I*B","HA*VEN"],
       "CRITERIA_2": "1_STARTS_C",
       "GOLD_WORD": "AUSTRIA",
+      "WIKIPEDIA_ARTICLE": "Austria",
       "NOTE": ""
     },
     {
@@ -363,6 +388,7 @@
       "answers": ["P*IE*R","T*AXED","VE*R*SUS","P*A*IL","IN*DENT"],
       "CRITERIA_2": "2X_STARTS_P",
       "GOLD_WORD": "PETERPAN",
+      "WIKIPEDIA_ARTICLE": "Peter Pan (character)",
       "NOTE": ""
     },
     {
@@ -377,6 +403,7 @@
       "answers": ["COPS*","UNUSUAL","CARROT*","PA*IR*S"],
       "CRITERIA_2": "1X_DOUBLE_R",
       "GOLD_WORD": "STAR",
+      "WIKIPEDIA_ARTICLE": "Star",
       "NOTE": ""
     },
     {
@@ -391,6 +418,7 @@
       "answers": ["C*URL","RA*ZOR","P*AUSE*","RAND*OM"],
       "CRITERIA_2": "2_CONTAINS_Z",
       "GOLD_WORD": "CAPED",
+      "WIKIPEDIA_ARTICLE": "Cape",
       "NOTE": "Dracula's cape was actually the invention of a 1924 stage production; when Bela Lugosi donned it seven years later, it became an iconic part of the character."
     },
     {
@@ -405,6 +433,7 @@
       "answers": ["F*RYER","O*AT","GAIN*ED*","CHU*RNE*D"],
       "CRITERIA_2": "*_ENDS_Y_NONE",
       "GOLD_WORD": "FONDUE",
+      "WIKIPEDIA_ARTICLE": "Fondue",
       "NOTE": ""
     },
     {
@@ -419,6 +448,7 @@
       "answers": ["JEWEL*","GOLD","S*OON","INSU*RER","JOB","OVAL"],
       "CRITERIA_2": "*_DOUBLE_*",
       "GOLD_WORD": "LSU",
+      "WIKIPEDIA_ARTICLE": "LSU Tigers and Lady Tigers",
       "NOTE": "Represented by the fiercely competitive Tigers, Louisiana State University (LSU) is a collegiate athletic powerhouse in the Southeastern Conference that has claimed numerous national championships across football, baseball, and track and field."
     },
     {
@@ -433,6 +463,7 @@
       "answers": ["AID","C*ITY","SHA*KE","SPI*R*AL","DO*RM"],
       "CRITERIA_2": "*_ENDS_S_NONE",
       "GOLD_WORD": "CAIRO",
+      "WIKIPEDIA_ARTICLE": "Cairo",
       "NOTE": "A classic Cairo street food that combines rice, pasta, and lentils, koshari is often considered Egypt's national dish."
     },
     {
@@ -447,6 +478,7 @@
       "answers": ["B*OG","HAZE*","WIZA*R*DS*","CYCLING"],
       "CRITERIA_2": "4_CONTAINS_Y",
       "GOLD_WORD": "BEARS",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": ""
     },
     {
@@ -461,6 +493,7 @@
       "answers": ["PH*OTO","OPE*RA*","OUTER*","KICK","TILT*"],
       "CRITERIA_2": "1X_ENDS_O",
       "GOLD_WORD": "HEART",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": "According to Greek mythology, the first artichoke was created when Zeus turned a rejected lover into a prickly thistle... but botanically speaking, the edible "
     },
     {
@@ -475,6 +508,7 @@
       "answers": ["HAS","K*I*TTY","LAW*","JAIL","I*RONIC"],
       "CRITERIA_2": "3X_CONTAINS_A",
       "GOLD_WORD": "KIWI",
+      "WIKIPEDIA_ARTICLE": "Kiwi (nickname)",
       "NOTE": ""
     },
     {
@@ -489,6 +523,7 @@
       "answers": ["VA*IN","HUM*ANE","OKAY*","DEW","S*ENDING"],
       "CRITERIA_2": "1X_STARTS_O",
       "GOLD_WORD": "AMYS",
+      "WIKIPEDIA_ARTICLE": "Amy",
       "NOTE": ""
     },
     {
@@ -503,6 +538,7 @@
       "answers": ["GRIP*","O*YSTER","P*URGE*","EXITS*"],
       "CRITERIA_2": "2_CONTAINS_Y",
       "GOLD_WORD": "POPES",
+      "WIKIPEDIA_ARTICLE": "List of popes",
       "NOTE": ""
     },
     {
@@ -517,6 +553,7 @@
       "answers": ["D*YES","RA*KER","NAVY","MOTION*S*"],
       "CRITERIA_2": "1X_CONTAINS_AV",
       "GOLD_WORD": "DANS",
+      "WIKIPEDIA_ARTICLE": "Dan (name)",
       "NOTE": ""
     },
     {
@@ -531,6 +568,7 @@
       "answers": ["LOGIN*","WO*O","L*EMON","MIME","INFA*N*TS"],
       "CRITERIA_2": "1X_ENDS_O",
       "GOLD_WORD": "NOLAN",
+      "WIKIPEDIA_ARTICLE": "Christopher Nolan",
       "NOTE": "Christopher Nolan's success in blending complex psychological storytelling in Memento with his efficient handling of a mid-budget studio thriller in Insomnia convinced Warner Bros. to trust him with the massive Batman Begins reboot."
     },
     {
@@ -545,6 +583,7 @@
       "answers": ["P*AUPER*","STI*N*G","C*OZY","LONE*","ARM"],
       "CRITERIA_2": "1X_STARTS_A",
       "GOLD_WORD": "PRINCE",
+      "WIKIPEDIA_ARTICLE": "Prince (musician)",
       "NOTE": ""
     },
     {
@@ -559,6 +598,7 @@
       "answers": ["WAIS*T*","AGIL*E","SO*U*R","RANCI*D","YAMS*"],
       "CRITERIA_2": "1X_STARTS_Y",
       "GOLD_WORD": "STLOUIS",
+      "WIKIPEDIA_ARTICLE": "St. Louis",
       "NOTE": ""
     },
     {
@@ -573,6 +613,7 @@
       "answers": ["B*IKE","RAG","SLO*PE","G*AI*NS","BARE*LY"],
       "CRITERIA_2": "1X_ENDS_G",
       "GOLD_WORD": "BOGIE",
+      "WIKIPEDIA_ARTICLE": "Humphrey Bogart",
       "NOTE": "Remembered as the quintessential cynical-yet-noble hero of Hollywood's Golden Age in classics like Casablanca, Humphrey Bogart was universally known as "
     },
     {
@@ -587,6 +628,7 @@
       "answers": ["LUMP*Y","HYPER","KI*CKER","MINE*"],
       "CRITERIA_2": "1X_STARTS_K",
       "GOLD_WORD": "PIE",
+      "WIKIPEDIA_ARTICLE": "Pie",
       "NOTE": "Early medieval pies were essentially baked crusts filled with whatever miscellaneous meats and scraps were available. Because of this, experts believe the word 'pie' is derived from the magpie bird, famous for hoarding a random assortment of objects!"
     },
     {
@@ -601,6 +643,7 @@
       "answers": ["BLO*T","C*ARGO","E*VA*DE","PIN*TS","LAYS*"],
       "CRITERIA_2": "1X_ENDS_O",
       "GOLD_WORD": "OCEANS",
+      "WIKIPEDIA_ARTICLE": "Ocean's Eleven",
       "NOTE": ""
     },
     {
@@ -615,6 +658,7 @@
       "answers": ["LOAFE*R","SM*I*TH","HAN*GE*D","DAISY","LIM*IT"],
       "CRITERIA_2": "3_STARTS_H",
       "GOLD_WORD": "EMINEM",
+      "WIKIPEDIA_ARTICLE": "Eminem",
       "NOTE": ""
     },
     {
@@ -629,6 +673,7 @@
       "answers": ["M*ERMA*ID","WAG*E","SMI*TH","HEM","AC*TION"],
       "CRITERIA_2": "4_STARTS_H",
       "GOLD_WORD": "MAGIC",
+      "WIKIPEDIA_ARTICLE": "Magic Johnson",
       "NOTE": "Regarded as one of the greatest point guards in basketball history, Magic Johnson dominated the NBA during the 1980s by leading the Los Angeles Lakers to five championships and earning three MVP awards."
     },
     {
@@ -643,6 +688,7 @@
       "answers": ["T*EEN","ONI*ONS","SKAT*E","RA*TS","FEN*CES*"],
       "CRITERIA_2": "1X_DOUBLE_E",
       "GOLD_WORD": "TITANS",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": ""
     },
     {
@@ -657,6 +703,7 @@
       "answers": ["WA*LL","SKIN*","SOUN*D","S*CARCE"],
       "CRITERIA_2": "*_ENDS_S_NONE",
       "GOLD_WORD": "ANNS",
+      "WIKIPEDIA_ARTICLE": "Anne",
       "NOTE": ""
     },
     {
@@ -671,6 +718,7 @@
       "answers": ["FOILS*","MU*GGING","M*ATH","GAZE*R","CR*UISE"],
       "CRITERIA_2": "1_STARTS_F",
       "GOLD_WORD": "SUMER",
+      "WIKIPEDIA_ARTICLE": "Sumer",
       "NOTE": ""
     },
     {
@@ -685,6 +733,7 @@
       "answers": ["JA*DED","BU*NS*","T*RIPE","RE*CEN*CY"],
       "CRITERIA_2": "*_STARTS_R",
       "GOLD_WORD": "AUSTEN",
+      "WIKIPEDIA_ARTICLE": "Jane Austen",
       "NOTE": ""
     },
     {
@@ -699,6 +748,7 @@
       "answers": ["P*IL*L","RA*Y*S","B*USH","MA*IN","JEL*L*IES"],
       "CRITERIA_2": "4_STARTS_M",
       "GOLD_WORD": "PLAYBALL",
+      "WIKIPEDIA_ARTICLE": "Baseball",
       "NOTE": ""
     },
     {
@@ -713,6 +763,7 @@
       "answers": ["GL*AZE","I*RON","FLOODS","BON*D","BANK*"],
       "CRITERIA_2": "3X_CONTAINS_O",
       "GOLD_WORD": "LINK",
+      "WIKIPEDIA_ARTICLE": "Link (The Legend of Zelda)",
       "NOTE": "Despite only making their first appearance 15 years into the franchise's history, Bokoblins have since become The Legend of Zelda's most common and well-known enemy."
     },
     {
@@ -727,6 +778,7 @@
       "answers": ["ST*O*W","PAR*RO*T","CAN*INE","ROT*O*R"],
       "CRITERIA_2": "3_STARTS_C",
       "GOLD_WORD": "TORONTO",
+      "WIKIPEDIA_ARTICLE": "Toronto",
       "NOTE": ""
     },
     {
@@ -741,6 +793,7 @@
       "answers": ["LOSE","P*ERMIT","HU*NK","FL*AW","SLUMP*"],
       "CRITERIA_2": "3X_CONTAINS_L",
       "GOLD_WORD": "PULP",
+      "WIKIPEDIA_ARTICLE": "Pulp Fiction",
       "NOTE": "Pulp Fiction's other iconic characters: philosophical hitmen Jules (Samuel L. Jackson) and Vincent (John Travolta), mob wife Mia Wallace (Uma Thurman), and the tough-as-nails boxer Butch Coolidge (Bruce Willis)."
     },
     {
@@ -755,6 +808,7 @@
       "answers": ["FIRM","C*AVE","FO*CU*S","PEER*","DIRT*"],
       "CRITERIA_2": "1_ENDS_M",
       "GOLD_WORD": "COURT",
+      "WIKIPEDIA_ARTICLE": "Court",
       "NOTE": "Originally referring to the enclosed outdoor courtyards of European royalty where early games like tennis were played, the word "
     },
     {
@@ -769,6 +823,7 @@
       "answers": ["LEDGER","PO*RCH*","ST*A*G","SN*I*DE"],
       "CRITERIA_2": "*_ENDS_S_NONE",
       "GOLD_WORD": "OHTANI",
+      "WIKIPEDIA_ARTICLE": "Shohei Ohtani",
       "NOTE": "Often described as a modern-day Babe Ruth, Japanese superstar Shohei Ohtani made Major League Baseball history by becoming the very first player to hit 50 home runs and steal 50 bases in a single season."
     },
     {
@@ -783,6 +838,7 @@
       "answers": ["PEAC*H*Y","HUM","RE*E*K","IDIOT","R*OT"],
       "CRITERIA_2": "2_CONTAINS_H",
       "GOLD_WORD": "CHEER",
+      "WIKIPEDIA_ARTICLE": "Cheerleading",
       "NOTE": "The iconic 'Herkie' jump is named for Lawrence Herkimer, founder of the National Cheerleaders Association and a former cheerleader himself."
     },
     {
@@ -797,6 +853,7 @@
       "answers": ["C*ULT","HA*R*NESS","MAID*","BODS*"],
       "CRITERIA_2": "*_DOUBLE_S",
       "GOLD_WORD": "CARDS",
+      "WIKIPEDIA_ARTICLE": "Playing card suit",
       "NOTE": ""
     },
     {
@@ -811,6 +868,7 @@
       "answers": ["MASHER","L*OU*D","C*HARGES","BOOK*","SHY*"],
       "CRITERIA_2": "1_CONTAINS_M",
       "GOLD_WORD": "LUCKY",
+      "WIKIPEDIA_ARTICLE": "Luck",
       "NOTE": "Medieval European farmers believed ladybugs were a gift from the Virgin Mary to save their crops from aphids, leading to the idea that one landing on a person will grant them good luck."
     },
     {
@@ -825,6 +883,7 @@
       "answers": ["ARMY*","MO*RON","STAR*VE","USE","BRISK*"],
       "CRITERIA_2": "1X_STARTS_A",
       "GOLD_WORD": "YORK",
+      "WIKIPEDIA_ARTICLE": "York",
       "NOTE": "York: A city in Northern England renowned for its well-preserved Roman- and Viking- era structures. A sequel, New York, was released in 1624."
     },
     {
@@ -839,6 +898,7 @@
       "answers": ["RA*TE","BEARIN*G","TENOR","PACT*","CRANE"],
       "CRITERIA_2": "3_STARTS_T",
       "GOLD_WORD": "ANT",
+      "WIKIPEDIA_ARTICLE": "Ant",
       "NOTE": ""
     },
     {
@@ -853,6 +913,7 @@
       "answers": ["HAIR*","STE*AM","ONE*","SEASON","F*RESH"],
       "CRITERIA_2": "2X_STARTS_S",
       "GOLD_WORD": "REEF",
+      "WIKIPEDIA_ARTICLE": "Coral reef",
       "NOTE": ""
     },
     {
@@ -867,6 +928,7 @@
       "answers": ["ZIG*","TR*E*KS","MA*T*H","CRO*NY","KN*OTTE*D"],
       "CRITERIA_2": "5_DOUBLE_*",
       "GOLD_WORD": "GREATONE",
+      "WIKIPEDIA_ARTICLE": "Wayne Gretzky",
       "NOTE": "Wayne Gretzky earned his 'Great One' moniker in Ontario's London Free Press at only age 10, following an incredible 400-goal season in his youth league."
     },
     {
@@ -881,6 +943,7 @@
       "answers": ["P*ALLET","GIRA*FFE","GHOS*T*","INERTIA*"],
       "CRITERIA_2": "*_DOUBLE_F",
       "GOLD_WORD": "PASTA",
+      "WIKIPEDIA_ARTICLE": "Pasta",
       "NOTE": ""
     },
     {
@@ -895,6 +958,7 @@
       "answers": ["C*ANAL","SWO*ON*","C*OOKE*D","BR*OACH","T*OOL"],
       "CRITERIA_2": "2X_DOUBLE_O",
       "GOLD_WORD": "CONCERT",
+      "WIKIPEDIA_ARTICLE": "Music festival",
       "NOTE": ""
     },
     {
@@ -909,6 +973,7 @@
       "answers": ["MORT*AR","AGE*","PAIN*T","CO*R*D","S*AVIOR"],
       "CRITERIA_2": "2X_ENDS_R",
       "GOLD_WORD": "TENORS",
+      "WIKIPEDIA_ARTICLE": "The Three Tenors",
       "NOTE": ""
     },
     {
@@ -923,6 +988,7 @@
       "answers": ["WENT*","ACH*IEVE*","C*A*USE","WR*AP","KIOS*K"],
       "CRITERIA_2": "2X_STARTS_W",
       "GOLD_WORD": "THECARS",
+      "WIKIPEDIA_ARTICLE": "The Cars",
       "NOTE": "Emerging from the late-1970s new wave scene, The Cars pioneered a blend of guitar-oriented rock with synth-pop through megahits like 'You Might Think' and 'My Best Friend's Girl'."
     },
     {
@@ -937,6 +1003,7 @@
       "answers": ["FILLE*R","FOAM","BANK","POPPY*","NATIVE*"],
       "CRITERIA_2": "2X_DOUBLE_*",
       "GOLD_WORD": "EYE",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": "The term 'private eye' originates from the 19th-century Pinkerton National Detective Agency, whose iconic logo featured a wide-open eye paired with the motto 'We Never Sleep.'"
     },
     {
@@ -948,9 +1015,10 @@
       "TARGET_ROW_LENGTHS": [3,7,4,4,5],
       "source": ["PUNCHING","SLEEPING","GARBAGE"],
       "VOWEL_RATIO": 0.3478,
-      "answers": ["B*IN","NA*GGING*","CAPE","G*ULP","S*HEER"],
+      "answers": ["B*IN","NA*GGING*","CAPE","GULP","S*HEER"],
       "CRITERIA_2": "3_STARTS_C",
-      "GOLD_WORD": "BAGGS",
+      "GOLD_WORD": "BAGS",
+      "WIKIPEDIA_ARTICLE": "Bag",
       "NOTE": ""
     },
     {
@@ -965,6 +1033,7 @@
       "answers": ["C*A*NNER","M*ULE","REE*L*ING","VIO*LET*"],
       "CRITERIA_2": "*_STARTS_V",
       "GOLD_WORD": "CAMELOT",
+      "WIKIPEDIA_ARTICLE": "Camelot",
       "NOTE": ""
     },
     {
@@ -979,6 +1048,7 @@
       "answers": ["OP*TION","CL*EAN","FA*N","GY*M","GENIES*"],
       "CRITERIA_2": "3X_ENDS_N",
       "GOLD_WORD": "PLAYS",
+      "WIKIPEDIA_ARTICLE": "Play (theatre)",
       "NOTE": ""
     },
     {
@@ -993,6 +1063,7 @@
       "answers": ["FIFES*","DI*T*TO","C*HIEF","GRO*OM*","DENS*E"],
       "CRITERIA_2": "*_ENDS_O",
       "GOLD_WORD": "SITCOMS",
+      "WIKIPEDIA_ARTICLE": "Sitcom",
       "NOTE": ""
     },
     {
@@ -1007,6 +1078,7 @@
       "answers": ["FAC*T","L*U*CKY","JOKER","RUB*","S*ALUTE"],
       "CRITERIA_2": "1X_STARTS_R",
       "GOLD_WORD": "CLUBS",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": ""
     },
     {
@@ -1021,6 +1093,7 @@
       "answers": ["SIEG*E","WH*A*LE","KEEN*","HA*IL","FILTH"],
       "CRITERIA_2": "1X_DOUBLE_E",
       "GOLD_WORD": "GHANA",
+      "WIKIPEDIA_ARTICLE": "Ghana",
       "NOTE": ""
     },
     {
@@ -1035,6 +1108,7 @@
       "answers": ["B*ONUS","SI*STER","RANG*E","MAT*E*","RAN*K"],
       "CRITERIA_2": "1X_ENDS_K",
       "GOLD_WORD": "BIGTEN",
+      "WIKIPEDIA_ARTICLE": "Big Ten Conference",
       "NOTE": "The Big Ten is the oldest Division I collegiate athletic conference in the United States, famously keeping its historic name despite having since expanded to include eighteen(!) different universities."
     },
     {
@@ -1049,6 +1123,7 @@
       "answers": ["CHIMP*","S*TINKY*","SKETC*H*Y","CO*RER"],
       "CRITERIA_2": "2X_STARTS_S",
       "GOLD_WORD": "PSYCHO",
+      "WIKIPEDIA_ARTICLE": "Psycho (1960 film)",
       "NOTE": ""
     },
     {
@@ -1063,6 +1138,7 @@
       "answers": ["LENS","FLICK*ER","P*O*UND","GASP*","BANK"],
       "CRITERIA_2": "1X_STARTS_G",
       "GOLD_WORD": "KPOP",
+      "WIKIPEDIA_ARTICLE": "K-pop",
       "NOTE": ""
     },
     {
@@ -1077,6 +1153,7 @@
       "answers": ["P*UTRID","MENA*CE","LUS*T*","BR*ISKLY*"],
       "CRITERIA_2": "1_ENDS_D",
       "GOLD_WORD": "PASTRY",
+      "WIKIPEDIA_ARTICLE": "Pastry",
       "NOTE": ""
     },
     {
@@ -1091,6 +1168,7 @@
       "answers": ["YOLK","SNA*RL","D*E*N","FOOL*","HE*LL"],
       "CRITERIA_2": "1_CONTAINS_Y",
       "GOLD_WORD": "ADELE",
+      "WIKIPEDIA_ARTICLE": "Adele",
       "NOTE": ""
     },
     {
@@ -1105,10 +1183,12 @@
       "answers": ["WAT*ER","FILLS","DRAW*","BOO*K","TREAT"],
       "CRITERIA_2": "1X_STARTS_W",
       "GOLD_WORD": "TWO",
+      "WIKIPEDIA_ARTICLE": "2",
       "NOTE": "The modern visual shape of the numeral '2' evolved from ancient Indian Brahmi script, where it was originally written simply as two unconnected horizontal lines."
     },
     {
       "ID": "crowes",
+      "ACTIVE": false,
       "SCHEDULED": true,
       "SOURCE_WORD_COUNT": 3,
       "SOURCE_WORD_LENGTHS": [7,7,8],
@@ -1119,6 +1199,7 @@
       "answers": ["SLAC*KER","R*O*UNDS","JAW*","CAME*LS*"],
       "CRITERIA_2": "1X_STARTS_S",
       "GOLD_WORD": "CROWES",
+      "WIKIPEDIA_ARTICLE": "Crowe (surname)",
       "NOTE": "My apologies to the small contingent of people who don't consider jackdaws crows – and the large contigent who will note that 'crows' isn't spelled with an E."
     },
     {
@@ -1133,6 +1214,7 @@
       "answers": ["C*HOP","I*N*ERT","SE*EM*","WA*RT","PHOTO"],
       "CRITERIA_2": "*_ENDS_S_NONE",
       "GOLD_WORD": "CINEMA",
+      "WIKIPEDIA_ARTICLE": "Movie theater",
       "NOTE": ""
     },
     {
@@ -1147,6 +1229,7 @@
       "answers": ["H*AVE","GO*LDEN","JAR","JO*INS*","MI*XE*R*S"],
       "CRITERIA_2": "4_STARTS_J",
       "GOLD_WORD": "HOOSIER",
+      "WIKIPEDIA_ARTICLE": "Hoosier",
       "NOTE": ""
     },
     {
@@ -1161,6 +1244,7 @@
       "answers": ["C*A*RGO","T*ENTH*","ONCE*","ORD*ER*","MA*L*ES*"],
       "CRITERIA_2": "3X_CONTAINS_O",
       "GOLD_WORD": "CATHEDRALS",
+      "WIKIPEDIA_ARTICLE": "Cathedral",
       "NOTE": "Upon its completion in 1165, the Chartres Cathedral was the second-tallest structure in the world (after the Great Pyramid)."
     },
     {
@@ -1175,6 +1259,7 @@
       "answers": ["ODDS*","ANTLE*R*","ME*N*D","GLAM","SIGNA*L"],
       "CRITERIA_2": "1_STARTS_O",
       "GOLD_WORD": "SERENA",
+      "WIKIPEDIA_ARTICLE": "Serena Williams",
       "NOTE": ""
     },
     {
@@ -1189,6 +1274,7 @@
       "answers": ["BOA","TUMBLER*","AUDI*T","BR*AI*SE","WALK"],
       "CRITERIA_2": "5_CONTAINS_W",
       "GOLD_WORD": "RIRI",
+      "WIKIPEDIA_ARTICLE": "Rihanna",
       "NOTE": ""
     },
     {
@@ -1203,6 +1289,7 @@
       "answers": ["ROB*E","RA*GER","L*ION","L*E*APT*"],
       "CRITERIA_2": "1X_ENDS_N",
       "GOLD_WORD": "BALLET",
+      "WIKIPEDIA_ARTICLE": "Ballet",
       "NOTE": ""
     },
     {
@@ -1217,6 +1304,7 @@
       "answers": ["BEEN*","FA*X","ROT*","TRO*VE","MONKEY"],
       "CRITERIA_2": "*_DOUBLE_E",
       "GOLD_WORD": "NATO",
+      "WIKIPEDIA_ARTICLE": "NATO phonetic alphabet",
       "NOTE": ""
     },
     {
@@ -1231,6 +1319,7 @@
       "answers": ["L*A*VA","INCL*I*NE","LOCATE","CAG*E","BRA*VO"],
       "CRITERIA_2": "3_STARTS_L",
       "GOLD_WORD": "LALIGA",
+      "WIKIPEDIA_ARTICLE": "La Liga",
       "NOTE": "La Liga, the highest-level professional soccer league in Spain, is usually considered the best in the world behind the English Premier League."
     },
     {
@@ -1245,6 +1334,7 @@
       "answers": ["CORK","GRI*EF","BALK*","VE*TO","PRA*NK"],
       "CRITERIA_2": "3X_ENDS_K",
       "GOLD_WORD": "IKEA",
+      "WIKIPEDIA_ARTICLE": "IKEA",
       "NOTE": "IKEA's best-selling item, the Billy bookcase, has lining the halls of its blue-and-yellow stores since 1979."
     },
     {
@@ -1259,6 +1349,7 @@
       "answers": ["OF*FER*","HA*NDS*","SOP","SI*TE*","CHOIR*"],
       "CRITERIA_2": "3_STARTS_S",
       "GOLD_WORD": "FRASIER",
+      "WIKIPEDIA_ARTICLE": "Frasier",
       "NOTE": ""
     },
     {
@@ -1273,6 +1364,7 @@
       "answers": ["DRAW*ER","ABSO*RB","SCO*PE","RUDD*ER"],
       "CRITERIA_2": "*_ENDS_B",
       "GOLD_WORD": "WOOD",
+      "WIKIPEDIA_ARTICLE": "Woodworking",
       "NOTE": ""
     },
     {
@@ -1287,6 +1379,7 @@
       "answers": ["CAMP*U*S","SOOT","N*OZZLES","BRICK*S"],
       "CRITERIA_2": "3X_ENDS_S",
       "GOLD_WORD": "PUNK",
+      "WIKIPEDIA_ARTICLE": "Punk rock",
       "NOTE": ""
     },
     {
@@ -1301,6 +1394,7 @@
       "answers": ["SH*ADE*S","SPIDER*","D*AM","OBE*Y","GR*OSS*"],
       "CRITERIA_2": "3X_CONTAINS_E",
       "GOLD_WORD": "HERDERS",
+      "WIKIPEDIA_ARTICLE": "Herding dog",
       "NOTE": ""
     },
     {
@@ -1315,6 +1409,7 @@
       "answers": ["H*O*OF","WATER*","S*HAKY","AGAIN","DOME*D"],
       "CRITERIA_2": "4_STARTS_A",
       "GOLD_WORD": "HORSE",
+      "WIKIPEDIA_ARTICLE": "Variations of basketball",
       "NOTE": "Now largely known as an iconic basketball shot, the 'fadeaway' actually began as a baseball term in the early 1900s."
     },
     {
@@ -1329,6 +1424,7 @@
       "answers": ["G*RID","ENTER*","SUMME*R","DECOY*","S*HAM"],
       "CRITERIA_2": "*_ENDS_E_NONE",
       "GOLD_WORD": "GREYS",
+      "WIKIPEDIA_ARTICLE": "Grey's Anatomy",
       "NOTE": ""
     },
     {
@@ -1343,6 +1439,7 @@
       "answers": ["SO*DA","R*OUSE*","EIG*HT","VENO*M","BOON*"],
       "CRITERIA_2": "1X_STARTS_V",
       "GOLD_WORD": "OREGON",
+      "WIKIPEDIA_ARTICLE": "Oregon",
       "NOTE": ""
     },
     {
@@ -1357,6 +1454,7 @@
       "answers": ["A*YE","DISK","CH*UCK","LA*ST","BRIM","MOB*"],
       "CRITERIA_2": "2X_ENDS_K",
       "GOLD_WORD": "AHAB",
+      "WIKIPEDIA_ARTICLE": "Captain Ahab",
       "NOTE": "The character of Starbuck indeed gave name to the iconic coffee chain, whose founders wished to pay homage to the early seafarers who shipped coffee across the globe."
     },
     {
@@ -1371,6 +1469,7 @@
       "answers": ["P*ALA*TE","HACKERS*","JOLTS*","G*RIP","CO*LA"],
       "CRITERIA_2": "1X_ENDS_P",
       "GOLD_WORD": "PASSGO",
+      "WIKIPEDIA_ARTICLE": "Monopoly (game)",
       "NOTE": ""
     },
     {
@@ -1385,6 +1484,7 @@
       "answers": ["D*EMON","NU*LL","K*NIT","E*NGINES*"],
       "CRITERIA_2": "1X_STARTS_K",
       "GOLD_WORD": "DUKES",
+      "WIKIPEDIA_ARTICLE": "Duke (given name)",
       "NOTE": "These 'Dukes' aren't literal royalty (except in the eyes of their fans): they're jazz legend Duke Ellington, iconic 90s video game action hero Duke Nukem, and popular YouTuber Duke Dennis."
     },
     {
@@ -1399,6 +1499,7 @@
       "answers": ["RUNT","ZAP*","CLOWNE*D","RIB","RUMBL*E*"],
       "CRITERIA_2": "3X_STARTS_R",
       "GOLD_WORD": "PELE",
+      "WIKIPEDIA_ARTICLE": "Pelé",
       "NOTE": "Pele first wore his iconic #10 at the 1958 World Cup; Brazil had not numbered its players, so a jersey number was assigned to him by FIFA."
     },
     {
@@ -1413,6 +1514,7 @@
       "answers": ["AR*K","SQU*IN*T","SID*E","M*ISTY","DEC*AY"],
       "CRITERIA_2": "1X_ENDS_Y",
       "GOLD_WORD": "RUNDMC",
+      "WIKIPEDIA_ARTICLE": "Run-DMC",
       "NOTE": "While Run-DMC's 1986 hit 'My Adidas' originated from a genuine affinity for the footwear, it led to a $1.6 million brand deal later that year."
     },
     {
@@ -1427,6 +1529,7 @@
       "answers": ["S*NOWY","C*LEAN","CLO*VER","NEAT*ENS*"],
       "CRITERIA_2": "1_ENDS_Y",
       "GOLD_WORD": "SCOTS",
+      "WIKIPEDIA_ARTICLE": "Scottish people",
       "NOTE": ""
     },
     {
@@ -1441,6 +1544,7 @@
       "answers": ["RAGS","D*AU*NTS","WOMEN*","LIMITS","SE*LL"],
       "CRITERIA_2": "4_CONTAINS_L",
       "GOLD_WORD": "DUNE",
+      "WIKIPEDIA_ARTICLE": "Dune (franchise)",
       "NOTE": ""
     },
     {
@@ -1455,6 +1559,7 @@
       "answers": ["T*ANK","EARTH*","TR*AIN","BO*RN*","SE*ALS*"],
       "CRITERIA_2": "2X_STARTS_T",
       "GOLD_WORD": "THRONES",
+      "WIKIPEDIA_ARTICLE": "Game of Thrones",
       "NOTE": ""
     },
     {
@@ -1469,6 +1574,7 @@
       "answers": ["ALARM*","MA*NOR","OBS*C*URE","BO*Y","CENT*"],
       "CRITERIA_2": "1X_STARTS_A",
       "GOLD_WORD": "MASCOT",
+      "WIKIPEDIA_ARTICLE": "Mascot",
       "NOTE": ""
     },
     {
@@ -1483,6 +1589,7 @@
       "answers": ["AC*E","QU*IZ","AMB*ER","REI*GN","S*T*OPS"],
       "CRITERIA_2": "*_STARTS_Z_NONE",
       "GOLD_WORD": "CUBIST",
+      "WIKIPEDIA_ARTICLE": "Cubism",
       "NOTE": "Pioneered in the early 20th century by Pablo Picasso and Georges Braque, Cubism was a revolutionary art movement that broke subjects down into geometric shapes to display multiple viewpoints simultaneously."
     },
     {
@@ -1497,6 +1604,7 @@
       "answers": ["CUP*S","BULL*Y","MA*IMED","CRIT*IC","PO*ISE"],
       "CRITERIA_2": "1X_ENDS_C",
       "GOLD_WORD": "PLATO",
+      "WIKIPEDIA_ARTICLE": "Plato",
       "NOTE": ""
     },
     {
@@ -1511,6 +1619,7 @@
       "answers": ["DUCKS*","H*ALO*","MAN*","BE*T","LUN*AR"],
       "CRITERIA_2": "1_STARTS_D",
       "GOLD_WORD": "SHONEN",
+      "WIKIPEDIA_ARTICLE": "Shōnen manga",
       "NOTE": "Shonen: The most popular genre of manga and anime in Japan, generally consisting of action-packed titles targeted towards young men. Sadly, DRAGON BALL Z didn't fit!"
     },
     {
@@ -1525,6 +1634,7 @@
       "answers": ["CRIS*P","COMI*C","IRON","ORG*AN*","PIE"],
       "CRITERIA_2": "1X_STARTS_I",
       "GOLD_WORD": "SIGN",
+      "WIKIPEDIA_ARTICLE": "Astrological sign",
       "NOTE": ""
     },
     {
@@ -1539,6 +1649,7 @@
       "answers": ["L*A*UNCH","OM*IT","CRAB*","AUDIO*"],
       "CRITERIA_2": "1X_STARTS_A",
       "GOLD_WORD": "LAMBO",
+      "WIKIPEDIA_ARTICLE": "Lamborghini",
       "NOTE": ""
     },
     {
@@ -1553,6 +1664,7 @@
       "answers": ["SMACK*","CO*RRUPT","OUT","A*NNUAL*","BA*IL"],
       "CRITERIA_2": "2_CONTAINS_U",
       "GOLD_WORD": "KOALA",
+      "WIKIPEDIA_ARTICLE": "Koala",
       "NOTE": ""
     },
     {
@@ -1567,6 +1679,7 @@
       "answers": ["CHIMES*","HIM","GO*AT","JOIN*","MADAMS*","JADE"],
       "CRITERIA_2": "2_ENDS_M",
       "GOLD_WORD": "SONS",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": ""
     },
     {
@@ -1581,6 +1694,7 @@
       "answers": ["M*ORE","TA*P*","TONING","L*OON","WINTE*R"],
       "CRITERIA_2": "*_DOUBLE_*",
       "GOLD_WORD": "MAPLE",
+      "WIKIPEDIA_ARTICLE": "Canada",
       "NOTE": ""
     },
     {
@@ -1595,6 +1709,7 @@
       "answers": ["P*OLL","OI*LY","RAVIOLI","BAN*G","DRONE*S"],
       "CRITERIA_2": "1X_ENDS_I",
       "GOLD_WORD": "PINE",
+      "WIKIPEDIA_ARTICLE": "Pine",
       "NOTE": ""
     },
     {
@@ -1609,6 +1724,7 @@
       "answers": ["THICK*ET","CHOKE*","BRA*WNY","JIN*X","RU*MP"],
       "CRITERIA_2": "*_ENDS_X",
       "GOLD_WORD": "KEANU",
+      "WIKIPEDIA_ARTICLE": "Keanu Reeves",
       "NOTE": ""
     },
     {
@@ -1623,6 +1739,7 @@
       "answers": ["COA*ST*AL*","SA*CK","COCON*UT*","LOA*F"],
       "CRITERIA_2": "2X_STARTS_C",
       "GOLD_WORD": "ATLANTA",
+      "WIKIPEDIA_ARTICLE": "Atlanta",
       "NOTE": "The name of Atlanta's football team was coined in 1965 by schoolteacher Julia Elliott, who noted that a falcon 'never drops its prey'."
     },
     {
@@ -1637,6 +1754,7 @@
       "answers": ["T*R*UE","LE*VE*L*","DI*N*E*RS","BASE"],
       "CRITERIA_2": "4_STARTS_B",
       "GOLD_WORD": "TREELINE",
+      "WIKIPEDIA_ARTICLE": "Tree line",
       "NOTE": ""
     },
     {
@@ -1651,6 +1769,7 @@
       "answers": ["D*O*RM","NINE","MO*NKS","ERROR*","AMAZES*"],
       "CRITERIA_2": "*_STARTS_E",
       "GOLD_WORD": "DOORS",
+      "WIKIPEDIA_ARTICLE": "The Doors",
       "NOTE": "With apologies to Doors guitarist Robby Krieger, the legend who composed 'Light My Fire'. Sorry, Robby, I could only fit three!"
     },
     {
@@ -1665,6 +1784,7 @@
       "answers": ["REUS*E","DIP*S","RO*SES","LO*ST","MAGN*ET"],
       "CRITERIA_2": "1_CONTAINS_U",
       "GOLD_WORD": "SPOON",
+      "WIKIPEDIA_ARTICLE": "Spoon",
       "NOTE": "Victorian dining etiquette featured a dizzying array of hyper-specific cutlery, famously including the 'mustache spoon,' which was designed with a special guard to keep soup out of a gentleman's waxed facial hair."
     },
     {
@@ -1679,6 +1799,7 @@
       "answers": ["REEKS*","CH*AIR","ABO*DE","DE*SKS"],
       "CRITERIA_2": "*_STARTS_A",
       "GOLD_WORD": "SHOE",
+      "WIKIPEDIA_ARTICLE": "Shoe",
       "NOTE": ""
     },
     {
@@ -1693,6 +1814,7 @@
       "answers": ["T*OTEM","FAW*N","CHA*RI*TY","SUNN*Y","MOCK"],
       "CRITERIA_2": "*_ENDS_S_NONE",
       "GOLD_WORD": "TWAIN",
+      "WIKIPEDIA_ARTICLE": "Mark Twain",
       "NOTE": ""
     },
     {
@@ -1707,6 +1829,7 @@
       "answers": ["TRA*IN","RAFFL*E","ZOOM","RI*NSE"],
       "CRITERIA_2": "2X_DOUBLE_*",
       "GOLD_WORD": "ALI",
+      "WIKIPEDIA_ARTICLE": "Muhammad Ali",
       "NOTE": ""
     },
     {
@@ -1721,6 +1844,7 @@
       "answers": ["S*P*AT","WI*NING","D*OG","NE*CK","COCKY*"],
       "CRITERIA_2": "1X_ENDS_T",
       "GOLD_WORD": "SPIDEY",
+      "WIKIPEDIA_ARTICLE": "Spider-Man",
       "NOTE": "Marvel publisher Martin Goodman initially rejected Stan Lee's pitch for Spider-Man, arguing that people inherently hated spiders and that a superhero possessing arachnid-like abilities would simply be too creepy for readers to enjoy."
     },
     {
@@ -1735,6 +1859,7 @@
       "answers": ["CEDE","CUBE","AB*HO*R","UPO*N","ST*AY*","CLONE"],
       "CRITERIA_2": "3X_STARTS_C",
       "GOLD_WORD": "BOOTY",
+      "WIKIPEDIA_ARTICLE": "Piracy",
       "NOTE": "Like countless other pirate tropes, the phrase 'X marks the spot' can be attributed to Robert Louis Stevenson’s 1883 novel Treasure Island."
     },
     {
@@ -1749,6 +1874,7 @@
       "answers": ["M*ANY","IDO*L","SPIN*NE*R","GAIN","LIST*"],
       "CRITERIA_2": "3_DOUBLE_*",
       "GOLD_WORD": "MONET",
+      "WIKIPEDIA_ARTICLE": "Claude Monet",
       "NOTE": ""
     },
     {
@@ -1763,6 +1889,7 @@
       "answers": ["M*UTE*","AIMING","PUT*","UNITS","MA*IL*MAN"],
       "CRITERIA_2": "1X_STARTS_U",
       "GOLD_WORD": "METAL",
+      "WIKIPEDIA_ARTICLE": "Metal",
       "NOTE": "Accounting for roughly three-quarters of the 118 known elements on the periodic table, elemental metals are broadly defined chemically as substances that readily lose electrons to form positive ions, making them excellent conductors of heat and electricity."
     },
     {
@@ -1777,6 +1904,7 @@
       "answers": ["MAD","ME*MOIR","DA*RN","S*T*YLING"],
       "CRITERIA_2": "2X_STARTS_M",
       "GOLD_WORD": "EAST",
+      "WIKIPEDIA_ARTICLE": "East",
       "NOTE": "Encompassing a diverse region of central England, the East Midlands is perhaps most famous worldwide as the home of Sherwood Forest and the legendary outlaw Robin Hood."
     },
     {
@@ -1791,6 +1919,7 @@
       "answers": ["B*EACH","WO*RLDS","B*EER","HIKERS*"],
       "CRITERIA_2": "1X_STARTS_W",
       "GOLD_WORD": "BOBS",
+      "WIKIPEDIA_ARTICLE": "Bob (given name)",
       "NOTE": ""
     },
     {
@@ -1805,6 +1934,7 @@
       "answers": ["MY*TH","TA*LL","STR*AW","PIANO","COD*ES"],
       "CRITERIA_2": "1X_ENDS_O",
       "GOLD_WORD": "YARD",
+      "WIKIPEDIA_ARTICLE": null,
       "NOTE": "Despite serving as the headquarters for London's Metropolitan Police, Scotland Yard takes its name from the building's original 1829 rear entrance on a street where Scottish royalty used to stay."
     },
     {
@@ -1819,6 +1949,7 @@
       "answers": ["MORN","FL*A*T*","LE*AN*","BI*T*E*","LONER"],
       "CRITERIA_2": "2X_STARTS_L",
       "GOLD_WORD": "LATENITE",
+      "WIKIPEDIA_ARTICLE": "Late-night talk show",
       "NOTE": ""
     },
     {
@@ -1833,6 +1964,7 @@
       "answers": ["ACT","SAL*SA","PEAS","COI*N","M*INE*RAL"],
       "CRITERIA_2": "1X_STARTS_A",
       "GOLD_WORD": "LIME",
+      "WIKIPEDIA_ARTICLE": "Lime (fruit)",
       "NOTE": "Though heavily associated with Latin American cuisine today, the lime actually originated in the tropical regions of Southeast Asia and was introduced to the rest of the world through early spice trade routes."
     },
     {
@@ -1847,6 +1979,7 @@
       "answers": ["G*RILLER","PEARL*S","MOU*SE*"],
       "CRITERIA_2": "1_DOUBLE_*",
       "GOLD_WORD": "GLUE",
+      "WIKIPEDIA_ARTICLE": "Adhesive",
       "NOTE": ""
     },
     {
@@ -1861,6 +1994,7 @@
       "answers": ["HUNG*","OUTWA*R*D","HOOKED*","KE*EN*","FOOLS"],
       "CRITERIA_2": "2X_STARTS_H",
       "GOLD_WORD": "GARDEN",
+      "WIKIPEDIA_ARTICLE": "Garden",
       "NOTE": "Often referred to as the "
     },
     {
@@ -1875,6 +2009,7 @@
       "answers": ["G*RANT","WHIRL","STE*RN*","STEER*","GE*L"],
       "CRITERIA_2": "2_STARTS_W",
       "GOLD_WORD": "GENRE",
+      "WIKIPEDIA_ARTICLE": "Film genre",
       "NOTE": "Reaching their absolute peak of popularity during the 1950s, Westerns dominated the American box office and television screens, accounting for roughly a quarter of all Hollywood films produced during that decade."
     },
     {
@@ -1889,6 +2024,7 @@
       "answers": ["F*O*RAGE","LAIR*","STAND*","HIRES*"],
       "CRITERIA_2": "1X_STARTS_S",
       "GOLD_WORD": "FORDS",
+      "WIKIPEDIA_ARTICLE": "Ford",
       "NOTE": "Originally developed in response to the 1973 oil crisis, the Ford Fiesta was a highly successful, fuel-efficient supermini car that sold over 22 million units worldwide before its long production run finally ended in 2023."
     }
   ]

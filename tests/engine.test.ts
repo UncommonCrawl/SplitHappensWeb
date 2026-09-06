@@ -11,6 +11,7 @@ const level: LevelDefinition = {
   criterion: "*_STARTS_D",
   goldTileExpectations: [{ rowIndex: 0, columnIndex: 0, letter: "C" }],
   goldWord: "C",
+  wikipediaArticle: null,
   note: "",
 };
 const words = new Set(["CAT", "DOG"]);

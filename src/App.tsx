@@ -9,6 +9,7 @@ import { loadPersistedState, progressFromGame, savePersistedState } from "./pers
 import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
+import { wikipediaArticleURL } from "./wikipedia";
 import trophyIconUrl from "../Trophy.svg";
 
 type ModalName = "about" | "how" | "recent" | "stats" | "victory" | null;
@@ -98,6 +99,16 @@ function LoadingScreen({ error, retry }: { error?: string; retry?: () => void })
       <img src={staticAssetPath("/images/title.png")} alt="Split Happens" />
       <p>{error}</p><button className="primary-button" onClick={retry}>Try again</button>
     </main>
+  );
+}
+
+function LevelTitle({ level }: { level: LevelDefinition }) {
+  return (
+    <span className="level-title">
+      '{level.wikipediaArticle
+        ? <a className="level-title-link" href={wikipediaArticleURL(level.wikipediaArticle)} target="_blank" rel="noopener noreferrer">{level.goldWord}</a>
+        : level.goldWord}'
+    </span>
   );
 }
 
@@ -833,7 +844,7 @@ export default function App() {
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="mobile-wordmark" />
           <h1>
             <span className="level-date">{longDate(selectedDate)}</span>
-            <span className="level-title">'{activeLevel.goldWord}'</span>
+            <LevelTitle level={activeLevel} />
           </h1>
         </div>
         <button
@@ -859,7 +870,7 @@ export default function App() {
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
           <h1>
             <span className="level-date">{longDate(selectedDate)}</span>
-            <span className="level-title">'{activeLevel.goldWord}'</span>
+            <LevelTitle level={activeLevel} />
           </h1>
         </header>
 

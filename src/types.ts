@@ -16,6 +16,7 @@ export interface LevelDefinition {
   criterion: string | null;
   goldTileExpectations: GoldTileExpectation[];
   goldWord: string;
+  wikipediaArticle: string | null;
   note: string;
 }
 

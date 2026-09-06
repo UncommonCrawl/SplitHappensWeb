@@ -13,6 +13,7 @@ const rawLevelSchema = z.object({
   answers: z.array(z.string().min(1)),
   CRITERIA_2: z.string().optional(),
   GOLD_WORD: z.string().optional(),
+  WIKIPEDIA_ARTICLE: z.string().trim().min(1).nullable().optional(),
   NOTE: z.string().optional(),
 }).passthrough();
 
@@ -61,6 +62,7 @@ export function normalizeLevel(raw: z.infer<typeof rawLevelSchema>): LevelDefini
     criterion: raw.CRITERIA_2?.trim() || null,
     goldTileExpectations: expectations,
     goldWord,
+    wikipediaArticle: raw.WIKIPEDIA_ARTICLE?.trim() || null,
     note: raw.NOTE?.trim() || "",
   };
 }
