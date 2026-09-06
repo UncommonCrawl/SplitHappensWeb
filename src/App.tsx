@@ -10,7 +10,6 @@ import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 import { wikipediaArticleURL } from "./wikipedia";
-import trophyIconUrl from "../Trophy.svg";
 
 type ModalName = "about" | "how" | "recent" | "stats" | "victory" | null;
 
@@ -46,8 +45,9 @@ function Seal({ tone, achieved = false, satisfied = false }: { tone: "bronze" | 
         {satisfied &&
           <path className="seal-outline" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
         }
-        {achieved && <svg className="seal-trophy" x="27" y="30" width="46" height="41" viewBox="0 0 91.5 81.9">
-          <use href={`${trophyIconUrl}#Layer_1`} />
+        {achieved && <svg className="seal-trophy" x="27" y="32" width="46" height="41" viewBox="0 0 91.5 81.9">
+          <path d="M82.2,5.1c-2.9-.6-6.3-.2-9.4,1,0-1.7,0-3.4,0-5H18.7c0,1.6,0,3.3,0,5-3.2-1.2-6.5-1.6-9.4-1-4.3.9-7.2,3.9-8.2,8.3-1.3,5.8,1.6,12.3,8.1,18.6,5.1,4.9,12,9,19.3,11.5,3,4.3,6.9,7.7,11.8,9.8-.7,2.6-3.2,10.2-9.3,14.8h29.6c-6.1-4.6-8.6-12.2-9.3-14.8,4.9-2.1,8.8-5.5,11.8-9.8,7.3-2.5,14.2-6.6,19.3-11.5,6.5-6.2,9.4-12.8,8.1-18.6-1-4.4-3.9-7.4-8.2-8.3ZM13.5,27.4c-4.7-4.5-7.1-9.2-6.3-12.6.5-2,1.5-3.1,3.4-3.6,2.5-.5,5.7.3,8.4,1.9.6,7.2,2,14.7,4.7,21.4-3.8-2-7.4-4.4-10.2-7.2ZM78,27.4c-2.9,2.7-6.4,5.2-10.2,7.2,2.7-6.7,4.1-14.2,4.7-21.4,2.7-1.7,5.9-2.5,8.4-1.9,1.9.4,3,1.5,3.4,3.6.8,3.4-1.6,8.1-6.3,12.6Z" />
+          <rect x="26.7" y="72" width="38" height="8.2" />
         </svg>}
       </svg>
     </span>

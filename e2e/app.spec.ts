@@ -278,9 +278,10 @@ test("shows completed progression and uses Perfect Split for every victory", asy
   const victoryBananaBox = await victoryBanana.boundingBox();
   expect(victoryBananaBox?.width).toBeGreaterThan(victorySealBox?.width ?? Infinity);
   await expect(page.locator(".tier-step.complete")).toHaveCount(3);
+  await expect(page.locator(".seal-trophy")).toHaveCount(3);
   await expect(page.locator(".criterion-line.met")).toHaveCount(3);
   await expect(page.locator(".criterion-line.met").first()).toHaveCSS("color", "rgb(119, 119, 119)");
-  await expect(page.locator('[data-date="2026-09-03"]')).toHaveCSS("background-color", "rgb(255, 216, 107)");
+  await expect(page.locator('.puzzle-date-button[aria-pressed="true"]')).toHaveClass(/tier-gold/);
   await expect(page.locator(".tier-lock")).toHaveCount(0);
   const perfectStep = page.locator(".tier-step").filter({ hasText: "Perfect Split" });
   await expect(perfectStep).toHaveClass(/active/);
@@ -328,7 +329,7 @@ test("keeps criteria unlocked while their live completion borders update", async
 
   const steps = page.locator(".tier-step");
   await expect(steps.filter({ has: page.locator(".seal-outline") })).toHaveCount(0);
-  await expect(page.locator(".seal-check")).toHaveCount(2);
+  await expect(page.locator(".seal-trophy")).toHaveCount(2);
   await expect(steps.nth(0)).toHaveClass(/unlocked/);
   await expect(steps.nth(1)).toHaveClass(/unlocked/);
   await expect(steps.nth(2)).toHaveClass(/unlocked/);
