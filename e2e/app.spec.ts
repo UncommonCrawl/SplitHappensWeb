@@ -1061,13 +1061,45 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
 
   await help.click();
   const helpPopup = page.getByRole("dialog", { name: "How to Play" });
+  await expect(help).toHaveAttribute("aria-expanded", "true");
   await expect(helpPopup).toContainText("Rearrange every letter");
-  await expect(helpPopup.getByRole("heading", { name: "Controls" })).toBeVisible();
+  await expect(helpPopup).toHaveClass(/help-sidebar/);
+  await expect(helpPopup).toHaveClass(/drawer-open/);
+  await expect(helpPopup).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  const helpHeading = helpPopup.getByRole("heading", { name: "How to Play" });
+  const menuHeadingStyles = await drawer.locator(".drawer-title").evaluate((element) => {
+    const styles = getComputedStyle(element);
+    return { fontSize: styles.fontSize, fontWeight: styles.fontWeight, letterSpacing: styles.letterSpacing };
+  });
+  await expect(helpHeading).toHaveCSS("font-size", menuHeadingStyles.fontSize);
+  await expect(helpHeading).toHaveCSS("font-weight", menuHeadingStyles.fontWeight);
+  await expect(helpHeading).toHaveCSS("letter-spacing", menuHeadingStyles.letterSpacing);
+  await expect(helpHeading).toHaveCSS("text-align", "center");
+  await expect(helpPopup.locator(".instructions")).toHaveCSS("text-align", "left");
+  await expect(helpPopup.getByRole("button", { name: "Close How to Play" })).toBeFocused();
+  const controlsHeading = helpPopup.getByRole("heading", { name: "Controls" });
+  await expect(controlsHeading).toBeVisible();
+  await expect(controlsHeading).toHaveClass(/drawer-title/);
+  await expect(controlsHeading).toHaveCSS("font-size", menuHeadingStyles.fontSize);
+  await expect(controlsHeading).toHaveCSS("font-weight", menuHeadingStyles.fontWeight);
+  await expect(controlsHeading).toHaveCSS("letter-spacing", menuHeadingStyles.letterSpacing);
+  await expect(controlsHeading).toHaveCSS("text-align", "center");
   await expect(helpPopup).toContainText("Click to select");
   await expect(helpPopup).toContainText("Drag to place");
   await expect(helpPopup).toContainText("Click any two tiles to swap positions");
   await expect(helpPopup).toContainText("Double-click to move tile to/from source");
-  await helpPopup.getByRole("button", { name: "Close" }).click();
+  await helpPopup.getByRole("button", { name: "Close How to Play" }).click();
+  await expect(page.locator("#help-sidebar")).toHaveAttribute("aria-hidden", "true");
+  await expect(help).toHaveAttribute("aria-expanded", "false");
+  await expect(help).toBeFocused();
+
+  await help.click();
+  await page.keyboard.press("Escape");
+  await expect(help).toBeFocused();
+
+  await help.click();
+  await page.locator(".help-drawer-backdrop").click({ position: { x: 20, y: 20 } });
+  await expect(help).toBeFocused();
 
   await menu.click();
   await expect(menu).toHaveAttribute("aria-expanded", "true");
@@ -1079,10 +1111,13 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
   await expect(drawerHeading).toHaveText("Menu");
   await expect(drawerHeading).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(drawerHeading).toHaveCSS("font-size", "24px");
-  await expect(drawerHeading).toHaveCSS("font-weight", "700");
+  await expect(drawerHeading).toHaveCSS("font-weight", "600");
+  await expect(drawerHeading).toHaveCSS("letter-spacing", "normal");
   await expect(drawerHeading).toHaveCSS("text-align", "center");
+  await expect(drawerHeading).toHaveCSS("text-transform", "none");
   await expect(drawer.getByRole("button", { name: "How to Play" })).toBeHidden();
   await expect(drawer.locator(".sidebar-controls")).toBeHidden();
+  await expect(drawer.locator(".sidebar-stats")).toHaveCSS("border-bottom-width", "0px");
 
   await page.keyboard.press("Escape");
   await expect(drawer).toHaveAttribute("aria-hidden", "true");

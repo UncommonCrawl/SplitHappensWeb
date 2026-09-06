@@ -561,6 +561,23 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   }
   .app-sidebar.drawer-open { transform: translateX(0); visibility: visible; transition: transform .22s ease; }
   .app-sidebar .sidebar-brand { display: none; }
+  .app-sidebar .sidebar-stats { border-bottom: 0; }
+  .help-sidebar {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 70;
+    width: min(294px, 88vw);
+    min-height: 0;
+    height: 100dvh;
+    overflow-y: auto;
+    padding: max(18px, env(safe-area-inset-top)) 16px max(26px, env(safe-area-inset-bottom));
+    background: #fff;
+    box-shadow: -4px 0 20px rgb(0 0 0 / 24%);
+    transform: translateX(105%);
+    visibility: hidden;
+    transition: transform .22s ease, visibility 0s linear .22s;
+  }
+  .help-sidebar.drawer-open { transform: translateX(0); visibility: visible; transition: transform .22s ease; }
   .drawer-header {
     position: relative;
     min-height: 44px;
@@ -568,18 +585,30 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
     display: grid;
     place-items: center;
   }
-  .drawer-header h2 {
+  .drawer-header .drawer-title,
+  .help-sidebar .drawer-title {
     margin: 0;
     color: #000;
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 600;
+    letter-spacing: normal;
     line-height: 1.1;
     text-align: center;
+    text-transform: none;
   }
   .drawer-close {
     position: absolute;
     left: -4px;
   }
+  .help-drawer-close {
+    right: -4px;
+    left: auto;
+  }
+  .help-drawer-close:hover { background: rgb(0 0 0 / 6%); }
+  .help-sidebar .instructions { color: #000; text-align: left; }
+  .help-sidebar .instructions > p { margin: 18px 0 0; }
+  .help-sidebar .popup-controls { margin-top: 24px; }
+  .help-sidebar .popup-controls .drawer-title { margin-bottom: 14px; }
   .drawer-backdrop {
     position: fixed;
     inset: 0;

@@ -138,6 +138,8 @@ export default function App() {
   const previousGold = useRef(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
+  const helpButtonRef = useRef<HTMLButtonElement>(null);
+  const helpDrawerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) return;
@@ -201,6 +203,11 @@ export default function App() {
     if (restoreFocus) window.requestAnimationFrame(() => hamburgerRef.current?.focus());
   }, []);
 
+  const closeHelpDrawer = useCallback((restoreFocus = true) => {
+    setModal(null);
+    if (restoreFocus) window.requestAnimationFrame(() => helpButtonRef.current?.focus());
+  }, []);
+
   useEffect(() => {
     const drawer = drawerRef.current;
     if (drawer) drawer.inert = isConstrained && !drawerOpen;
@@ -235,6 +242,42 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [closeDrawer, drawerOpen, isConstrained]);
+
+  useEffect(() => {
+    const drawer = helpDrawerRef.current;
+    const helpDrawerOpen = isConstrained && modal === "how";
+    if (drawer) drawer.inert = !helpDrawerOpen;
+    if (!drawer || !helpDrawerOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusable = () => Array.from(drawer.querySelectorAll<HTMLElement>("button:not(:disabled), [href], [tabindex]:not([tabindex='-1'])"));
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeHelpDrawer();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    window.requestAnimationFrame(() => focusable()[0]?.focus());
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeHelpDrawer, isConstrained, modal]);
 
   const activeLevel = useMemo(() => content?.levels.find((level) => level.id === activeLevelID) ?? null, [content, activeLevelID]);
   const scheduleEntry = useMemo(() => content?.schedule.find((entry) => entry.levelID === activeLevelID) ?? null, [content, activeLevelID]);
@@ -848,8 +891,11 @@ export default function App() {
           </h1>
         </div>
         <button
+          ref={helpButtonRef}
           className="mobile-help-button"
           aria-label="How to Play"
+          aria-controls="help-sidebar"
+          aria-expanded={isConstrained && modal === "how"}
           onClick={() => setModal("how")}
         ><HelpCircle /></button>
       </header>
@@ -867,7 +913,7 @@ export default function App() {
       >
         <header className="drawer-header">
           <button className="drawer-close" aria-label="Close sidebar menu" onClick={() => closeDrawer()}><X /></button>
-          <h2>Menu</h2>
+          <h2 className="drawer-title">Menu</h2>
         </header>
         <header className="sidebar-brand">
           <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
@@ -1034,18 +1080,39 @@ export default function App() {
       ><span className="tile-letter">{game.tiles[drag.tileID].character}</span></div>}
       {toast && <div className="toast" role="status">{toast}</div>}
 
-      {modal === "how" && <Modal title="How to Play" onClose={() => setModal(null)}>
+      {isConstrained && modal === "how" && <button className="drawer-backdrop help-drawer-backdrop" aria-label="Dismiss How to Play" onClick={() => closeHelpDrawer()} />}
+
+      {isConstrained && <aside
+        ref={helpDrawerRef}
+        id="help-sidebar"
+        className={`help-sidebar ${modal === "how" ? "drawer-open" : ""}`}
+        role="dialog"
+        aria-modal={modal === "how" ? "true" : undefined}
+        aria-labelledby="help-sidebar-title"
+        aria-hidden={modal !== "how" ? "true" : undefined}
+      >
+        <header className="drawer-header help-drawer-header">
+          <h2 id="help-sidebar-title" className="drawer-title">How to Play</h2>
+          <button className="drawer-close help-drawer-close" aria-label="Close How to Play" onClick={() => closeHelpDrawer()}><X /></button>
+        </header>
         <div className="instructions">
           <p>Rearrange every letter to form a valid English word in each row.</p>
           <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
-          {!isConstrained && <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>}
-          {isConstrained && <section className="popup-controls" aria-labelledby="popup-controls-title">
-            <h3 id="popup-controls-title">Controls</h3>
+          <section className="popup-controls" aria-labelledby="popup-controls-title">
+            <h3 id="popup-controls-title" className="drawer-title">Controls</h3>
             <p>Click to select</p>
             <p>Drag to place</p>
             <p>Click any two tiles to swap positions</p>
             <p>Double-click to move tile to/from source</p>
-          </section>}
+          </section>
+        </div>
+      </aside>}
+
+      {modal === "how" && !isConstrained && <Modal title="How to Play" onClose={() => setModal(null)}>
+        <div className="instructions">
+          <p>Rearrange every letter to form a valid English word in each row.</p>
+          <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
+          <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
         </div>
       </Modal>}
 
