@@ -8,6 +8,21 @@ async function openSidebarIfNeeded(page: Page) {
   }
 }
 
+async function setCurrentBadges(page: Page, perfectSplit: boolean, licketySplit: boolean) {
+  await page.evaluate(({ perfectSplit, licketySplit }) => {
+    const storageKey = "split-happens.web.v2";
+    const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
+    if (!saved) throw new Error("Expected saved game progress");
+    const current = Object.values(saved.levels)[0] as any;
+    if (!current) throw new Error("Expected current level progress");
+    current.perfectSplit = perfectSplit;
+    current.licketySplit = licketySplit;
+    localStorage.setItem(storageKey, JSON.stringify(saved));
+  }, { perfectSplit, licketySplit });
+  await page.reload();
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+}
+
 test("renders the app behind a game-area loader while the dictionary loads", async ({ page }) => {
   await page.route("**/words.json", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -56,8 +71,8 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: "Stats" }).click();
   await expect(page.getByRole("dialog")).toContainText("Daily Stats");
-  await expect(page.getByRole("dialog")).toContainText("Streaks");
-  await expect(page.getByRole("dialog")).toContainText("Best:");
+  await expect(page.getByRole("dialog")).not.toContainText("Streaks");
+  await expect(page.getByRole("dialog")).not.toContainText("Best:");
   await expect(page.getByRole("dialog")).toContainText("Progress");
   await expect(page.getByRole("dialog")).toContainText("Hard or Higher");
   await expect(page.locator(".stats-progress-bar span")).toHaveCount(4);
@@ -127,6 +142,43 @@ test("opens the victory popup with the localhost-only shortcut", async ({ page }
 
   await expect(page.getByRole("dialog", { name: "Perfect Split!" })).toBeVisible();
   await expect(page.locator(".victory-banana")).toBeVisible();
+  await expect(page.locator(".victory-badge")).toHaveCount(0);
+});
+
+test("renders each earned badge combination on victory and recent-puzzle tiles", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  for (const variant of [
+    { perfectSplit: true, licketySplit: false, names: ["Holy Split"] },
+    { perfectSplit: false, licketySplit: true, names: ["Lickety Split"] },
+    { perfectSplit: true, licketySplit: true, names: ["Holy Split", "Lickety Split"] },
+  ]) {
+    await setCurrentBadges(page, variant.perfectSplit, variant.licketySplit);
+    await page.keyboard.press("Alt+v");
+
+    const dialogBadges = page.locator(".victory-badge");
+    await expect(dialogBadges).toHaveCount(variant.names.length);
+    await expect(dialogBadges.locator("strong")).toHaveText(variant.names);
+    if (variant.names.length === 1) {
+      const badgesBox = await page.locator(".victory-badges").boundingBox();
+      const badgeBox = await dialogBadges.boundingBox();
+      expect(badgesBox).not.toBeNull();
+      expect(badgeBox).not.toBeNull();
+      expect((badgeBox?.x ?? 0) + (badgeBox?.width ?? 0) / 2)
+        .toBeCloseTo((badgesBox?.x ?? 0) + (badgesBox?.width ?? 0) / 2, 0);
+    }
+    await page.getByRole("button", { name: "Close" }).click();
+
+    await openSidebarIfNeeded(page);
+    const activeTile = page.locator('.puzzle-date-button[aria-pressed="true"]');
+    const tileBadges = activeTile.locator(".puzzle-tile-badges img");
+    await expect(tileBadges).toHaveCount(variant.names.length);
+    await expect(activeTile).toHaveAttribute("aria-label", new RegExp(variant.names.join(" and ")));
+    for (let index = 0; index < variant.names.length; index += 1) {
+      await expect(tileBadges.nth(index)).toHaveCSS("opacity", "0.5");
+    }
+  }
 });
 
 test("previews all three trophy pulses without earning criteria", async ({ page }) => {

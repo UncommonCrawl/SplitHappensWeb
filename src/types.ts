@@ -48,6 +48,7 @@ export interface GameState extends BoardSnapshot {
   levelID: string;
   tiles: Record<TileID, Tile>;
   hintedRows: number[];
+  usedHint: boolean;
   history: BoardSnapshot[];
   elapsedMs: number;
   splitElapsedMs: number | null;
@@ -58,6 +59,7 @@ export interface LevelProgress {
   sourceSlots: Array<Array<TileID | null>>;
   targetSlots: Array<Array<TileID | null>>;
   hintedRows: number[];
+  usedHint: boolean;
   history: BoardSnapshot[];
   elapsedMs: number;
   splitElapsedMs: number | null;

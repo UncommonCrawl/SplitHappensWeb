@@ -1,4 +1,5 @@
 import type { GameState, LevelProgress, PersistedAppState, WebSettings } from "./types";
+import { localDateKey } from "./content";
 
 export const STORAGE_KEY = "split-happens.web.v2";
 
@@ -33,6 +34,7 @@ export function progressFromGame(state: GameState, previous?: LevelProgress): Le
     sourceSlots: state.sourceSlots,
     targetSlots: state.targetSlots,
     hintedRows: state.hintedRows,
+    usedHint: state.usedHint,
     history: state.history,
     elapsedMs: state.elapsedMs,
     splitElapsedMs: state.splitElapsedMs,
@@ -42,5 +44,19 @@ export function progressFromGame(state: GameState, previous?: LevelProgress): Le
     firstGoldAt: previous?.firstGoldAt ?? null,
     perfectSplit: previous?.perfectSplit ?? false,
     licketySplit: previous?.licketySplit ?? false,
+  };
+}
+
+export function awardVictoryBadges(
+  progress: LevelProgress,
+  scheduleDate: string,
+  achievedAt: Date,
+  newlyAchievedPerfectSplit: boolean,
+): LevelProgress {
+  if (!newlyAchievedPerfectSplit) return progress;
+  return {
+    ...progress,
+    perfectSplit: progress.perfectSplit || !progress.usedHint,
+    licketySplit: progress.licketySplit || scheduleDate === localDateKey(achievedAt),
   };
 }

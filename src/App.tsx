@@ -1,17 +1,22 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lightbulb, Lock,
+  ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lock,
   Menu, RotateCcw, Share2, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
+import hintIcon from "../hint.svg";
+import clockIcon from "../clock.svg";
+import noHintIcon from "../no-hint.svg";
 import { loadPuzzleContent, loadWords, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
-import { loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
+import { awardVictoryBadges, loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
 import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 import { wikipediaArticleURL } from "./wikipedia";
 
 type ModalName = "about" | "how" | "recent" | "stats" | "victory" | null;
+
+const SHOW_STREAKS_IN_STATS = false;
 
 type DragState = {
   tileID: TileID;
@@ -38,6 +43,28 @@ type AchievementPulse = {
   tones: AchievementTone[];
   preview: boolean;
 };
+
+type BadgeDefinition = {
+  key: "perfectSplit" | "licketySplit";
+  name: string;
+  description: string;
+  icon: string;
+};
+
+const BADGES: BadgeDefinition[] = [
+  {
+    key: "perfectSplit",
+    name: "Holy Split",
+    description: "Achieve a Perfect Split without any hints.",
+    icon: noHintIcon,
+  },
+  {
+    key: "licketySplit",
+    name: "Lickety Split",
+    description: "Achieve a Perfect Split within 24 hours of release.",
+    icon: clockIcon,
+  },
+];
 
 const TILE_DOUBLE_CLICK_MS = 500;
 const EMPTY_WORDS = new Set<string>();
@@ -411,13 +438,9 @@ export default function App() {
       const timestamp = new Date().toISOString();
       if (derived.allWordsValid && !progress.firstSplitAt) progress.firstSplitAt = timestamp;
       if (derived.silverSatisfied && !progress.firstSilverAt) progress.firstSilverAt = timestamp;
-      if (derived.victorySatisfied && !progress.firstGoldAt) progress.firstGoldAt = timestamp;
-      progress.perfectSplit = Boolean(
-        previous?.perfectSplit || (derived.victorySatisfied && game.hintedRows.length === 0),
-      );
-      progress.licketySplit = Boolean(
-        previous?.licketySplit || (derived.victorySatisfied && scheduleEntry.date === localDateKey()),
-      );
+      const newlyAchievedPerfectSplit = derived.victorySatisfied && !progress.firstGoldAt;
+      if (newlyAchievedPerfectSplit) progress.firstGoldAt = timestamp;
+      const badgeProgress = awardVictoryBadges(progress, scheduleEntry.date, new Date(timestamp), newlyAchievedPerfectSplit);
       const dailyResults = { ...current.dailyResults };
       if (derived.allWordsValid && game.splitElapsedMs !== null) {
         dailyResults[scheduleEntry.date] = {
@@ -425,14 +448,14 @@ export default function App() {
           levelID: activeLevel.id,
           solvedOnReleaseDate: scheduleEntry.date === localDateKey(new Date(progress.firstSplitAt!)),
           splitElapsedMs: game.splitElapsedMs,
-          perfectSplit: progress.perfectSplit,
+          perfectSplit: badgeProgress.perfectSplit,
           hardOrHigher: Boolean(progress.firstSilverAt || progress.firstGoldAt),
           hardOnReleaseDate: Boolean(progress.firstSilverAt && scheduleEntry.date === localDateKey(new Date(progress.firstSilverAt))),
           achievedPerfectSplit: Boolean(progress.firstGoldAt),
           perfectOnReleaseDate: Boolean(progress.firstGoldAt && scheduleEntry.date === localDateKey(new Date(progress.firstGoldAt))),
         };
       }
-      const next = { ...current, levels: { ...current.levels, [activeLevel.id]: progress }, dailyResults };
+      const next = { ...current, levels: { ...current.levels, [activeLevel.id]: badgeProgress }, dailyResults };
       savePersistedState(next);
       return next;
     });
@@ -818,6 +841,7 @@ export default function App() {
 
   const selectedDate = parseLocalDate(scheduleEntry.date);
   const savedProgress = persisted.levels[activeLevel.id];
+  const earnedBadges = BADGES.filter((badge) => Boolean(savedProgress?.[badge.key]));
   const normalAchieved = derived.allWordsValid || Boolean(
     savedProgress?.firstSplitAt || savedProgress?.firstSilverAt || savedProgress?.firstGoldAt,
   );
@@ -901,17 +925,23 @@ export default function App() {
         const level = content.levels.find((item) => item.id === entry.levelID);
         const today = entry.date === localDateKey(now);
         const tier = level ? highestPuzzleTier(level, persisted.levels[entry.levelID], words ?? EMPTY_WORDS) : "none";
+        const puzzleProgress = persisted.levels[entry.levelID];
+        const puzzleBadges = BADGES.filter((badge) => Boolean(puzzleProgress?.[badge.key]));
         const tierLabel = tier === "none" ? "not completed" : `${tier} tier`;
+        const badgeLabel = puzzleBadges.length ? `, ${puzzleBadges.map((badge) => badge.name).join(" and ")}` : "";
         return <button
           key={entry.date}
           className={`puzzle-date-button tier-${tier}`}
           data-date={entry.date}
-          aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}`}
+          aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}${badgeLabel}`}
           aria-pressed={entry.levelID === activeLevel.id}
           onClick={() => handlePuzzleSelection(entry.levelID)}
         >
           <span className="puzzle-date-month">{MONTH_ABBREVIATIONS[date.getMonth()]}</span>
           <strong className="puzzle-date-day">{date.getDate()}</strong>
+          {puzzleBadges.length > 0 && <span className="puzzle-tile-badges" aria-hidden="true">
+            {puzzleBadges.map((badge) => <img src={badge.icon} alt="" key={badge.key} />)}
+          </span>}
         </button>;
       })}
     </div>
@@ -1118,7 +1148,7 @@ export default function App() {
 
           <div className="game-toolbar">
             <button className="undo-action" aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
-            <button className="hint-action" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><Lightbulb /><span>Hint</span></button>
+            <button className="hint-action" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><img src={hintIcon} alt="" aria-hidden="true" /><span>Hint</span></button>
             <button className="recall-action" aria-label="Recall" onClick={() => send({ type: "RECALL" })} disabled={!canRecall}><RotateCcw /><span>Recall</span></button>
           </div>
         </main>
@@ -1176,7 +1206,7 @@ export default function App() {
 
       {modal === "stats" && <Modal title="Daily Stats" onClose={() => setModal(null)} wide>
         <div className="modal-stats">
-          <section className="stats-streak-card" aria-labelledby="streaks-heading">
+          {SHOW_STREAKS_IN_STATS && <section className="stats-streak-card" aria-labelledby="streaks-heading">
             <h3 id="streaks-heading">Streaks</h3>
             {([
               ["Perfect Split", "gold", stats.tiers.perfect],
@@ -1190,7 +1220,7 @@ export default function App() {
                 <small>Best: {tier.bestStreak} {tier.bestStreak === 1 ? "day" : "days"}</small>
               </div>
             </div>)}
-          </section>
+          </section>}
           <section className="stats-progress" aria-labelledby="progress-heading">
             <h3 id="progress-heading">Progress</h3>
             <div
@@ -1218,7 +1248,18 @@ export default function App() {
       </Modal>}
 
       {modal === "victory" && <Modal title="Perfect Split!" onClose={() => setModal(null)}>
-        <div className="victory-content"><span className="victory-seal" aria-hidden="true"><span className="victory-banana" /></span><p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p><button className="primary-button" onClick={shareResult}><Share2 />Share result</button></div>
+        <div className="victory-content">
+          <span className="victory-seal" aria-hidden="true"><span className="victory-banana" /></span>
+          <p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p>
+          {earnedBadges.length > 0 && <div className="victory-badges" aria-label="Badges earned">
+            {earnedBadges.map((badge) => <div className="victory-badge" key={badge.key}>
+              <img src={badge.icon} alt="" aria-hidden="true" />
+              <strong>{badge.name}</strong>
+              <span>{badge.description}</span>
+            </div>)}
+          </div>}
+          <button className="primary-button" onClick={shareResult}><Share2 />Share result</button>
+        </div>
       </Modal>}
     </div>
   );

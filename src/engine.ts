@@ -41,6 +41,7 @@ export function createGame(level: LevelDefinition, progress?: LevelProgress): Ga
     sourceSlots: validProgress ? structuredClone(progress.sourceSlots) : initialSource,
     targetSlots: validProgress ? structuredClone(progress.targetSlots) : initialTarget,
     hintedRows: validProgress ? [...progress.hintedRows] : [],
+    usedHint: validProgress ? (progress.usedHint ?? progress.hintedRows.length > 0) : false,
     history: validProgress ? structuredClone(progress.history).slice(-20) : [],
     elapsedMs: validProgress ? progress.elapsedMs : 0,
     splitElapsedMs: validProgress ? progress.splitElapsedMs : null,
@@ -191,6 +192,7 @@ function hint(state: GameState, level: LevelDefinition): GameState {
     if (destination) setLocation(next, destination, id);
   });
   next.hintedRows.push(row);
+  next.usedHint = true;
   next.history = [];
   return next;
 }

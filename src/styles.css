@@ -153,6 +153,7 @@ h1, h2, h3, strong, b { font-weight: 500; }
   justify-content: center;
   line-height: 1;
   cursor: pointer;
+  position: relative;
 }
 .puzzle-date-button:hover:not([aria-pressed="true"]) { box-shadow: none; filter: brightness(.97); }
 .puzzle-date-button[aria-pressed="true"] { outline: 0; box-shadow: inset 0 0 0 2px #000; }
@@ -171,6 +172,19 @@ h1, h2, h3, strong, b { font-weight: 500; }
 .puzzle-date-placeholder { width: 100%; aspect-ratio: 1; visibility: hidden; }
 .puzzle-date-month { font-size: var(--puzzle-month-size); font-weight: 500; letter-spacing: .04em; }
 .puzzle-date-day { font-size: calc(var(--puzzle-month-size) * 2); line-height: .95; }
+.puzzle-tile-badges {
+  position: absolute;
+  right: 0;
+  bottom: 9%;
+  left: 0;
+  height: 14.4%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8%;
+  pointer-events: none;
+}
+.puzzle-tile-badges img { width: auto; height: 100%; opacity: .5; }
 
 .game-area {
   container-type: size;
@@ -329,6 +343,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .game-toolbar .hint-action:hover:not(:disabled) { border-color: #494949; background: #494949; }
 .game-toolbar .hint-action:disabled { border-color: var(--silver); background: var(--silver); color: #fff; }
 .game-toolbar .hint-action svg { width: 55%; height: 55%; stroke-width: 2.4; }
+.game-toolbar .hint-action img { width: 55%; height: 55%; object-fit: contain; filter: invert(1); }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgb(0 0 0 / 28%); display: grid; place-items: center; padding: 22px; backdrop-filter: blur(3px); }
 .modal { width: min(520px, 100%); max-height: min(760px, 90vh); overflow: auto; position: relative; background: white; border-radius: 20px; padding: 42px 44px 38px; box-shadow: 0 20px 80px rgb(0 0 0 / 26%); }
@@ -397,6 +412,30 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .victory-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .victory-seal { position: relative; width: 110px; height: 110px; border-radius: 50%; background: var(--blank); display: grid; place-items: center; box-shadow: 0 0 0 9px #fff4c8; animation: victory-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
 .victory-banana { position: absolute; z-index: 1; width: 145%; aspect-ratio: 892 / 556; background: var(--gold); -webkit-mask: url("../splithappensbanana.svg") center / contain no-repeat; mask: url("../splithappensbanana.svg") center / contain no-repeat; pointer-events: none; }
+.victory-content > p { margin: 26px 0 20px; font-weight: 600; }
+.victory-badges {
+  width: 100%;
+  margin: -2px 0 20px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 28px;
+}
+.victory-badge {
+  width: min(180px, calc((100% - 28px) / 2));
+  min-height: 144px;
+  padding: 18px 14px 16px;
+  border-radius: 18px;
+  background: var(--blank);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  line-height: 1.15;
+}
+.victory-badge img { width: 38.4px; height: 38.4px; margin-bottom: 6px; object-fit: contain; }
+.victory-badge strong { font-size: 16px; font-weight: 600; }
+.victory-badge span { max-width: 150px; color: #4f4b45; font-size: 14px; }
 .primary-button { border: 0; border-radius: 9px; background: var(--yellow); min-height: 48px; padding: 0 22px; font-weight: 500; display: inline-flex; align-items: center; gap: 9px; cursor: pointer; }
 .toast { position: fixed; z-index: 80; left: 50%; bottom: 26px; transform: translateX(-50%); background: #191919; color: white; padding: 12px 18px; border-radius: 8px; box-shadow: var(--shadow); }
 .drag-tile { position: fixed; z-index: 100; pointer-events: none; display: grid; place-items: center; margin: 0; opacity: .5; transition: none; cursor: grabbing; }
@@ -492,6 +531,17 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .stats-streak-card { padding: 22px 24px 18px; border-radius: 22px; }
   .stats-streak-row { grid-template-columns: 46px minmax(0, 1fr); gap: 18px; }
   .stats-flame { width: 46px; height: 46px; }
+  .victory-badges { gap: 16px; }
+  .victory-badge { width: min(180px, calc((100% - 16px) / 2)); }
+}
+
+@media (max-width: 430px) {
+  .victory-content > p { margin-block: 22px 16px; font-size: 14px; }
+  .victory-badges { margin-bottom: 14px; gap: 10px; }
+  .victory-badge { width: min(148px, calc((100% - 10px) / 2)); min-height: 112px; padding: 10px 8px; border-radius: 12px; }
+  .victory-badge img { width: 28.8px; height: 28.8px; margin-bottom: 3px; }
+  .victory-badge strong { font-size: 14px; }
+  .victory-badge span { font-size: 11px; }
 }
 
 @media (hover: none) and (pointer: coarse) and (max-height: 780px) {

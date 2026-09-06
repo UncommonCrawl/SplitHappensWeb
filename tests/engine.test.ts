@@ -101,6 +101,7 @@ describe("game engine", () => {
     let state = reduce(createGame(level), { type: "HINT" });
     expect(deriveGame(state, level, words).rowWords[0]).toBe("CAT");
     expect(state.hintedRows).toEqual([0]);
+    expect(state.usedHint).toBe(true);
     const locked = state;
     state = reduce(state, { type: "RETURN", tileID: state.targetSlots[0][0]! });
     expect(state).toEqual(locked);
@@ -115,6 +116,7 @@ describe("game engine", () => {
     expect(state.sourceSlots).toEqual(initial.sourceSlots);
     expect(state.targetSlots).toEqual(initial.targetSlots);
     expect(state.hintedRows).toEqual([]);
+    expect(state.usedHint).toBe(true);
     expect(state.history).toEqual([]);
     expect(reduce(state, { type: "UNDO" })).toEqual(state);
   });
