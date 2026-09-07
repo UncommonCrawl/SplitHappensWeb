@@ -111,6 +111,29 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(nextButton.locator("svg")).toHaveCSS("opacity", "0.22");
 });
 
+test("supports permanent numbered puzzle URLs and document titles", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveTitle("Split Happens");
+
+  await page.goto("/7");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveTitle("September 7 - 'PART' | Split Happens");
+  await expect(page.locator(".level-title:visible")).toContainText("'PART'");
+
+  await openSidebarIfNeeded(page);
+  await page.locator('[data-date="2026-09-06"]').click();
+  await expect(page).toHaveURL(/\/6$/);
+  await expect(page).toHaveTitle("September 6 - 'DIEHARD' | Split Happens");
+  await page.goBack();
+  await expect(page).toHaveURL(/\/7$/);
+  await expect(page).toHaveTitle("September 7 - 'PART' | Split Happens");
+
+  await page.goto("/9999");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveTitle("Split Happens");
+});
+
 test("links the level title to Wikipedia in the visible responsive header", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });

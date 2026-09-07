@@ -10,6 +10,7 @@ import { loadPuzzleContent, loadWords, localDateKey, parseLocalDate, staticAsset
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
 import { awardVictoryBadges, loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
 import { highestPuzzleTier, recentScheduleEntries } from "./recentPuzzles";
+import { MAIN_TITLE, puzzleDocumentTitle, puzzleNumberForLevel, resolvePuzzleRoute } from "./routing";
 import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 import { wikipediaArticleURL } from "./wikipedia";
@@ -338,6 +339,7 @@ export default function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [persisted, setPersisted] = useState<PersistedAppState>(() => loadPersistedState());
   const [activeLevelID, setActiveLevelID] = useState<string | null>(null);
+  const [routePuzzleNumber, setRoutePuzzleNumber] = useState<number | null>(null);
   const [game, setGame] = useState<GameState | null>(null);
   const [selectedTile, setSelectedTile] = useState<TileID | null>(null);
   const [selectedTargetSlot, setSelectedTargetSlot] = useState<SlotID | null>(null);
@@ -436,10 +438,12 @@ export default function App() {
     setWords(null);
     loadPuzzleContent().then((snapshot) => {
       setContent(snapshot);
-      const today = localDateKey();
-      const released = snapshot.schedule.filter((entry) => entry.date <= today);
-      const selected = snapshot.schedule.find((entry) => entry.date === today) ?? released.at(-1);
-      setActiveLevelID(selected?.levelID ?? null);
+      const route = resolvePuzzleRoute(window.location.pathname, snapshot.schedule, localDateKey());
+      setActiveLevelID(route.entry?.levelID ?? null);
+      setRoutePuzzleNumber(route.puzzleNumber);
+      if (window.location.pathname !== route.canonicalPath) {
+        window.history.replaceState(null, "", route.canonicalPath);
+      }
     }).catch((error: unknown) => setLoadError(error instanceof Error ? error.message : "The puzzles could not be loaded."));
     loadWords()
       .then(setWords)
@@ -447,6 +451,20 @@ export default function App() {
   }, []);
 
   useEffect(refreshContent, [refreshContent]);
+  useEffect(() => {
+    if (!content) return;
+    const handlePopState = () => {
+      const route = resolvePuzzleRoute(window.location.pathname, content.schedule, localDateKey());
+      setActiveLevelID(route.entry?.levelID ?? null);
+      setRoutePuzzleNumber(route.puzzleNumber);
+      if (window.location.pathname !== route.canonicalPath) {
+        window.history.replaceState(null, "", route.canonicalPath);
+      }
+      setModal(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [content]);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(timer);
@@ -509,6 +527,12 @@ export default function App() {
   const recentEntries = useMemo(() => recentScheduleEntries(content?.schedule ?? [], now, 9, archivePage), [content, now, archivePage]);
   const hasPreviousPage = releasedEntries.length > (archivePage + 1) * 9;
   const hasNextPage = archivePage > 0;
+
+  useEffect(() => {
+    document.title = routePuzzleNumber !== null && scheduleEntry && activeLevel
+      ? puzzleDocumentTitle(scheduleEntry, activeLevel.goldWord)
+      : MAIN_TITLE;
+  }, [activeLevel, routePuzzleNumber, scheduleEntry]);
 
   useLayoutEffect(() => {
     if (isConstrained) {
@@ -1084,6 +1108,11 @@ export default function App() {
     if (isConstrained) closeDrawer();
   };
   const handlePuzzleSelection = (levelID: string) => {
+    const puzzleNumber = puzzleNumberForLevel(content.schedule, levelID);
+    if (puzzleNumber !== null) {
+      window.history.pushState(null, "", `/${puzzleNumber}`);
+      setRoutePuzzleNumber(puzzleNumber);
+    }
     setActiveLevelID(levelID);
     setModal(null);
     if (isConstrained) closeDrawer();
