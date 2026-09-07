@@ -1,8 +1,34 @@
 import { describe, expect, it } from "vitest";
+import scheduleDocument from "../public/daily_schedule.json";
 import levelsDocument from "../public/levels.json";
 import { normalizeLevel } from "../src/content";
+import { recentScheduleEntries } from "../src/recentPuzzles";
 
 describe("production level corpus", () => {
+  it("releases the level sequence daily beginning September 1, 2026", () => {
+    expect(scheduleDocument.schedule[0]?.date).toBe("2026-09-01");
+
+    for (let index = 1; index < scheduleDocument.schedule.length; index += 1) {
+      const previous = new Date(`${scheduleDocument.schedule[index - 1].date}T00:00:00Z`);
+      const current = new Date(`${scheduleDocument.schedule[index].date}T00:00:00Z`);
+      expect(current.getTime() - previous.getTime()).toBe(24 * 60 * 60 * 1000);
+    }
+
+    const visible = recentScheduleEntries(
+      scheduleDocument.schedule.map((entry) => ({ date: entry.date, levelID: entry.ID })),
+      new Date(2026, 8, 7, 12),
+    );
+    expect(visible.map((entry) => entry.date)).toEqual([
+      "2026-09-01",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-04",
+      "2026-09-05",
+      "2026-09-06",
+      "2026-09-07",
+    ]);
+  });
+
   it("normalizes every level with conserved letters and valid gold expectations", () => {
     const levels = levelsDocument.levels.map((level) => normalizeLevel(level));
     expect(levels.length).toBeGreaterThan(100);
