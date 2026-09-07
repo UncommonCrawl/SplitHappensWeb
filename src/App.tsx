@@ -105,15 +105,160 @@ function longDate(date: Date): string {
 const MONTH_ABBREVIATIONS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  const modalRef = useRef<HTMLElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const modal = modalRef.current;
+    const focusable = () => Array.from(modal?.querySelectorAll<HTMLElement>("button:not(:disabled), [href], [tabindex]:not([tabindex='-1'])") ?? []);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    window.requestAnimationFrame(() => focusable()[0]?.focus());
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previouslyFocused && previouslyFocused !== document.body) {
+        window.requestAnimationFrame(() => previouslyFocused.focus());
+      }
+    };
+  }, []);
+
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className={`modal ${wide ? "modal-wide" : ""}`} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <section ref={modalRef} className={`modal ${wide ? "modal-wide" : ""}`} role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <button className="icon-button modal-close" onClick={onClose} aria-label="Close"><X /></button>
         <h2 id="modal-title">{title}</h2>
         {children}
       </section>
     </div>
   );
+}
+
+type HelpTileTone = "blank" | "empty" | "source" | "valid" | "invalid" | "gold" | "correctGold";
+
+function HelpTile({ letter, tone }: { letter?: string; tone: HelpTileTone }) {
+  return <span className={`help-tile help-tile-${tone}`} aria-hidden="true">{letter}</span>;
+}
+
+function HelpBoard({ rows, tones }: { rows: string[]; tones: HelpTileTone[][] }) {
+  return <div className="help-board" aria-hidden="true">
+    {rows.map((row, rowIndex) => <div className="help-board-row" key={`${row}-${rowIndex}`}>
+      {[...row].map((letter, columnIndex) => <HelpTile
+        key={`${rowIndex}-${columnIndex}`}
+        letter={letter === " " ? undefined : letter}
+        tone={tones[rowIndex]?.[columnIndex] ?? "blank"}
+      />)}
+    </div>)}
+  </div>;
+}
+
+const EMPTY_TARGET_TONES: HelpTileTone[][] = Array.from({ length: 3 }, () => Array(3).fill("empty"));
+const VALID_TARGET_TONES: HelpTileTone[][] = Array.from({ length: 3 }, () => Array(3).fill("valid"));
+const SOURCE_TONES: HelpTileTone[][] = Array.from({ length: 2 }, (_, row) => Array(row + 4).fill("source"));
+const BLANK_SOURCE_TONES: HelpTileTone[][] = Array.from({ length: 2 }, (_, row) => Array(row + 4).fill("blank"));
+
+const HELP_PAGES = [
+  {
+    description: <>Rearrange every letter to form a valid English word in each row.</>,
+    before: <div className="help-example-stack">
+      <HelpBoard rows={["   ", "   ", "   "]} tones={EMPTY_TARGET_TONES} />
+      <HelpBoard rows={["LEAF", "STEEP"]} tones={SOURCE_TONES} />
+    </div>,
+    after: <div className="help-example-stack">
+      <HelpBoard rows={["SET", "   ", "FPL"]} tones={[
+        ["valid", "valid", "valid"],
+        ["empty", "empty", "empty"],
+        ["invalid", "invalid", "invalid"],
+      ]} />
+      <HelpBoard rows={[" EA ", "   E "]} tones={[
+        ["blank", "source", "source", "blank"],
+        ["blank", "blank", "blank", "source", "blank"],
+      ]} />
+    </div>,
+  },
+  {
+    description: <>
+      <span>Complete a goal to unlock the next tier.</span>
+      <span>To complete Hard and Perfect Split tiers, all previous criteria must be met.</span>
+      <div className="help-criteria" aria-label="Hard tier criteria">
+        <span className="help-criterion-complete">REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS</span>
+        <span>ROW TWO MUST BEGIN WITH F</span>
+      </div>
+    </>,
+    before: <div className="help-example-stack">
+      <HelpBoard rows={["LET", "SAP", "FEE"]} tones={VALID_TARGET_TONES} />
+      <HelpBoard rows={["    ", "     "]} tones={BLANK_SOURCE_TONES} />
+    </div>,
+    after: <div className="help-example-stack">
+      <HelpBoard rows={["LET", "FEE", "SAP"]} tones={VALID_TARGET_TONES} />
+      <HelpBoard rows={["    ", "     "]} tones={BLANK_SOURCE_TONES} />
+    </div>,
+  },
+  {
+    description: <>
+      <span>For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</span>
+      <div className="help-criteria" aria-label="Perfect Split criteria">
+        <span className="help-criterion-complete">REARRANGE ALL LETTERS INTO VALID ENGLISH WORDS</span>
+        <span className="help-criterion-complete">ROW TWO MUST BEGIN WITH F</span>
+        <span>GOLD LETTERS MUST SPELL <em>TEA</em></span>
+      </div>
+    </>,
+    before: <div className="help-example-stack">
+      <HelpBoard rows={["LAP", "FEE", "SET"]} tones={[
+        ["valid", "valid", "gold"],
+        ["valid", "gold", "valid"],
+        ["valid", "gold", "valid"],
+      ]} />
+      <HelpBoard rows={["    ", "     "]} tones={BLANK_SOURCE_TONES} />
+    </div>,
+    after: <div className="help-example-stack">
+      <HelpBoard rows={["LET", "FEE", "SAP"]} tones={[
+        ["valid", "valid", "correctGold"],
+        ["valid", "correctGold", "valid"],
+        ["valid", "correctGold", "valid"],
+      ]} />
+      <HelpBoard rows={["    ", "     "]} tones={BLANK_SOURCE_TONES} />
+    </div>,
+  },
+] as const;
+
+function HowToPlay() {
+  const [page, setPage] = useState(0);
+  const current = HELP_PAGES[page];
+
+  return <div className="how-to-play">
+    <div className="help-description">{current.description}</div>
+    <div className="help-transformation" aria-label={`Example for instruction ${page + 1} of ${HELP_PAGES.length}`}>
+      {current.before}
+      <ArrowRight className="help-example-arrow" aria-hidden="true" />
+      {current.after}
+    </div>
+    <div className="help-pagination">
+      <button type="button" aria-label="Previous instruction" disabled={page === 0} onClick={() => setPage((currentPage) => currentPage - 1)}><ArrowLeft /></button>
+      <span className="visually-hidden" aria-live="polite">Instruction {page + 1} of {HELP_PAGES.length}</span>
+      <button type="button" aria-label="Next instruction" disabled={page === HELP_PAGES.length - 1} onClick={() => setPage((currentPage) => currentPage + 1)}><ArrowRight /></button>
+    </div>
+  </div>;
 }
 
 function LoadingScreen({ error, retry }: { error?: string; retry?: () => void }) {
@@ -179,7 +324,6 @@ export default function App() {
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const helpButtonRef = useRef<HTMLButtonElement>(null);
-  const helpDrawerRef = useRef<HTMLElement>(null);
 
   const pulseAchievements = useCallback((tones: AchievementTone[], preview = false) => {
     if (achievementPulseTimer.current !== null) window.clearTimeout(achievementPulseTimer.current);
@@ -259,11 +403,6 @@ export default function App() {
     if (restoreFocus) window.requestAnimationFrame(() => hamburgerRef.current?.focus());
   }, []);
 
-  const closeHelpDrawer = useCallback((restoreFocus = true) => {
-    setModal(null);
-    if (restoreFocus) window.requestAnimationFrame(() => helpButtonRef.current?.focus());
-  }, []);
-
   useEffect(() => {
     const drawer = drawerRef.current;
     if (drawer) drawer.inert = isConstrained && !drawerOpen;
@@ -298,42 +437,6 @@ export default function App() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [closeDrawer, drawerOpen, isConstrained]);
-
-  useEffect(() => {
-    const drawer = helpDrawerRef.current;
-    const helpDrawerOpen = isConstrained && modal === "how";
-    if (drawer) drawer.inert = !helpDrawerOpen;
-    if (!drawer || !helpDrawerOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const focusable = () => Array.from(drawer.querySelectorAll<HTMLElement>("button:not(:disabled), [href], [tabindex]:not([tabindex='-1'])"));
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeHelpDrawer();
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const elements = focusable();
-      if (!elements.length) return;
-      const first = elements[0];
-      const last = elements[elements.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    window.requestAnimationFrame(() => focusable()[0]?.focus());
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [closeHelpDrawer, isConstrained, modal]);
 
   const activeLevel = useMemo(() => content?.levels.find((level) => level.id === activeLevelID) ?? null, [content, activeLevelID]);
   const scheduleEntry = useMemo(() => content?.schedule.find((entry) => entry.levelID === activeLevelID) ?? null, [content, activeLevelID]);
@@ -972,8 +1075,7 @@ export default function App() {
           ref={helpButtonRef}
           className="mobile-help-button"
           aria-label="How to Play"
-          aria-controls="help-sidebar"
-          aria-expanded={isConstrained && modal === "how"}
+          aria-haspopup="dialog"
           onClick={() => setModal("how")}
         ><HelpCircle /></button>
       </header>
@@ -1168,40 +1270,11 @@ export default function App() {
       ><span className="tile-letter">{game.tiles[drag.tileID].character}</span></div>}
       {toast && <div className="toast" role="status">{toast}</div>}
 
-      {isConstrained && modal === "how" && <button className="drawer-backdrop help-drawer-backdrop" aria-label="Dismiss How to Play" onClick={() => closeHelpDrawer()} />}
-
-      {isConstrained && <aside
-        ref={helpDrawerRef}
-        id="help-sidebar"
-        className={`help-sidebar ${modal === "how" ? "drawer-open" : ""}`}
-        role="dialog"
-        aria-modal={modal === "how" ? "true" : undefined}
-        aria-labelledby="help-sidebar-title"
-        aria-hidden={modal !== "how" ? "true" : undefined}
-      >
-        <header className="drawer-header help-drawer-header">
-          <h2 id="help-sidebar-title" className="drawer-title">How to Play</h2>
-          <button className="drawer-close help-drawer-close" aria-label="Close How to Play" onClick={() => closeHelpDrawer()}><X /></button>
-        </header>
-        <div className="instructions">
-          <p>Rearrange every letter to form a valid English word in each row.</p>
-          <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
-          <section className="popup-controls" aria-labelledby="popup-controls-title">
-            <h3 id="popup-controls-title" className="drawer-title">Controls</h3>
-            <p>Click to select</p>
-            <p>Drag to place</p>
-            <p>Click any two tiles to swap positions</p>
-            <p>Double-click to move tile to/from source</p>
-          </section>
-        </div>
-      </aside>}
-
-      {modal === "how" && !isConstrained && <Modal title="How to Play" onClose={() => setModal(null)}>
-        <div className="instructions">
-          <p>Rearrange every letter to form a valid English word in each row.</p>
-          <p>Complete the Normal, Hard, and Perfect Split goals in order. For a Perfect Split, the highlighted target tiles must spell the featured word from top to bottom.</p>
-          <p>Drag letters, or select a letter and then choose a target square. Double-click a placed tile to return it.</p>
-        </div>
+      {modal === "how" && <Modal title="How to Play" onClose={() => {
+        setModal(null);
+        if (isConstrained) window.requestAnimationFrame(() => helpButtonRef.current?.focus());
+      }}>
+        <HowToPlay />
       </Modal>}
 
       {modal === "stats" && <Modal title="Daily Stats" onClose={() => setModal(null)} wide>

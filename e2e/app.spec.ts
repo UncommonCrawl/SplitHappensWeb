@@ -87,7 +87,9 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   }
   const howToPlay = page.getByRole("dialog");
   await expect(howToPlay).toContainText("Rearrange every letter");
-  await expect(howToPlay).toContainText("Normal, Hard, and Perfect Split");
+  await howToPlay.getByRole("button", { name: "Next instruction" }).click();
+  await expect(howToPlay).toContainText("Complete a goal to unlock the next tier");
+  await expect(howToPlay).toContainText("Hard and Perfect Split tiers");
   await expect(howToPlay).not.toContainText("Holy Split");
   await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
   await page.getByRole("button", { name: "Close" }).click();
@@ -1131,7 +1133,7 @@ const layoutViewports = [
   { width: 360, height: 640 },
 ];
 
-test("uses an accessible sidebar drawer at constrained widths", async ({ page }) => {
+test("uses an accessible help popup and sidebar drawer at constrained widths", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
@@ -1148,36 +1150,36 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
 
   await help.click();
   const helpPopup = page.getByRole("dialog", { name: "How to Play" });
-  await expect(help).toHaveAttribute("aria-expanded", "true");
   await expect(helpPopup).toContainText("Rearrange every letter");
-  await expect(helpPopup).toHaveClass(/help-sidebar/);
-  await expect(helpPopup).toHaveClass(/drawer-open/);
+  await expect(helpPopup).toHaveClass(/modal/);
   await expect(helpPopup).toHaveCSS("background-color", "rgb(255, 255, 255)");
   const helpHeading = helpPopup.getByRole("heading", { name: "How to Play" });
-  const menuHeadingStyles = await drawer.locator(".drawer-title").evaluate((element) => {
-    const styles = getComputedStyle(element);
-    return { fontSize: styles.fontSize, fontWeight: styles.fontWeight, letterSpacing: styles.letterSpacing };
-  });
-  await expect(helpHeading).toHaveCSS("font-size", menuHeadingStyles.fontSize);
-  await expect(helpHeading).toHaveCSS("font-weight", menuHeadingStyles.fontWeight);
-  await expect(helpHeading).toHaveCSS("letter-spacing", menuHeadingStyles.letterSpacing);
   await expect(helpHeading).toHaveCSS("text-align", "center");
-  await expect(helpPopup.locator(".instructions")).toHaveCSS("text-align", "left");
-  await expect(helpPopup.getByRole("button", { name: "Close How to Play" })).toBeFocused();
-  const controlsHeading = helpPopup.getByRole("heading", { name: "Controls" });
-  await expect(controlsHeading).toBeVisible();
-  await expect(controlsHeading).toHaveClass(/drawer-title/);
-  await expect(controlsHeading).toHaveCSS("font-size", menuHeadingStyles.fontSize);
-  await expect(controlsHeading).toHaveCSS("font-weight", menuHeadingStyles.fontWeight);
-  await expect(controlsHeading).toHaveCSS("letter-spacing", menuHeadingStyles.letterSpacing);
-  await expect(controlsHeading).toHaveCSS("text-align", "center");
-  await expect(helpPopup).toContainText("Click to select");
-  await expect(helpPopup).toContainText("Drag to place");
-  await expect(helpPopup).toContainText("Click any two tiles to swap positions");
-  await expect(helpPopup).toContainText("Double-click to move tile to/from source");
-  await helpPopup.getByRole("button", { name: "Close How to Play" }).click();
-  await expect(page.locator("#help-sidebar")).toHaveAttribute("aria-hidden", "true");
-  await expect(help).toHaveAttribute("aria-expanded", "false");
+  await expect(helpPopup.getByRole("button", { name: "Close" })).toBeFocused();
+  await expect(helpPopup.locator(".help-tile")).toHaveCount(36);
+  const previousInstruction = helpPopup.getByRole("button", { name: "Previous instruction" });
+  const nextInstruction = helpPopup.getByRole("button", { name: "Next instruction" });
+  await expect(previousInstruction).toBeDisabled();
+  await expect(nextInstruction).toBeEnabled();
+  await nextInstruction.click();
+  await expect(helpPopup).toContainText("Complete a goal to unlock the next tier");
+  await expect(helpPopup).toContainText("ROW TWO MUST BEGIN WITH F");
+  let helpCriteria = helpPopup.locator(".help-criteria > span");
+  await expect(helpCriteria).toHaveCount(2);
+  await expect(helpCriteria.nth(0)).toHaveCSS("color", "rgb(119, 119, 119)");
+  await expect(helpCriteria.nth(1)).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(previousInstruction).toBeEnabled();
+  await nextInstruction.click();
+  await expect(helpPopup).toContainText("GOLD LETTERS MUST SPELL TEA");
+  helpCriteria = helpPopup.locator(".help-criteria > span");
+  await expect(helpCriteria).toHaveCount(3);
+  await expect(helpCriteria.nth(0)).toHaveCSS("color", "rgb(119, 119, 119)");
+  await expect(helpCriteria.nth(1)).toHaveCSS("color", "rgb(119, 119, 119)");
+  await expect(helpCriteria.nth(2)).toHaveCSS("color", "rgb(0, 0, 0)");
+  await expect(helpPopup.locator(".help-tile-correctGold")).toHaveCount(3);
+  await expect(nextInstruction).toBeDisabled();
+  await helpPopup.getByRole("button", { name: "Close" }).click();
+  await expect(helpPopup).toBeHidden();
   await expect(help).toBeFocused();
 
   await help.click();
@@ -1185,7 +1187,7 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
   await expect(help).toBeFocused();
 
   await help.click();
-  await page.locator(".help-drawer-backdrop").click({ position: { x: 20, y: 20 } });
+  await page.locator(".modal-backdrop").click({ position: { x: 20, y: 20 } });
   await expect(help).toBeFocused();
 
   await menu.click();
@@ -1225,6 +1227,35 @@ test("uses an accessible sidebar drawer at constrained widths", async ({ page })
   const toolbarBox = await page.locator(".game-toolbar").boundingBox();
   expect(toolbarBox).not.toBeNull();
   if (toolbarBox) expect(718 - (toolbarBox.y + toolbarBox.height)).toBeGreaterThanOrEqual(4);
+});
+
+test("keeps every help page inside compact viewports", async ({ page }) => {
+  for (const viewport of [{ width: 390, height: 844 }, { width: 360, height: 640 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+    await page.locator(".mobile-header").getByRole("button", { name: "How to Play" }).click();
+
+    const popup = page.getByRole("dialog", { name: "How to Play" });
+    const next = popup.getByRole("button", { name: "Next instruction" });
+    for (let helpPage = 0; helpPage < 3; helpPage += 1) {
+      const popupBox = await popup.boundingBox();
+      const tiles = popup.locator(".help-tile");
+      const firstTile = await tiles.first().boundingBox();
+      const lastTile = await tiles.last().boundingBox();
+      expect(popupBox).not.toBeNull();
+      expect(firstTile).not.toBeNull();
+      expect(lastTile).not.toBeNull();
+      if (popupBox && firstTile && lastTile) {
+        expect(firstTile.x).toBeGreaterThanOrEqual(popupBox.x - 1);
+        expect(lastTile.x + lastTile.width).toBeLessThanOrEqual(popupBox.x + popupBox.width + 1);
+        expect(lastTile.y + lastTile.height).toBeLessThanOrEqual(popupBox.y + popupBox.height + 1);
+      }
+      expect(await popup.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+      if (helpPage < 2) await next.click();
+    }
+    await popup.getByRole("button", { name: "Close" }).click();
+  }
 });
 
 test("reserves a fifth target row and keeps four- and five-row tile sizes consistent", async ({ page }) => {
