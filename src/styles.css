@@ -177,7 +177,9 @@ h1, h2, h3, strong, b { font-weight: 500; }
   line-height: 1;
   cursor: pointer;
   position: relative;
+  transition: background-color 180ms ease-out;
 }
+.puzzle-date-button.pulsing { animation: level-tile-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
 .puzzle-date-button:hover:not([aria-pressed="true"]) { box-shadow: none; filter: brightness(.97); }
 .puzzle-date-button[aria-pressed="true"] { outline: 0; box-shadow: inset 0 0 0 2px #000; }
 .puzzle-date-button.tier-bronze { background: var(--bronze); }
@@ -611,6 +613,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 @keyframes victory-pulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.08); } }
 @keyframes victory-seal-spin { to { transform: rotate(-360deg); } }
 @keyframes trophy-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.14); } }
+@keyframes level-tile-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.08); } }
 
 @media (max-width: 620px), (max-height: 780px), (hover: none) and (pointer: coarse) {
   :root {

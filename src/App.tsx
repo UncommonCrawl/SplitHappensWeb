@@ -44,6 +44,11 @@ type AchievementPulse = {
   preview: boolean;
 };
 
+type PuzzleTilePulse = {
+  id: number;
+  levelID: string;
+};
+
 type BadgeDefinition = {
   key: "perfectSplit" | "licketySplit";
   name: string;
@@ -72,6 +77,20 @@ const TARGET_BOARD_HEIGHT_PERCENT = 45;
 const SOURCE_BOARD_HEIGHT_PERCENT = 18.75;
 const TILE_HEIGHT_SCALE = 0.9;
 const ACHIEVEMENT_PULSE_MS = 800;
+const PUZZLE_TILE_PULSE_MS = 800;
+
+function isVisibleOnscreen(element: HTMLElement): boolean {
+  if (document.visibilityState !== "visible" || element.closest('[aria-hidden="true"], [inert]')) return false;
+  const style = window.getComputedStyle(element);
+  if (style.display === "none" || style.visibility !== "visible" || Number(style.opacity) === 0) return false;
+  const bounds = element.getBoundingClientRect();
+  return bounds.width > 0
+    && bounds.height > 0
+    && bounds.right > 0
+    && bounds.bottom > 0
+    && bounds.left < window.innerWidth
+    && bounds.top < window.innerHeight;
+}
 
 function Seal({ tone, achieved = false, satisfied = false, pulsing = false }: { tone: AchievementTone; achieved?: boolean; satisfied?: boolean; pulsing?: boolean }) {
   return (
@@ -333,6 +352,7 @@ export default function App() {
   const [drag, setDrag] = useState<DragState | null>(null);
   const [dragHover, setDragHover] = useState<DragHover | null>(null);
   const [achievementPulse, setAchievementPulse] = useState<AchievementPulse | null>(null);
+  const [puzzleTilePulse, setPuzzleTilePulse] = useState<PuzzleTilePulse | null>(null);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
   const lastTargetSelectionClick = useRef<{ target: SlotID; at: number } | null>(null);
@@ -341,6 +361,9 @@ export default function App() {
   const previousAchievements = useRef<Record<AchievementTone, boolean>>({ bronze: false, silver: false, gold: false });
   const achievementPulseID = useRef(0);
   const achievementPulseTimer = useRef<number | null>(null);
+  const puzzleTilePulseID = useRef(0);
+  const puzzleTilePulseFrame = useRef<number | null>(null);
+  const puzzleTilePulseTimer = useRef<number | null>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const helpButtonRef = useRef<HTMLButtonElement>(null);
@@ -355,22 +378,44 @@ export default function App() {
     }, ACHIEVEMENT_PULSE_MS);
   }, []);
 
+  const pulsePuzzleTile = useCallback((levelID: string) => {
+    const tile = Array.from(document.querySelectorAll<HTMLElement>(".puzzle-date-button"))
+      .find((element) => element.dataset.levelId === levelID);
+    if (!tile || !isVisibleOnscreen(tile)) return;
+
+    if (puzzleTilePulseFrame.current !== null) window.cancelAnimationFrame(puzzleTilePulseFrame.current);
+    if (puzzleTilePulseTimer.current !== null) window.clearTimeout(puzzleTilePulseTimer.current);
+    setPuzzleTilePulse(null);
+    puzzleTilePulseFrame.current = window.requestAnimationFrame(() => {
+      puzzleTilePulseID.current += 1;
+      setPuzzleTilePulse({ id: puzzleTilePulseID.current, levelID });
+      puzzleTilePulseFrame.current = null;
+      puzzleTilePulseTimer.current = window.setTimeout(() => {
+        setPuzzleTilePulse(null);
+        puzzleTilePulseTimer.current = null;
+      }, PUZZLE_TILE_PULSE_MS);
+    });
+  }, []);
+
   useEffect(() => () => {
     if (achievementPulseTimer.current !== null) window.clearTimeout(achievementPulseTimer.current);
+    if (puzzleTilePulseFrame.current !== null) window.cancelAnimationFrame(puzzleTilePulseFrame.current);
+    if (puzzleTilePulseTimer.current !== null) window.clearTimeout(puzzleTilePulseTimer.current);
   }, []);
 
   useEffect(() => {
     if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) return;
     const handleLocalDevShortcut = (event: KeyboardEvent) => {
       if (!event.altKey || event.repeat) return;
-      if (event.code !== "KeyV" && event.code !== "KeyT") return;
+      if (event.code !== "KeyV" && event.code !== "KeyT" && event.code !== "KeyL") return;
       event.preventDefault();
       if (event.code === "KeyV") setModal("victory");
-      else pulseAchievements(["bronze", "silver", "gold"], true);
+      else if (event.code === "KeyT") pulseAchievements(["bronze", "silver", "gold"], true);
+      else if (activeLevelID) pulsePuzzleTile(activeLevelID);
     };
     window.addEventListener("keydown", handleLocalDevShortcut);
     return () => window.removeEventListener("keydown", handleLocalDevShortcut);
-  }, [pulseAchievements]);
+  }, [activeLevelID, pulseAchievements, pulsePuzzleTile]);
 
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
@@ -545,8 +590,11 @@ export default function App() {
     const newlyAchieved = (Object.keys(currentAchievements) as AchievementTone[])
       .filter((tone) => currentAchievements[tone] && !previousAchievements.current[tone]);
     previousAchievements.current = currentAchievements;
-    if (newlyAchieved.length) pulseAchievements(newlyAchieved);
-  }, [activeLevel, derived, game, persisted.levels, pulseAchievements]);
+    if (newlyAchieved.length) {
+      pulseAchievements(newlyAchieved);
+      pulsePuzzleTile(activeLevel.id);
+    }
+  }, [activeLevel, derived, game, persisted.levels, pulseAchievements, pulsePuzzleTile]);
 
   const send = useCallback((action: GameAction) => {
     if (!activeLevel || !words) return;
@@ -1054,8 +1102,9 @@ export default function App() {
         const badgeLabel = puzzleBadges.length ? `, ${puzzleBadges.map((badge) => badge.name).join(" and ")}` : "";
         return <button
           key={entry.date}
-          className={`puzzle-date-button tier-${tier}`}
+          className={`puzzle-date-button tier-${tier} ${puzzleTilePulse?.levelID === entry.levelID ? "pulsing" : ""}`}
           data-date={entry.date}
+          data-level-id={entry.levelID}
           aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}${badgeLabel}`}
           aria-pressed={entry.levelID === activeLevel.id}
           onClick={() => handlePuzzleSelection(entry.levelID)}

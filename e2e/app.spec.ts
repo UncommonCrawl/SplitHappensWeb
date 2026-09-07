@@ -217,6 +217,28 @@ test("previews all three trophy pulses without earning criteria", async ({ page 
   await expect(page.locator(".seal-trophy")).toHaveCount(0);
 });
 
+test("previews the visible level-tile pulse without changing its tier", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  const activePuzzleTile = page.locator('.puzzle-date-button[aria-pressed="true"]');
+  const tierBefore = (await activePuzzleTile.getAttribute("class"))?.match(/tier-(?:none|bronze|silver|gold)/)?.[0];
+  expect(tierBefore).toBeTruthy();
+  await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", {
+    altKey: true,
+    code: "KeyL",
+    key: "¬",
+  })));
+
+  if (await activePuzzleTile.isVisible()) {
+    await expect(activePuzzleTile).toHaveClass(/pulsing/);
+    await expect(activePuzzleTile).toHaveCSS("animation-name", "level-tile-pulse");
+  } else {
+    await expect(activePuzzleTile).not.toHaveClass(/pulsing/);
+  }
+  await expect(activePuzzleTile).toHaveClass(new RegExp(`\\b${tierBefore}\\b`));
+});
+
 test("shows nine equal recent-puzzle buttons ending with today and navigates by date", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
@@ -385,6 +407,14 @@ test("shows completed progression and uses Perfect Split for every victory", asy
   await expect(page.locator(".criterion-line.met")).toHaveCount(3);
   await expect(page.locator(".criterion-line.met").first()).toHaveCSS("color", "rgb(119, 119, 119)");
   await expect(page.locator('.puzzle-date-button[aria-pressed="true"]')).toHaveClass(/tier-gold/);
+  const activePuzzleTile = page.locator('.puzzle-date-button[aria-pressed="true"]');
+  if (await activePuzzleTile.isVisible()) {
+    await expect(activePuzzleTile).toHaveClass(/pulsing/);
+    await expect(activePuzzleTile).toHaveCSS("animation-name", "level-tile-pulse");
+    await expect(activePuzzleTile).toHaveCSS("transition-duration", "0.18s");
+  } else {
+    await expect(activePuzzleTile).not.toHaveClass(/pulsing/);
+  }
   await expect(page.locator(".tier-lock")).toHaveCount(0);
   await expect(page.locator(".seal.pulsing .seal-trophy")).toHaveCount(3);
   await expect(page.locator(".seal.pulsing .seal-trophy").first()).toHaveCSS("animation-name", "trophy-pulse");
