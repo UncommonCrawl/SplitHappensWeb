@@ -553,8 +553,19 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .archive-grid button strong { font-size: 19px; }
 .archive-grid button small { color: #666; }
 .victory-content { text-align: center; display: flex; flex-direction: column; align-items: center; font-size: var(--popup-body-size); line-height: var(--popup-body-line-height); }
-.victory-seal { position: relative; width: 110px; height: 110px; border-radius: 50%; background: var(--blank); display: grid; place-items: center; box-shadow: 0 0 0 9px #fff4c8; animation: victory-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
-.victory-banana { position: absolute; z-index: 1; width: 145%; aspect-ratio: 892 / 556; background: var(--gold); -webkit-mask: url("../splithappensbanana.svg") center / contain no-repeat; mask: url("../splithappensbanana.svg") center / contain no-repeat; pointer-events: none; }
+.victory-seal { position: relative; width: 128px; height: 154px; animation: victory-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
+.victory-seal::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 0;
+  width: 100%;
+  height: 128px;
+  background: #fff4c8;
+  clip-path: polygon(50% 0%, 56% 7%, 63% 2%, 67% 11%, 75% 7%, 77% 17%, 87% 15%, 86% 25%, 95% 25%, 91% 35%, 100% 39%, 93% 46%, 100% 52%, 92% 58%, 98% 66%, 88% 69%, 92% 79%, 81% 79%, 82% 90%, 72% 86%, 68% 97%, 59% 91%, 52% 100%, 46% 92%, 38% 99%, 34% 89%, 24% 94%, 23% 83%, 12% 85%, 15% 74%, 5% 72%, 11% 63%, 1% 59%, 8% 51%, 0% 44%, 9% 38%, 3% 30%, 14% 27%, 10% 17%, 21% 18%, 21% 7%, 31% 12%, 36% 2%, 44% 9%);
+  animation: victory-seal-spin 36s linear infinite;
+}
+.victory-banana { position: absolute; z-index: 1; top: 0; left: 50%; width: 145%; aspect-ratio: 892 / 556; background: var(--gold); transform: translateX(-50%); -webkit-mask: url("../splithappensbanana.svg") center / contain no-repeat; mask: url("../splithappensbanana.svg") center / contain no-repeat; pointer-events: none; }
 .victory-content > p { margin: var(--popup-section-gap) 0; font-weight: 600; }
 .victory-badges {
   width: 100%;
@@ -598,6 +609,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .app-shell-loading-content .mobile-header > * { visibility: hidden; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes victory-pulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.08); } }
+@keyframes victory-seal-spin { to { transform: rotate(-360deg); } }
 @keyframes trophy-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.14); } }
 
 @media (max-width: 620px), (max-height: 780px), (hover: none) and (pointer: coarse) {

@@ -358,10 +358,25 @@ test("shows completed progression and uses Perfect Split for every victory", asy
   await expect(page.getByRole("dialog")).toContainText("Perfect Split!");
   const victorySeal = page.locator(".victory-seal");
   const victoryBanana = victorySeal.locator(".victory-banana");
-  await expect(victorySeal).toHaveCSS("background-color", "rgb(250, 250, 248)");
   await expect(victorySeal).toHaveCSS("animation-name", "victory-pulse");
+  const sealBackdrop = await victorySeal.evaluate((element) => {
+    const style = getComputedStyle(element, "::before");
+    return {
+      animationDuration: style.animationDuration,
+      animationName: style.animationName,
+      backgroundColor: style.backgroundColor,
+      clipPath: style.clipPath,
+      top: style.top,
+    };
+  });
+  expect(sealBackdrop.animationDuration).toBe("36s");
+  expect(sealBackdrop.animationName).toBe("victory-seal-spin");
+  expect(sealBackdrop.backgroundColor).toBe("rgb(255, 244, 200)");
+  expect(sealBackdrop.clipPath).not.toBe("none");
+  expect(sealBackdrop.top).toBe("12px");
   await expect(victoryBanana).toHaveCSS("background-color", "rgb(255, 216, 107)");
   await expect(victoryBanana).not.toHaveCSS("mask-image", "none");
+  await expect(victorySeal).toHaveCSS("height", "154px");
   const victorySealBox = await victorySeal.boundingBox();
   const victoryBananaBox = await victoryBanana.boundingBox();
   expect(victoryBananaBox?.width).toBeGreaterThan(victorySealBox?.width ?? Infinity);
