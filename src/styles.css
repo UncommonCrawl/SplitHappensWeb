@@ -19,6 +19,7 @@
   --placeholder: #dedede;
   --valid: #def1d3;
   --invalid: #fbe2e0;
+  --invalid-text: #d93025;
   --bronze: #cca981;
   --silver: #d1d1d1;
   --gold: #ffd86b;
@@ -36,6 +37,7 @@
   --popup-body-line-height: 1.45;
   --popup-instruction-size: 15px;
   --popup-instruction-line-height: 1.25;
+  --popup-example-instruction-size: 14px;
   --popup-padding-top: 40px;
   --popup-padding-inline: 44px;
   --popup-padding-bottom: 36px;
@@ -371,6 +373,27 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .modal-wide { --popup-width: 860px; }
 .modal h2 { margin: 0 var(--popup-title-inline-margin) var(--popup-title-gap); text-align: center; font-size: var(--popup-title-size); line-height: var(--popup-title-line-height); }
 .modal:has(.recent-puzzles-popup) { --popup-width: 380px; }
+.modal:has(.controls-popup) { --popup-width: 440px; }
+.controls-popup {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.controls-popup-list { margin-block: auto; }
+.controls-popup-list p { margin: 0; }
+.controls-popup-list p + p { margin-top: 10px; }
+.controls-how-link {
+  align-self: center;
+  margin-top: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 .recent-puzzles-popup .puzzle-date-grid,
 .recent-puzzles-popup .puzzle-pagination { width: min(220px, 100%); margin-inline: auto; }
 .modal:has(.modal-stats) { --popup-width: 700px; }
@@ -421,9 +444,21 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .how-to-play {
   --help-tile-size: clamp(42px, 6.5dvh, 56px);
   --help-tile-gap: 8px;
-  display: grid;
-  gap: var(--popup-section-gap);
+  display: flex;
+  flex-direction: column;
 }
+.help-pages {
+  display: grid;
+}
+.help-page {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  align-content: start;
+  gap: var(--popup-section-gap);
+  visibility: hidden;
+}
+.help-page-active { visibility: visible; }
 .help-description {
   max-width: 540px;
   margin-inline: auto;
@@ -436,10 +471,14 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 }
 .help-description span { display: block; }
 .help-description em { color: var(--green); font-style: normal; }
-.help-criteria { display: grid; gap: 2px; font-size: var(--popup-instruction-size); line-height: var(--popup-instruction-line-height); text-transform: uppercase; }
+.help-valid-word, .help-invalid-word { font-weight: 600; }
+.help-valid-word { color: var(--green); }
+.help-invalid-word { color: var(--invalid-text); }
+.help-criteria { display: grid; gap: 2px; font-size: var(--popup-example-instruction-size); line-height: var(--popup-instruction-line-height); text-transform: uppercase; }
 .help-criterion-complete { color: #777; }
 .help-transformation {
   width: 100%;
+  align-self: end;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
   align-items: center;
@@ -483,7 +522,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .help-tile-gold { background: var(--gold); }
 .help-tile-correctGold { background: var(--correct-gold-fill); border: 1px solid var(--gold); box-shadow: var(--correct-gold-shadow); }
 .help-example-arrow { width: 30px; height: 30px; justify-self: center; stroke-width: 2.5; }
-.help-pagination { display: flex; justify-content: center; gap: 28px; }
+.help-pagination { margin-top: var(--popup-section-gap); display: flex; justify-content: center; gap: 28px; }
 .help-pagination button {
   width: 54px;
   height: 54px;
@@ -566,6 +605,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
     --popup-title-size: 26px;
     --popup-body-size: 15px;
     --popup-instruction-size: 13px;
+    --popup-example-instruction-size: 12px;
     --popup-padding-top: 34px;
     --popup-padding-inline: 22px;
     --popup-padding-bottom: 24px;
@@ -722,7 +762,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   .mobile-brand { min-width: 0; display: grid; justify-items: center; gap: 1px; text-align: center; }
   .mobile-wordmark { width: min(230px, 100%); height: 34px; object-fit: contain; }
   .mobile-brand h1 { margin: 0; font-size: 13px; line-height: 1.15; white-space: nowrap; }
-  .app-sidebar .sidebar-help-action, .app-sidebar .sidebar-controls { display: none; }
+  .app-sidebar .sidebar-controls { display: none; }
   .workspace { width: 100%; height: 100%; min-height: 0; overflow: hidden; padding: 8px 12px max(16px, env(safe-area-inset-bottom)); }
   .game-area { width: min(760px, 100%); height: 100%; min-height: 0; align-self: center; }
   .app-sidebar {

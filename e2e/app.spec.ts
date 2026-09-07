@@ -79,9 +79,10 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(page.locator(".stats-progress-bar")).toHaveCSS("overflow", "hidden");
   await expect(page.locator(".stats-progress-bar span").first()).toHaveCSS("border-radius", "0px");
   await page.getByRole("button", { name: "Close" }).click();
-  const headerHelp = page.locator(".mobile-header").getByRole("button", { name: "How to Play" });
+  const headerHelp = page.locator(".mobile-header").getByRole("button", { name: "Controls" });
   if (await headerHelp.isVisible()) {
     await headerHelp.click();
+    await page.getByRole("dialog", { name: "Controls" }).getByRole("button", { name: "How to Play" }).click();
   } else {
     await page.getByRole("button", { name: "How to Play" }).click();
   }
@@ -1140,7 +1141,7 @@ test("uses an accessible help popup and sidebar drawer at constrained widths", a
 
   const header = page.locator(".mobile-header");
   const menu = page.getByRole("button", { name: "Open sidebar menu" });
-  const help = header.getByRole("button", { name: "How to Play" });
+  const help = header.getByRole("button", { name: "Controls" });
   const drawer = page.locator("#sidebar-menu");
   await expect(header).toBeVisible();
   await expect(help).toBeVisible();
@@ -1149,14 +1150,26 @@ test("uses an accessible help popup and sidebar drawer at constrained widths", a
   await expect(drawer).toHaveAttribute("aria-hidden", "true");
 
   await help.click();
+  const controlsPopup = page.getByRole("dialog", { name: "Controls" });
+  await expect(controlsPopup).toContainText("Click to select");
+  await expect(controlsPopup).toContainText("Drag to place");
+  await expect(controlsPopup).toContainText("Click any two tiles to swap positions");
+  await expect(controlsPopup).toContainText("Double-click to move tile to/from source");
+  await controlsPopup.getByRole("button", { name: "How to Play" }).click();
   const helpPopup = page.getByRole("dialog", { name: "How to Play" });
   await expect(helpPopup).toContainText("Rearrange every letter");
+  await expect(helpPopup).toContainText("Valid words will light up in GREEN.");
+  await expect(helpPopup).toContainText("Invalid words will light up in RED.");
+  await expect(helpPopup.locator(".help-valid-word")).toHaveCSS("font-weight", "600");
+  await expect(helpPopup.locator(".help-valid-word")).toHaveCSS("color", "rgb(0, 176, 80)");
+  await expect(helpPopup.locator(".help-invalid-word")).toHaveCSS("font-weight", "600");
+  await expect(helpPopup.locator(".help-invalid-word")).toHaveCSS("color", "rgb(217, 48, 37)");
   await expect(helpPopup).toHaveClass(/modal/);
   await expect(helpPopup).toHaveCSS("background-color", "rgb(255, 255, 255)");
   const helpHeading = helpPopup.getByRole("heading", { name: "How to Play" });
   await expect(helpHeading).toHaveCSS("text-align", "center");
   await expect(helpPopup.getByRole("button", { name: "Close" })).toBeFocused();
-  await expect(helpPopup.locator(".help-tile")).toHaveCount(36);
+  await expect(helpPopup.locator(".help-page-active .help-tile")).toHaveCount(36);
   const previousInstruction = helpPopup.getByRole("button", { name: "Previous instruction" });
   const nextInstruction = helpPopup.getByRole("button", { name: "Next instruction" });
   await expect(previousInstruction).toBeDisabled();
@@ -1164,14 +1177,14 @@ test("uses an accessible help popup and sidebar drawer at constrained widths", a
   await nextInstruction.click();
   await expect(helpPopup).toContainText("Complete a goal to unlock the next tier");
   await expect(helpPopup).toContainText("ROW TWO MUST BEGIN WITH F");
-  let helpCriteria = helpPopup.locator(".help-criteria > span");
+  let helpCriteria = helpPopup.locator(".help-page-active .help-criteria > span");
   await expect(helpCriteria).toHaveCount(2);
   await expect(helpCriteria.nth(0)).toHaveCSS("color", "rgb(119, 119, 119)");
   await expect(helpCriteria.nth(1)).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(previousInstruction).toBeEnabled();
   await nextInstruction.click();
   await expect(helpPopup).toContainText("GOLD LETTERS MUST SPELL TEA");
-  helpCriteria = helpPopup.locator(".help-criteria > span");
+  helpCriteria = helpPopup.locator(".help-page-active .help-criteria > span");
   await expect(helpCriteria).toHaveCount(3);
   await expect(helpCriteria.nth(0)).toHaveCSS("color", "rgb(119, 119, 119)");
   await expect(helpCriteria.nth(1)).toHaveCSS("color", "rgb(119, 119, 119)");
@@ -1204,7 +1217,9 @@ test("uses an accessible help popup and sidebar drawer at constrained widths", a
   await expect(drawerHeading).toHaveCSS("letter-spacing", "normal");
   await expect(drawerHeading).toHaveCSS("text-align", "center");
   await expect(drawerHeading).toHaveCSS("text-transform", "none");
-  await expect(drawer.getByRole("button", { name: "How to Play" })).toBeHidden();
+  const drawerActions = drawer.locator(".sidebar-actions button");
+  await expect(drawerActions.first()).toHaveAccessibleName("How to Play");
+  await expect(drawerActions.first()).toBeVisible();
   await expect(drawer.locator(".sidebar-controls")).toBeHidden();
   await expect(drawer.locator(".sidebar-stats")).toHaveCSS("border-bottom-width", "0px");
 
@@ -1234,26 +1249,49 @@ test("keeps every help page inside compact viewports", async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/");
     await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
-    await page.locator(".mobile-header").getByRole("button", { name: "How to Play" }).click();
+    await page.locator(".mobile-header").getByRole("button", { name: "Controls" }).click();
+    await page.getByRole("dialog", { name: "Controls" }).getByRole("button", { name: "How to Play" }).click();
 
     const popup = page.getByRole("dialog", { name: "How to Play" });
     const next = popup.getByRole("button", { name: "Next instruction" });
+    const popupHeights: number[] = [];
+    const pageTops: number[] = [];
+    const boardBottoms: number[] = [];
+    const arrowTops: number[] = [];
     for (let helpPage = 0; helpPage < 3; helpPage += 1) {
       const popupBox = await popup.boundingBox();
-      const tiles = popup.locator(".help-tile");
+      const activePage = popup.locator(".help-page-active");
+      const tiles = activePage.locator(".help-tile");
       const firstTile = await tiles.first().boundingBox();
       const lastTile = await tiles.last().boundingBox();
       expect(popupBox).not.toBeNull();
       expect(firstTile).not.toBeNull();
       expect(lastTile).not.toBeNull();
+      if (popupBox) popupHeights.push(popupBox.height);
       if (popupBox && firstTile && lastTile) {
         expect(firstTile.x).toBeGreaterThanOrEqual(popupBox.x - 1);
         expect(lastTile.x + lastTile.width).toBeLessThanOrEqual(popupBox.x + popupBox.width + 1);
         expect(lastTile.y + lastTile.height).toBeLessThanOrEqual(popupBox.y + popupBox.height + 1);
       }
+      const arrowsBox = await popup.locator(".help-pagination").boundingBox();
+      const activePageBox = await activePage.boundingBox();
+      const boardsBox = await activePage.locator(".help-transformation").boundingBox();
+      expect(arrowsBox).not.toBeNull();
+      expect(activePageBox).not.toBeNull();
+      expect(boardsBox).not.toBeNull();
+      if (arrowsBox && activePageBox && boardsBox) {
+        pageTops.push(activePageBox.y);
+        boardBottoms.push(boardsBox.y + boardsBox.height);
+        arrowTops.push(arrowsBox.y);
+        expect(arrowsBox.y).toBeGreaterThanOrEqual(activePageBox.y + activePageBox.height - 1);
+      }
       expect(await popup.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
       if (helpPage < 2) await next.click();
     }
+    expect(Math.max(...popupHeights) - Math.min(...popupHeights)).toBeLessThanOrEqual(1);
+    expect(Math.max(...pageTops) - Math.min(...pageTops)).toBeLessThanOrEqual(1);
+    expect(Math.max(...boardBottoms) - Math.min(...boardBottoms)).toBeLessThanOrEqual(1);
+    expect(Math.max(...arrowTops) - Math.min(...arrowTops)).toBeLessThanOrEqual(1);
     await popup.getByRole("button", { name: "Close" }).click();
   }
 });

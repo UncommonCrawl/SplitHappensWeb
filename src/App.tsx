@@ -14,7 +14,7 @@ import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 import { wikipediaArticleURL } from "./wikipedia";
 
-type ModalName = "about" | "how" | "recent" | "stats" | "victory" | null;
+type ModalName = "about" | "controls" | "how" | "recent" | "stats" | "victory" | null;
 
 const SHOW_STREAKS_IN_STATS = false;
 
@@ -179,7 +179,11 @@ const BLANK_SOURCE_TONES: HelpTileTone[][] = Array.from({ length: 2 }, (_, row) 
 
 const HELP_PAGES = [
   {
-    description: <>Rearrange every letter to form a valid English word in each row.</>,
+    description: <>
+      <span>Rearrange every letter to form a valid English word in each row.</span>
+      <span>Valid words will light up in <strong className="help-valid-word">GREEN</strong>.</span>
+      <span>Invalid words will light up in <strong className="help-invalid-word">RED</strong>.</span>
+    </>,
     before: <div className="help-example-stack">
       <HelpBoard rows={["   ", "   ", "   "]} tones={EMPTY_TARGET_TONES} />
       <HelpBoard rows={["LEAF", "STEEP"]} tones={SOURCE_TONES} />
@@ -244,14 +248,21 @@ const HELP_PAGES = [
 
 function HowToPlay() {
   const [page, setPage] = useState(0);
-  const current = HELP_PAGES[page];
 
   return <div className="how-to-play">
-    <div className="help-description">{current.description}</div>
-    <div className="help-transformation" aria-label={`Example for instruction ${page + 1} of ${HELP_PAGES.length}`}>
-      {current.before}
-      <ArrowRight className="help-example-arrow" aria-hidden="true" />
-      {current.after}
+    <div className="help-pages">
+      {HELP_PAGES.map((helpPage, index) => <div
+        className={`help-page ${index === page ? "help-page-active" : ""}`}
+        aria-hidden={index !== page}
+        key={index}
+      >
+        <div className="help-description">{helpPage.description}</div>
+        <div className="help-transformation" aria-label={`Example for instruction ${index + 1} of ${HELP_PAGES.length}`}>
+          {helpPage.before}
+          <ArrowRight className="help-example-arrow" aria-hidden="true" />
+          {helpPage.after}
+        </div>
+      </div>)}
     </div>
     <div className="help-pagination">
       <button type="button" aria-label="Previous instruction" disabled={page === 0} onClick={() => setPage((currentPage) => currentPage - 1)}><ArrowLeft /></button>
@@ -259,6 +270,15 @@ function HowToPlay() {
       <button type="button" aria-label="Next instruction" disabled={page === HELP_PAGES.length - 1} onClick={() => setPage((currentPage) => currentPage + 1)}><ArrowRight /></button>
     </div>
   </div>;
+}
+
+function ControlsList() {
+  return <>
+    <p>Click to select</p>
+    <p>Drag to place</p>
+    <p>Click any two tiles to swap positions</p>
+    <p>Double-click to move tile to/from source</p>
+  </>;
 }
 
 function LoadingScreen({ error, retry }: { error?: string; retry?: () => void }) {
@@ -1074,9 +1094,9 @@ export default function App() {
         <button
           ref={helpButtonRef}
           className="mobile-help-button"
-          aria-label="How to Play"
+          aria-label="Controls"
           aria-haspopup="dialog"
-          onClick={() => setModal("how")}
+          onClick={() => setModal("controls")}
         ><HelpCircle /></button>
       </header>
 
@@ -1124,10 +1144,7 @@ export default function App() {
         </section>}
 
         <footer className="sidebar-controls" aria-label="Game controls">
-          <p>Click to select</p>
-          <p>Drag to place</p>
-          <p>Click any two tiles to swap positions</p>
-          <p>Double-click to move tile to/from source</p>
+          <ControlsList />
         </footer>
       </aside>
 
@@ -1269,6 +1286,16 @@ export default function App() {
         style={{ left: drag.left, top: drag.top, width: drag.width, height: drag.height, fontSize: drag.fontSize }}
       ><span className="tile-letter">{game.tiles[drag.tileID].character}</span></div>}
       {toast && <div className="toast" role="status">{toast}</div>}
+
+      {modal === "controls" && <Modal title="Controls" onClose={() => {
+        setModal(null);
+        window.requestAnimationFrame(() => helpButtonRef.current?.focus());
+      }}>
+        <div className="controls-popup">
+          <div className="controls-popup-list"><ControlsList /></div>
+          <button type="button" className="controls-how-link" onClick={() => setModal("how")}>How to Play</button>
+        </div>
+      </Modal>}
 
       {modal === "how" && <Modal title="How to Play" onClose={() => {
         setModal(null);
