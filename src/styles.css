@@ -514,8 +514,8 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
   line-height: 1;
   box-shadow: inset 0 -1px 1px var(--inner-shadow);
 }
-.help-tile-blank { background: var(--blank); opacity: .58; box-shadow: inset 0 1px 1px var(--inner-shadow); }
-.help-tile-empty { background: var(--placeholder); box-shadow: inset 0 1px 1px var(--inner-shadow); }
+.help-tile-blank { background: var(--blank); box-shadow: inset 0 1px 2px rgb(68 51 30 / 20%); }
+.help-tile-empty { background: var(--placeholder); box-shadow: inset 0 1px 2px rgb(68 51 30 / 20%); }
 .help-tile-source { background: var(--cream); }
 .help-tile-valid { background: var(--valid); }
 .help-tile-invalid { background: var(--invalid); }
