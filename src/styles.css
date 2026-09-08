@@ -275,7 +275,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 .seal-fill { fill: currentColor; }
 .seal-outline { fill: none; stroke: var(--seal-mark); stroke-width: 5; }
 .seal-trophy { fill: var(--seal-mark); pointer-events: none; }
-.seal.pulsing .seal-trophy { transform-box: fill-box; transform-origin: center; animation: trophy-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
+.tier-step.pulsing { animation: achievement-pulse 700ms cubic-bezier(.2, .8, .2, 1) both; }
 .seal.bronze { color: var(--bronze); --seal-mark: #3d3327; }
 .seal.silver { color: var(--silver); --seal-mark: #3f3f3f; }
 .seal.gold { color: var(--gold); --seal-mark: #4d4120; }
@@ -626,7 +626,7 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes victory-pulse { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.08); } }
 @keyframes victory-seal-spin { to { transform: rotate(-360deg); } }
-@keyframes trophy-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.14); } }
+@keyframes achievement-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.14); } }
 @keyframes level-tile-pulse { 0%, 100% { transform: scale(1); } 42% { transform: scale(1.08); } }
 
 @media (max-width: 620px), (max-height: 780px), (hover: none) and (pointer: coarse) {

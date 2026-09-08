@@ -93,9 +93,9 @@ function isVisibleOnscreen(element: HTMLElement): boolean {
     && bounds.top < window.innerHeight;
 }
 
-function Seal({ tone, achieved = false, satisfied = false, pulsing = false }: { tone: AchievementTone; achieved?: boolean; satisfied?: boolean; pulsing?: boolean }) {
+function Seal({ tone, achieved = false, satisfied = false }: { tone: AchievementTone; achieved?: boolean; satisfied?: boolean }) {
   return (
-    <span className={`seal ${tone} ${achieved ? "achieved" : ""} ${pulsing ? "pulsing" : ""}`} aria-hidden="true">
+    <span className={`seal ${tone} ${achieved ? "achieved" : ""}`} aria-hidden="true">
       <svg viewBox="0 0 100 100" role="img">
         <path className="seal-fill" d="M50 4C57 4 60 12 66 14C72 16 79 11 84 16C89 21 84 28 86 34C88 40 96 43 96 50C96 57 88 60 86 66C84 72 89 79 84 84C79 89 72 84 66 86C60 88 57 96 50 96C43 96 40 88 34 86C28 84 21 89 16 84C11 79 16 72 14 66C12 60 4 57 4 50C4 43 12 40 14 34C16 28 11 21 16 16C21 11 28 16 34 14C40 12 43 4 50 4Z" />
         {satisfied &&
@@ -1291,7 +1291,7 @@ export default function App() {
                 return <Fragment key={tier.name}>
                   {index > 0 && <span className={`tier-connector ${tier.unlocked ? "complete" : ""}`} aria-hidden="true" />}
                   <div
-                    className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.achieved ? "complete" : ""} ${tier.satisfied ? "satisfied" : ""} ${index === activeTierIndex ? "active" : ""} ${previewAchieved ? "previewing" : ""}`}
+                    className={`tier-step tier-${tier.tone} ${tier.unlocked ? "unlocked" : "future"} ${tier.achieved ? "complete" : ""} ${tier.satisfied ? "satisfied" : ""} ${index === activeTierIndex ? "active" : ""} ${previewAchieved ? "previewing" : ""} ${isPulsing ? "pulsing" : ""}`}
                     role="listitem"
                     aria-current={index === activeTierIndex ? "step" : undefined}
                     aria-label={`${tier.name}: ${tier.achieved ? `achieved, ${tier.satisfied ? "currently satisfied" : "not currently satisfied"}` : tier.unlocked ? "unlocked, not currently satisfied" : "not yet available"}`}
@@ -1302,7 +1302,6 @@ export default function App() {
                         tone={tier.tone}
                         achieved={tier.achieved || previewAchieved}
                         satisfied={tier.satisfied}
-                        pulsing={isPulsing}
                       />
                       {!tier.unlocked && !previewAchieved && <Lock className="tier-lock" aria-hidden="true" />}
                     </span>

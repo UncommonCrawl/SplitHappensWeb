@@ -354,11 +354,18 @@ export function rowWords(state: GameState): Array<string | null> {
   });
 }
 
+function criterionWords(state: GameState): string[] {
+  // Preserve each tile's position while a row is still being assembled. This
+  // lets positional bonus rules (starts, ends, contains, doubles) evaluate
+  // independently of whether the row is complete or a dictionary word.
+  return state.targetSlots.map((row) => row.map((id) => id ? state.tiles[id].character : " ").join(""));
+}
+
 export function deriveGame(state: GameState, level: LevelDefinition, words: Set<string>) {
   const rows = rowWords(state);
   const validRows = new Set(rows.flatMap((word, index) => word && words.has(word) ? [index] : []));
   const allWordsValid = validRows.size === rows.length;
-  const bonus = evaluateCriterion(level.criterion, rows);
+  const bonus = evaluateCriterion(level.criterion, criterionWords(state));
   const goldMatches = level.goldTileExpectations.map((expectation) => {
     const id = state.targetSlots[expectation.rowIndex]?.[expectation.columnIndex];
     return Boolean(id && state.tiles[id].character === expectation.letter);

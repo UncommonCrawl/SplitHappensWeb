@@ -160,6 +160,16 @@ describe("game engine", () => {
     expect(result.victorySatisfied).toBe(false);
   });
 
+  it("evaluates the bonus criterion from placed tiles before rows are complete or valid", () => {
+    const reduce = gameReducer(level, words);
+    const state = reduce(createGame(level), { type: "PLACE", tileID: "1:0", slotID: "1:0" });
+    const result = deriveGame(state, level, words);
+
+    expect(result.rowWords[1]).toBeNull();
+    expect(result.allWordsValid).toBe(false);
+    expect(result.bonus.satisfied).toBe(true);
+  });
+
   it("arranges interchangeable gold letters, preserves correct tiles, and returns displacements in order", () => {
     const goldLevel: LevelDefinition = {
       ...level,
