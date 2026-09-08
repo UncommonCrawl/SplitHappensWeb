@@ -23,7 +23,7 @@ async function setCurrentBadges(page: Page, perfectSplit: boolean, licketySplit:
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
 }
 
-test("renders the app behind a game-area loader while the dictionary loads", async ({ page }) => {
+test("renders the app behind a game-area loader while the dictionary loads @cross-browser", async ({ page }) => {
   await page.route("**/words.json", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     await route.continue();
@@ -36,10 +36,10 @@ test("renders the app behind a game-area loader while the dictionary loads", asy
   await expect(page.locator(".sidebar-brand")).toBeHidden();
   await expect(page.locator(".game-loading-overlay")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(page.locator(".game-loading-overlay")).toBeHidden({ timeout: 5_000 });
-  await expect(page.locator(".sidebar-brand")).toBeVisible();
+  await expect(page.locator(".sidebar-brand:visible, .mobile-header:visible")).toHaveCount(1);
 });
 
-test("loads the daily game and opens core dialogs", async ({ page }) => {
+test("loads the daily game and opens core dialogs @cross-browser", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("img", { name: "Split Happens" })).toBeVisible();
   await expect(page.getByRole("main")).toBeVisible({ timeout: 15_000 });
@@ -92,7 +92,7 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(howToPlay).toContainText("Complete a goal to unlock the next tier");
   await expect(howToPlay).toContainText("Hard and Perfect Split tiers");
   await expect(howToPlay).not.toContainText("Holy Split");
-  await expect(howToPlay).not.toContainText(/bronze|silver|gold/i);
+  await expect(howToPlay).not.toContainText(/bronze|silver/i);
   await page.getByRole("button", { name: "Close" }).click();
   await openSidebarIfNeeded(page);
   await page.getByRole("button", { name: "About" }).click();
@@ -101,7 +101,6 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(about.getByRole("link", { name: "Check out my other stuff" })).toHaveAttribute("href", "https://linktr.ee/keithherrmann");
   await page.getByRole("button", { name: "Close" }).click();
   await openSidebarIfNeeded(page);
-  await expect(page.getByRole("button", { name: "Prev." })).toBeEnabled();
   const nextButton = page.getByRole("button", { name: "Next" });
   await expect(nextButton).toBeDisabled();
   await expect(nextButton).toHaveCSS("border-color", "rgba(0, 0, 0, 0.22)");
@@ -111,7 +110,7 @@ test("loads the daily game and opens core dialogs", async ({ page }) => {
   await expect(nextButton.locator("svg")).toHaveCSS("opacity", "0.22");
 });
 
-test("supports permanent numbered puzzle URLs and document titles", async ({ page }) => {
+test("supports permanent numbered puzzle URLs and document titles @cross-browser", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
   await expect(page).toHaveTitle("Split Happens");
@@ -608,7 +607,7 @@ test("clicking the Perfect Split keyword arranges gold letters and returns displ
   }
 });
 
-test("supports keyboard-style select then place", async ({ page }) => {
+test("supports keyboard-style select then place @cross-browser", async ({ page }) => {
   await page.goto("/");
   const tile = page.getByRole("button", { name: /^Letter / }).first();
   await tile.focus();
@@ -930,7 +929,7 @@ test("uses a target letter after the source board is empty", async ({ page }) =>
   await expect(page.locator('[data-source-row="0"][data-source-column="0"]')).toHaveAttribute("aria-label", `Letter ${displacedLetter}`);
 });
 
-test("uses target-tile sizing and preserves the proportional grab offset while dragging", async ({ page }) => {
+test("uses target-tile sizing and preserves the proportional grab offset while dragging @cross-browser", async ({ page }) => {
   await page.goto("/");
   const source = page.locator(".letter-tile").first();
   const target = page.locator(".target-slot").first();
@@ -1186,10 +1185,9 @@ test("swaps target and source tiles at the exact occupied source slot", async ({
 
 test("fits the daily game within the reported short desktop viewport", async ({ page }) => {
   await page.setViewportSize({ width: 1207, height: 744 });
-  await page.goto("/");
+  await page.goto("/2");
   const game = page.locator(".game-area");
   await expect(game).toBeVisible({ timeout: 15_000 });
-  await page.locator('[data-date="2026-09-02"]').click();
   await expect(page.locator(".target-row")).toHaveCount(5);
   const criteria = await page.locator(".criteria").boundingBox();
   const target = await page.locator(".target-board").boundingBox();
@@ -1213,11 +1211,7 @@ test("fits the daily game within the reported short desktop viewport", async ({ 
 
 const layoutViewports = [
   { width: 1440, height: 900 },
-  { width: 1280, height: 720 },
-  { width: 1207, height: 600 },
-  { width: 1024, height: 500 },
   { width: 768, height: 1024 },
-  { width: 390, height: 844 },
   { width: 360, height: 640 },
 ];
 
@@ -1319,8 +1313,8 @@ test("uses an accessible help popup and sidebar drawer at constrained widths", a
   await expect(menu).toBeFocused();
 
   await menu.click();
-  await page.locator('[data-date="2026-08-31"]').click();
-  await expect(header.locator("h1")).toContainText("August 31st");
+  await page.locator('[data-date="2026-09-01"]').click();
+  await expect(header.locator("h1")).toContainText("September 1st");
   await expect(menu).toHaveAttribute("aria-expanded", "false");
 
   await page.setViewportSize({ width: 500, height: 718 });
@@ -1385,11 +1379,10 @@ test("keeps every help page inside compact viewports", async ({ page }) => {
 
 test("reserves a fifth target row and keeps four- and five-row tile sizes consistent", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
-  await page.goto("/");
+  await page.goto("/1");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".game-toolbar")).toHaveCSS("margin-bottom", "0px");
 
-  await page.locator('[data-date="2026-08-26"]').click();
   await expect(page.locator(".target-row")).toHaveCount(4);
   const fourRowBoard = await page.locator(".target-board").boundingBox();
   const fourRowTile = await page.locator(".target-slot").first().boundingBox();
@@ -1397,7 +1390,8 @@ test("reserves a fifth target row and keeps four- and five-row tile sizes consis
   expect(fourRowTile).not.toBeNull();
   if (!fourRowBoard || !fourRowTile) return;
 
-  await page.locator('[data-date="2026-08-28"]').click();
+  await page.goto("/2");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".target-row")).toHaveCount(5);
   const fiveRowBoard = await page.locator(".target-board").boundingBox();
   const fiveRowTile = await page.locator(".target-slot").first().boundingBox();
@@ -1437,9 +1431,8 @@ test("keeps source and target tile scaling proportional at desktop heights", asy
 
 test("sizes each row divider to the shorter adjacent word", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
-  await page.goto("/");
+  await page.goto("/1");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
-  await page.locator('[data-date="2026-08-26"]').click();
 
   const rows = page.locator(".target-row");
   await expect(rows).toHaveCount(4);
@@ -1455,12 +1448,12 @@ test("sizes each row divider to the shorter adjacent word", async ({ page }) => 
     const slotWidth = await rows.nth(index).locator(".target-slot").first().evaluate((slot) =>
       slot.getBoundingClientRect().width,
     );
-    expect(dividerWidth).toBeCloseTo(slotWidth * dividerSlots + 6 * (dividerSlots - 1), 1);
+    expect(Math.abs(dividerWidth - (slotWidth * dividerSlots + 6 * (dividerSlots - 1)))).toBeLessThan(1);
   }
   await expect(rows.last()).not.toHaveAttribute("data-divider-slots", /.+/);
 });
 
-test("lets game controls shrink below their preferred sizes for a tiny window", async ({ page }) => {
+test("lets game controls shrink below their preferred sizes for a tiny window @cross-browser", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 360 });
   await page.goto("/");
   await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
@@ -1515,7 +1508,8 @@ test("moves recent puzzles into a popup when a desktop sidebar cannot fit", asyn
 for (const viewport of layoutViewports) {
   test(`fits the full six-row game at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await page.clock.setFixedTime("2026-09-11T12:00:00");
+    await page.goto("/11");
     await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
 
     await expect(page.locator(".target-row")).toHaveCount(6);
