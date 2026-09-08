@@ -7,10 +7,11 @@ export const defaultSettings: WebSettings = {
   soundEnabled: true,
   shuffleAllLetters: false,
   shuffleGoldTiles: false,
+  suppressHintPrompt: false,
 };
 
 export function emptyPersistedState(): PersistedAppState {
-  return { version: 2, levels: {}, dailyResults: {}, settings: defaultSettings };
+  return { version: 2, levels: {}, dailyResults: {}, hintPromptedLevels: {}, settings: defaultSettings };
 }
 
 export function loadPersistedState(storage: Pick<Storage, "getItem"> = localStorage): PersistedAppState {
@@ -19,7 +20,13 @@ export function loadPersistedState(storage: Pick<Storage, "getItem"> = localStor
     if (!raw) return emptyPersistedState();
     const parsed = JSON.parse(raw) as Partial<PersistedAppState>;
     if (parsed.version !== 2 || !parsed.levels || !parsed.dailyResults) return emptyPersistedState();
-    return { version: 2, levels: parsed.levels, dailyResults: parsed.dailyResults, settings: { ...defaultSettings, ...parsed.settings } };
+    return {
+      version: 2,
+      levels: parsed.levels,
+      dailyResults: parsed.dailyResults,
+      hintPromptedLevels: parsed.hintPromptedLevels ?? {},
+      settings: { ...defaultSettings, ...parsed.settings },
+    };
   } catch {
     return emptyPersistedState();
   }

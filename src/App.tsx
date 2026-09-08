@@ -15,7 +15,7 @@ import { calculateStats, formatDuration } from "./stats";
 import type { ContentSnapshot, GameState, LevelDefinition, PersistedAppState, SlotID, TileID } from "./types";
 import { wikipediaArticleURL } from "./wikipedia";
 
-type ModalName = "about" | "controls" | "how" | "recent" | "stats" | "victory" | null;
+type ModalName = "about" | "controls" | "hint" | "how" | "recent" | "stats" | "victory" | null;
 
 const SHOW_STREAKS_IN_STATS = false;
 
@@ -133,7 +133,7 @@ function Modal({ title, onClose, children, wide = false }: { title: string; onCl
   useEffect(() => {
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const modal = modalRef.current;
-    const focusable = () => Array.from(modal?.querySelectorAll<HTMLElement>("button:not(:disabled), [href], [tabindex]:not([tabindex='-1'])") ?? []);
+    const focusable = () => Array.from(modal?.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), [href], [tabindex]:not([tabindex='-1'])") ?? []);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -345,6 +345,7 @@ export default function App() {
   const [selectedTargetSlot, setSelectedTargetSlot] = useState<SlotID | null>(null);
   const [selectedSourceSlot, setSelectedSourceSlot] = useState<SlotID | null>(null);
   const [modal, setModal] = useState<ModalName>(null);
+  const [dontShowHintPrompt, setDontShowHintPrompt] = useState(false);
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
   const [archivePage, setArchivePage] = useState(0);
@@ -1021,6 +1022,36 @@ export default function App() {
     });
   };
 
+  const markHintPrompted = (levelID: string) => {
+    setPersisted((current) => {
+      if (current.hintPromptedLevels[levelID]) return current;
+      const next = { ...current, hintPromptedLevels: { ...current.hintPromptedLevels, [levelID]: true as const } };
+      savePersistedState(next);
+      return next;
+    });
+  };
+
+  const handleHintClick = () => {
+    if (!activeLevel || !game || game.hintedRows.length >= activeLevel.answerRows.length) return;
+    if (persisted.settings.suppressHintPrompt || persisted.hintPromptedLevels[activeLevel.id]) {
+      send({ type: "HINT" });
+      return;
+    }
+    markHintPrompted(activeLevel.id);
+    setDontShowHintPrompt(false);
+    setModal("hint");
+  };
+
+  const closeHintPrompt = () => {
+    if (dontShowHintPrompt) updateSettings({ suppressHintPrompt: true });
+    setModal(null);
+  };
+
+  const useHintFromPrompt = () => {
+    closeHintPrompt();
+    send({ type: "HINT" });
+  };
+
   const shareResult = async () => {
     if (!activeLevel || !derived) return;
     const seals = [derived.allWordsValid, derived.silverSatisfied, derived.victorySatisfied].map((done) => done ? "🟨" : "⬜").join("");
@@ -1167,8 +1198,8 @@ export default function App() {
       })}
     </div>
     <div className="puzzle-pagination" aria-label="Archive navigation">
-      <button className="archive-button" disabled={!hasPreviousPage} onClick={() => setArchivePage((page) => page + 1)}><ArrowLeft /><span>Prev.</span></button>
-      <button className="archive-button" disabled={!hasNextPage} onClick={() => setArchivePage((page) => Math.max(0, page - 1))}><span>Next</span><ArrowRight /></button>
+      <button className="button-asset archive-button" disabled={!hasPreviousPage} onClick={() => setArchivePage((page) => page + 1)}><ArrowLeft /><span>Prev.</span></button>
+      <button className="button-asset archive-button" disabled={!hasNextPage} onClick={() => setArchivePage((page) => Math.max(0, page - 1))}><span>Next</span><ArrowRight /></button>
     </div>
   </>;
   return (
@@ -1369,7 +1400,7 @@ export default function App() {
 
           <div className="game-toolbar">
             <button className="undo-action" aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
-            <button className="hint-action" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><img src={hintIcon} alt="" aria-hidden="true" /><span>Hint</span></button>
+            <button className="hint-action" aria-label="Hint" onClick={handleHintClick} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><img src={hintIcon} alt="" aria-hidden="true" /><span>Hint</span></button>
             <button className="recall-action" aria-label="Recall" onClick={() => send(recallAction)} disabled={!canRecall}><ArrowDown /><span>Recall</span></button>
           </div>
         </main>
@@ -1380,6 +1411,21 @@ export default function App() {
 
       {modal === "recent" && <Modal title="Recent Puzzles" onClose={() => setModal(null)}>
         <div className="recent-puzzles-popup">{recentPuzzleGrid}</div>
+      </Modal>}
+
+      {modal === "hint" && <Modal title="Use a Hint?" onClose={closeHintPrompt}>
+        <div className="hint-prompt">
+          <p>Each hint reveals a row from the official answer key.</p>
+          <p>Using hints on a level means the Holy Split achievement cannot be earned.</p>
+          <label className="hint-prompt-checkbox">
+            <input type="checkbox" checked={dontShowHintPrompt} onChange={(event) => setDontShowHintPrompt(event.target.checked)} />
+            <span>Don't show this to me again</span>
+          </label>
+          <div className="hint-prompt-actions">
+            <button className="button-asset hint-prompt-cancel" onClick={closeHintPrompt}>Cancel</button>
+            <button className="button-asset hint-prompt-confirm" onClick={useHintFromPrompt}>Use Hint</button>
+          </div>
+        </div>
       </Modal>}
 
       {drag?.moved && <div

@@ -52,6 +52,8 @@
   --popup-close-size: 42px;
   --popup-close-icon-size: 28px;
   --popup-close-inset: 16px;
+  --button-font-size: 16px;
+  --button-radius: 8px;
 }
 
 * { box-sizing: border-box; }
@@ -141,8 +143,8 @@ h1, h2, h3, strong, b { font-weight: 500; }
 .progress-rail h2 { margin: 0 0 17px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: rgb(0 0 0 / 68%); }
 .rail-row, .stat-row { display: flex; align-items: center; justify-content: space-between; min-height: 42px; }
 .rail-row + .rail-row { border-top: 1px solid #eee; }
-.archive-button { width: 100%; height: 46px; margin-top: 16px; border: 1px solid rgb(0 0 0 / 22%); background: rgb(255 255 255 / 8%); border-radius: 8px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
-.archive-button:hover:not(:disabled) { border-color: rgb(0 0 0 / 40%); background: rgb(255 255 255 / 22%); }
+.archive-button { width: 100%; height: 46px; margin-top: 16px; background: rgb(255 255 255 / 8%); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.archive-button:hover:not(:disabled) { background: rgb(255 255 255 / 22%); }
 .archive-button:disabled { opacity: .45; cursor: not-allowed; }
 .archive-button svg { width: 20px; }
 .puzzle-pagination { margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -442,6 +444,16 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 }
 .modal-close:hover { color: #494949; }
 .modal-close svg { width: var(--popup-close-icon-size); height: var(--popup-close-icon-size); stroke-width: 2.5; }
+.modal:has(.hint-prompt) { --popup-width: 465px; }
+.hint-prompt { display: grid; gap: 16px; text-align: center; }
+.hint-prompt p { margin: 0; }
+.hint-prompt-checkbox { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 4px; cursor: pointer; }
+.hint-prompt-checkbox input { width: 18px; height: 18px; margin: 0; accent-color: var(--yellow-deep); }
+.hint-prompt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.button-asset { min-height: 46px; border: 0; border-radius: var(--button-radius); cursor: pointer; font-size: var(--button-font-size); font-weight: 600; }
+.hint-prompt-cancel { background: var(--silver); }
+.hint-prompt-confirm { background: var(--yellow); }
+.hint-prompt-actions button:hover { filter: brightness(.97); }
 .modal:has(.how-to-play) {
   --popup-width: 650px;
 }

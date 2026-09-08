@@ -87,12 +87,14 @@ export interface WebSettings {
   soundEnabled: boolean;
   shuffleAllLetters: boolean;
   shuffleGoldTiles: boolean;
+  suppressHintPrompt: boolean;
 }
 
 export interface PersistedAppState {
   version: 2;
   levels: Record<string, LevelProgress>;
   dailyResults: Record<string, DailyResult>;
+  hintPromptedLevels: Record<string, true>;
   settings: WebSettings;
 }
 
