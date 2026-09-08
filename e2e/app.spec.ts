@@ -186,7 +186,29 @@ test("opens the victory popup with the localhost-only shortcut", async ({ page }
 
   await expect(page.getByRole("dialog", { name: "Perfect Split!" })).toBeVisible();
   await expect(page.locator(".victory-banana")).toBeVisible();
-  await expect(page.locator(".victory-badge")).toHaveCount(0);
+  await expect(page.locator(".victory-badge")).toHaveCount(2);
+  await expect(page.locator(".victory-badge strong")).toHaveText(["Holy Split", "Lickety Split"]);
+  const shareMessageSizing = await page.locator("#share-message").evaluate((field) => ({
+    clientHeight: field.clientHeight,
+    scrollHeight: field.scrollHeight,
+    height: getComputedStyle(field).height,
+    resize: getComputedStyle(field).resize,
+  }));
+  expect(shareMessageSizing.scrollHeight).toBeLessThanOrEqual(shareMessageSizing.clientHeight);
+  expect(shareMessageSizing.height).toBe("92px");
+  expect(shareMessageSizing.resize).toBe("none");
+  const shareMessage = page.locator("#share-message");
+  const originalMessage = await shareMessage.inputValue();
+  await shareMessage.focus();
+  await shareMessage.evaluate((element) => {
+    const field = element as HTMLTextAreaElement;
+    field.setSelectionRange(field.value.length, field.value.length);
+  });
+  await shareMessage.press("Backspace");
+  await expect(shareMessage).toHaveValue(originalMessage.slice(0, -1));
+
+  await page.setViewportSize({ width: 440, height: 844 });
+  await expect(shareMessage).toHaveCSS("height", "112px");
 });
 
 test("renders each earned badge combination on victory and recent-puzzle tiles", async ({ page }) => {

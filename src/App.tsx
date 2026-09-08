@@ -1,8 +1,9 @@
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
   ArrowDown, ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lock,
-  Menu, Share2, Undo2, Volume2, VolumeX, X,
+  Menu, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
+import copyIcon from "../copy.svg";
 import hintIcon from "../hint.svg";
 import clockIcon from "../clock.svg";
 import noHintIcon from "../no-hint.svg";
@@ -133,7 +134,7 @@ function Modal({ title, onClose, children, wide = false }: { title: string; onCl
   useEffect(() => {
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const modal = modalRef.current;
-    const focusable = () => Array.from(modal?.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), [href], [tabindex]:not([tabindex='-1'])") ?? []);
+    const focusable = () => Array.from(modal?.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), textarea:not(:disabled), [href], [tabindex]:not([tabindex='-1'])") ?? []);
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -345,6 +346,7 @@ export default function App() {
   const [selectedTargetSlot, setSelectedTargetSlot] = useState<SlotID | null>(null);
   const [selectedSourceSlot, setSelectedSourceSlot] = useState<SlotID | null>(null);
   const [modal, setModal] = useState<ModalName>(null);
+  const [previewVictoryBadges, setPreviewVictoryBadges] = useState(false);
   const [dontShowHintPrompt, setDontShowHintPrompt] = useState(false);
   const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState<string | null>(null);
@@ -370,6 +372,7 @@ export default function App() {
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
   const helpButtonRef = useRef<HTMLButtonElement>(null);
+  const shareMessageRef = useRef<HTMLTextAreaElement>(null);
 
   const pulseAchievements = useCallback((tones: AchievementTone[], preview = false) => {
     if (achievementPulseTimer.current !== null) window.clearTimeout(achievementPulseTimer.current);
@@ -412,7 +415,10 @@ export default function App() {
       if (!event.altKey || event.repeat) return;
       if (event.code !== "KeyV" && event.code !== "KeyT" && event.code !== "KeyL") return;
       event.preventDefault();
-      if (event.code === "KeyV") setModal("victory");
+      if (event.code === "KeyV") {
+        setPreviewVictoryBadges(true);
+        setModal("victory");
+      }
       else if (event.code === "KeyT") pulseAchievements(["bronze", "silver", "gold"], true);
       else if (activeLevelID) pulsePuzzleTile(activeLevelID);
     };
@@ -657,6 +663,7 @@ export default function App() {
     });
     if (derived.victorySatisfied && !previousGold.current) {
       previousGold.current = true;
+      setPreviewVictoryBadges(false);
       setModal("victory");
       if (persisted.settings.soundEnabled) new Audio(staticAssetPath("/sounds/victory.mp3")).play().catch(() => undefined);
     }
@@ -712,6 +719,13 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!game || event.altKey || event.ctrlKey || event.metaKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement
+        || target instanceof HTMLTextAreaElement
+        || target instanceof HTMLSelectElement
+        || (target instanceof HTMLElement && target.isContentEditable)
+      ) return;
 
       if (event.key === "Escape" && (selectedTile || selectedTargetSlot || selectedSourceSlot)) {
         event.preventDefault();
@@ -1052,22 +1066,24 @@ export default function App() {
     send({ type: "HINT" });
   };
 
-  const shareResult = async () => {
+  const shareResult = async (text: string) => {
     if (!activeLevel || !derived) return;
-    const seals = [derived.allWordsValid, derived.silverSatisfied, derived.victorySatisfied].map((done) => done ? "🟨" : "⬜").join("");
-    const text = `Split Happens — ${scheduleEntry?.date ?? "Puzzle"}\n${seals}\n${formatDuration(game?.elapsedMs ?? 0)}`;
     try {
-      if (navigator.share) await navigator.share({ title: "Split Happens", text });
-      else { await navigator.clipboard.writeText(text); setToast("Result copied to clipboard"); }
-    } catch { /* User cancelled sharing. */ }
+      await navigator.clipboard.writeText(text);
+      setToast("Result copied to clipboard");
+    } catch {
+      setToast("Could not copy result");
+    }
   };
 
   if (loadError) return <LoadingScreen error={loadError} retry={refreshContent} />;
   if (!content || !activeLevel || !game || !derived || !scheduleEntry) return <LoadingScreen />;
 
+  const defaultShareMessage = `${window.location.href}\n\nI got a Perfect Split in ${formatDuration(game.elapsedMs)}. Think you can beat my time?`;
   const selectedDate = parseLocalDate(scheduleEntry.date);
   const savedProgress = persisted.levels[activeLevel.id];
-  const earnedBadges = BADGES.filter((badge) => Boolean(savedProgress?.[badge.key]));
+  const savedBadges = BADGES.filter((badge) => Boolean(savedProgress?.[badge.key]));
+  const earnedBadges = previewVictoryBadges && savedBadges.length === 0 ? BADGES : savedBadges;
   const normalAchieved = derived.allWordsValid || Boolean(
     savedProgress?.firstSplitAt || savedProgress?.firstSilverAt || savedProgress?.firstGoldAt,
   );
@@ -1494,7 +1510,10 @@ export default function App() {
         </div>
       </Modal>}
 
-      {modal === "victory" && <Modal title="Perfect Split!" onClose={() => setModal(null)}>
+      {modal === "victory" && <Modal title="Perfect Split!" onClose={() => {
+        setPreviewVictoryBadges(false);
+        setModal(null);
+      }}>
         <div className="victory-content">
           <span className="victory-seal" aria-hidden="true"><span className="victory-banana" /></span>
           <p>You completed all three goals in {formatDuration(game.elapsedMs)}.</p>
@@ -1505,7 +1524,18 @@ export default function App() {
               <span>{badge.description}</span>
             </div>)}
           </div>}
-          <button className="primary-button" onClick={shareResult}><Share2 />Share result</button>
+          <label className="visually-hidden" htmlFor="share-message">Share message</label>
+          <textarea
+            ref={shareMessageRef}
+            id="share-message"
+            className="share-message"
+            defaultValue={defaultShareMessage}
+            rows={3}
+            spellCheck={false}
+          />
+          <button className="primary-button copy-button" onClick={() => shareResult(shareMessageRef.current?.value ?? defaultShareMessage)}>
+            <img src={copyIcon} alt="" aria-hidden="true" />Copy
+          </button>
         </div>
       </Modal>}
     </div>

@@ -583,6 +583,9 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
 }
 .victory-banana { position: absolute; z-index: 1; top: 0; left: 50%; width: 145%; aspect-ratio: 892 / 556; background: var(--gold); transform: translateX(-50%); -webkit-mask: url("../splithappensbanana.svg") center / contain no-repeat; mask: url("../splithappensbanana.svg") center / contain no-repeat; pointer-events: none; }
 .victory-content > p { margin: var(--popup-section-gap) 0; font-weight: 600; }
+.share-message { width: min(100%, 440px); height: 92px; min-height: 92px; margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: inherit; font-family: inherit; font-size: 15px; font-weight: inherit; line-height: 1.35; resize: none; }
+.share-message:focus { outline: 2px solid var(--yellow-deep); outline-offset: 2px; }
+.copy-button img { width: 19px; height: 19px; }
 .victory-badges {
   width: 100%;
   margin: -2px 0 20px;
@@ -643,6 +646,10 @@ button.gold-word:focus-visible { outline: 2px solid var(--selection); outline-of
     --popup-related-gap: 6px;
     --popup-radius: 16px;
   }
+}
+
+@media (max-width: 620px) {
+  .share-message { height: 112px; min-height: 112px; }
 }
 
 @media (max-height: 780px) {
