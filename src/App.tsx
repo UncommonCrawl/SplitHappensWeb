@@ -3,10 +3,6 @@ import {
   ArrowDown, ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lock,
   Menu, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
-import copyIcon from "../copy.svg";
-import hintIcon from "../hint.svg";
-import clockIcon from "../clock.svg";
-import noHintIcon from "../no-hint.svg";
 import { loadPuzzleContent, loadWords, localDateKey, parseLocalDate, staticAssetPath } from "./content";
 import { createGame, deriveGame, gameReducer, slotID, type GameAction } from "./engine";
 import { awardVictoryBadges, loadPersistedState, progressFromGame, savePersistedState } from "./persistence";
@@ -19,6 +15,10 @@ import { wikipediaArticleURL } from "./wikipedia";
 type ModalName = "about" | "controls" | "hint" | "how" | "recent" | "stats" | "victory" | null;
 
 const SHOW_STREAKS_IN_STATS = false;
+const copyIcon = "/copy.svg";
+const hintIcon = "/hint.svg";
+const clockIcon = "/clock.svg";
+const noHintIcon = "/no-hint.svg";
 
 type DragState = {
   tileID: TileID;
