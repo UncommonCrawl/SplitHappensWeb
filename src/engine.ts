@@ -7,7 +7,7 @@ export type GameAction =
   | { type: "MOVE_SOURCE"; tileID: TileID; row: number; column: number }
   | { type: "RETURN"; tileID: TileID }
   | { type: "RETURN_FIRST_FREE"; tileID: TileID }
-  | { type: "RECALL" }
+  | { type: "RECALL"; preserveGold?: boolean }
   | { type: "UNDO" }
   | { type: "HINT" }
   | { type: "ARRANGE_GOLD" }
@@ -150,16 +150,26 @@ function returnToSource(state: GameState, id: TileID, preferOriginal = true): Ga
   return next;
 }
 
-function recall(state: GameState): GameState {
+function recall(state: GameState, level: LevelDefinition, preserveGold = false): GameState {
+  const protectedGold = new Set<TileID>();
+  if (preserveGold) level.goldTileExpectations.forEach(({ rowIndex, columnIndex }) => {
+    const id = state.targetSlots[rowIndex]?.[columnIndex];
+    if (id) protectedGold.add(id);
+  });
   const sourceSlots = state.sourceSlots.map((row) => Array<TileID | null>(row.length).fill(null));
   Object.values(state.tiles).forEach((tile) => {
+    if (protectedGold.has(tile.id)) return;
     sourceSlots[tile.sourceWordIndex][tile.positionInWord] = tile.id;
   });
   const targetSlots = state.targetSlots.map((row) => Array<TileID | null>(row.length).fill(null));
+  if (preserveGold) level.goldTileExpectations.forEach(({ rowIndex, columnIndex }) => {
+    const id = state.targetSlots[rowIndex]?.[columnIndex];
+    if (id) targetSlots[rowIndex][columnIndex] = id;
+  });
   const changed = state.hintedRows.length > 0
     || JSON.stringify(state.sourceSlots) !== JSON.stringify(sourceSlots)
     || JSON.stringify(state.targetSlots) !== JSON.stringify(targetSlots);
-  return changed ? { ...state, sourceSlots, targetSlots, hintedRows: [], history: [] } : state;
+  return changed ? { ...state, sourceSlots, targetSlots, hintedRows: [], history: [...state.history, snapshot(state)].slice(-20) } : state;
 }
 
 function hint(state: GameState, level: LevelDefinition): GameState {
@@ -319,7 +329,7 @@ export function gameReducer(level: LevelDefinition, words: Set<string>) {
       case "MOVE_SOURCE": next = moveToSource(state, action.tileID, action.row, action.column); break;
       case "RETURN": next = returnToSource(state, action.tileID); break;
       case "RETURN_FIRST_FREE": next = returnToSource(state, action.tileID, false); break;
-      case "RECALL": next = recall(state); break;
+      case "RECALL": next = recall(state, level, action.preserveGold); break;
       case "HINT": next = hint(state, level); break;
       case "SHUFFLE": next = shuffle(state, level, words, action.allLetters, action.includeGold); break;
       case "UNDO": {

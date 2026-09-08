@@ -78,6 +78,7 @@ h1, h2, h3, strong, b { font-weight: 500; }
   flex-direction: column;
 }
 .sidebar-brand { padding: 0 0 18px; text-align: center; border-bottom: 1px solid rgb(0 0 0 / 11%); }
+.brand-home-link { display: block; line-height: 0; }
 .wordmark { width: 100%; height: 48px; object-fit: contain; object-position: center; }
 .sidebar-brand h1 { margin: 8px 0 0; font-size: 16px; line-height: 1.2; white-space: nowrap; }
 .sidebar-brand h1 span, .mobile-brand h1 span { display: block; }
@@ -175,6 +176,7 @@ h1, h2, h3, strong, b { font-weight: 500; }
   align-items: center;
   justify-content: center;
   line-height: 1;
+  text-decoration: none;
   cursor: pointer;
   position: relative;
   transition: background-color 180ms ease-out;

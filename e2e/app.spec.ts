@@ -122,6 +122,25 @@ test("supports permanent numbered puzzle URLs and document titles", async ({ pag
   await expect(page.locator(".level-title:visible")).toContainText("'PART'");
 
   await openSidebarIfNeeded(page);
+  const todayTile = page.locator('[data-date="2026-09-07"]');
+  await expect(todayTile).toHaveJSProperty("tagName", "A");
+  await expect(todayTile).toHaveAttribute("href", "/");
+  await todayTile.click();
+  await expect(page).toHaveURL(/\/$/);
+
+  await page.goto("/7");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+  const homeLink = page.locator(".brand-home-link:visible");
+  await expect(homeLink).toHaveAttribute("href", "/");
+  await homeLink.click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveTitle("Split Happens");
+  await expect(page.locator(".level-title:visible")).toContainText("'PART'");
+
+  await page.goto("/7");
+  await expect(page.locator(".game-area")).toBeVisible({ timeout: 15_000 });
+
+  await openSidebarIfNeeded(page);
   await page.locator('[data-date="2026-09-06"]').click();
   await expect(page).toHaveURL(/\/6$/);
   await expect(page).toHaveTitle("September 6 - 'DIEHARD' | Split Happens");

@@ -107,18 +107,36 @@ describe("game engine", () => {
     expect(state).toEqual(locked);
   });
 
-  it("recalls every tile to its exact original source position and clears hints", () => {
+  it("recalls every tile to its exact original source position, clears hints, and can be undone", () => {
     const reduce = gameReducer(level, words);
     const initial = createGame(level);
     let state = reduce(initial, { type: "PLACE", tileID: "0:0", slotID: "1:0" });
     state = reduce(state, { type: "HINT" });
+    const beforeRecall = structuredClone(state);
     state = reduce(state, { type: "RECALL" });
     expect(state.sourceSlots).toEqual(initial.sourceSlots);
     expect(state.targetSlots).toEqual(initial.targetSlots);
     expect(state.hintedRows).toEqual([]);
     expect(state.usedHint).toBe(true);
-    expect(state.history).toEqual([]);
-    expect(reduce(state, { type: "UNDO" })).toEqual(state);
+    expect(state.history).not.toEqual([]);
+    state = reduce(state, { type: "UNDO" });
+    expect(state.sourceSlots).toEqual(beforeRecall.sourceSlots);
+    expect(state.targetSlots).toEqual(beforeRecall.targetSlots);
+    expect(state.history.length).toBe(beforeRecall.history.length);
+  });
+
+  it("leaves tiles in gold slots in place when recalling on the gold level", () => {
+    const reduce = gameReducer(level, words);
+    const initial = createGame(level);
+    let state = reduce(initial, { type: "PLACE", tileID: "0:1", slotID: "0:0" });
+    state = reduce(state, { type: "PLACE", tileID: "1:0", slotID: "1:0" });
+
+    state = reduce(state, { type: "RECALL", preserveGold: true });
+
+    expect(state.targetSlots[0][0]).toBe("0:1");
+    expect(state.targetSlots[1][0]).toBeNull();
+    expect(state.sourceSlots[0][1]).toBeNull();
+    expect(state.sourceSlots[1][0]).toBe("1:0");
   });
 
   it("recognizes all words, bonus, and ordered gold tiles", () => {

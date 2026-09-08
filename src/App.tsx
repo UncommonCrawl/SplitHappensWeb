@@ -1,7 +1,7 @@
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lock,
-  Menu, RotateCcw, Share2, Undo2, Volume2, VolumeX, X,
+  ArrowDown, ArrowLeft, ArrowRight, CalendarDays, ChartNoAxesColumn, Flame, HelpCircle, Info, Lock,
+  Menu, Share2, Undo2, Volume2, VolumeX, X,
 } from "lucide-react";
 import hintIcon from "../hint.svg";
 import clockIcon from "../clock.svg";
@@ -1089,13 +1089,8 @@ export default function App() {
         : <span className="gold-word">{goldWord}</span>} IN ORDER</>,
     },
   ];
-  const canRecall = game.hintedRows.length > 0
-    || game.targetSlots.some((row) => row.some(Boolean))
-    || game.sourceSlots.some((row, rowIndex) => row.some((id, columnIndex) => {
-      if (!id) return true;
-      const tile = game.tiles[id];
-      return tile.sourceWordIndex !== rowIndex || tile.positionInWord !== columnIndex;
-    }));
+  const recallAction = { type: "RECALL", preserveGold: goldLevelReached } as const;
+  const canRecall = gameReducer(activeLevel, words ?? EMPTY_WORDS)(game, recallAction) !== game;
   const targetSizingRows = Math.max(5, game.targetSlots.length);
   const gameLayoutStyle = {
     "--target-columns": Math.max(...game.targetSlots.map((row) => row.length)),
@@ -1117,6 +1112,16 @@ export default function App() {
     setModal(null);
     if (isConstrained) closeDrawer();
   };
+  const handleHomeNavigation = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const route = resolvePuzzleRoute("/", content.schedule, localDateKey());
+    if (window.location.pathname !== "/") window.history.pushState(null, "", "/");
+    setActiveLevelID(route.entry?.levelID ?? null);
+    setRoutePuzzleNumber(null);
+    setModal(null);
+    if (isConstrained) closeDrawer();
+  };
   const recentPuzzleGrid = <>
     <div className="puzzle-date-grid" aria-label="Recent puzzles">
       {Array.from({ length: 9 - recentEntries.length }, (_, index) => <span className="puzzle-date-placeholder" aria-hidden="true" key={`placeholder-${index}`} />)}
@@ -1129,20 +1134,35 @@ export default function App() {
         const puzzleBadges = BADGES.filter((badge) => Boolean(puzzleProgress?.[badge.key]));
         const tierLabel = tier === "none" ? "not completed" : `${tier} tier`;
         const badgeLabel = puzzleBadges.length ? `, ${puzzleBadges.map((badge) => badge.name).join(" and ")}` : "";
-        return <button
-          key={entry.date}
-          className={`puzzle-date-button tier-${tier} ${puzzleTilePulse?.levelID === entry.levelID ? "pulsing" : ""}`}
-          data-date={entry.date}
-          data-level-id={entry.levelID}
-          aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}${badgeLabel}`}
-          aria-pressed={entry.levelID === activeLevel.id}
-          onClick={() => handlePuzzleSelection(entry.levelID)}
-        >
+        const className = `puzzle-date-button tier-${tier} ${puzzleTilePulse?.levelID === entry.levelID ? "pulsing" : ""}`;
+        const ariaLabel = `${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}, ${today ? "today's puzzle" : tierLabel}${badgeLabel}`;
+        const tileContents = <>
           <span className="puzzle-date-month">{MONTH_ABBREVIATIONS[date.getMonth()]}</span>
           <strong className="puzzle-date-day">{date.getDate()}</strong>
           {puzzleBadges.length > 0 && <span className="puzzle-tile-badges" aria-hidden="true">
             {puzzleBadges.map((badge) => <img src={badge.icon} alt="" key={badge.key} />)}
           </span>}
+        </>;
+        if (today) return <a
+          key={entry.date}
+          className={className}
+          href="/"
+          data-date={entry.date}
+          data-level-id={entry.levelID}
+          aria-label={ariaLabel}
+          aria-pressed={entry.levelID === activeLevel.id}
+          onClick={handleHomeNavigation}
+        >{tileContents}</a>;
+        return <button
+          key={entry.date}
+          className={className}
+          data-date={entry.date}
+          data-level-id={entry.levelID}
+          aria-label={ariaLabel}
+          aria-pressed={entry.levelID === activeLevel.id}
+          onClick={() => handlePuzzleSelection(entry.levelID)}
+        >
+          {tileContents}
         </button>;
       })}
     </div>
@@ -1163,7 +1183,9 @@ export default function App() {
           onClick={() => setDrawerOpen(true)}
         ><Menu /></button>
         <div className="mobile-brand">
-          <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="mobile-wordmark" />
+          <a className="brand-home-link" href="/" onClick={handleHomeNavigation}>
+            <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="mobile-wordmark" />
+          </a>
           <h1>
             <span className="level-date">{longDate(selectedDate)}</span>
             <LevelTitle level={activeLevel} />
@@ -1194,7 +1216,9 @@ export default function App() {
           <h2 className="drawer-title">Menu</h2>
         </header>
         <header className="sidebar-brand">
-          <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
+          <a className="brand-home-link" href="/" onClick={handleHomeNavigation}>
+            <img src={staticAssetPath("/images/title.png")} alt="Split Happens" className="wordmark" />
+          </a>
           <h1>
             <span className="level-date">{longDate(selectedDate)}</span>
             <LevelTitle level={activeLevel} />
@@ -1346,7 +1370,7 @@ export default function App() {
           <div className="game-toolbar">
             <button className="undo-action" aria-label="Undo" onClick={() => send({ type: "UNDO" })} disabled={!game.history.length}><Undo2 /><span>Undo</span></button>
             <button className="hint-action" aria-label="Hint" onClick={() => send({ type: "HINT" })} disabled={game.hintedRows.length >= activeLevel.answerRows.length}><img src={hintIcon} alt="" aria-hidden="true" /><span>Hint</span></button>
-            <button className="recall-action" aria-label="Recall" onClick={() => send({ type: "RECALL" })} disabled={!canRecall}><RotateCcw /><span>Recall</span></button>
+            <button className="recall-action" aria-label="Recall" onClick={() => send(recallAction)} disabled={!canRecall}><ArrowDown /><span>Recall</span></button>
           </div>
         </main>
         {!words && <div className="game-loading-overlay" role="status" aria-label="Loading puzzle">
